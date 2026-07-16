@@ -1,0 +1,670 @@
+/* ============================================
+   Tema 3Blue1Brown para Reveal.js
+   Curso de Machine Learning - Universidad Galileo
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  /* 3B1B Color Palette */
+  --c-bg: #1b1b2f;
+  --c-bg-light: #232340;
+  --c-text: #ece6d0;
+  --c-text-dim: #a8a290;
+  --c-blue: #58C4DD;
+  --c-yellow: #FFFF00;
+  --c-green: #83C167;
+  --c-red: #FC6255;
+  --c-orange: #FF862F;
+  --c-purple: #9A72AC;
+  --c-teal: #5CD0B3;
+  --c-pink: #E48BB0;
+  --c-code-bg: #0d0d1a;
+}
+
+/* ---- Reveal.js Theme Overrides ---- */
+
+.reveal-viewport {
+  background: var(--c-bg);
+  background-image: radial-gradient(ellipse at center, #1f1f3a 0%, #1b1b2f 70%);
+}
+
+.reveal {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 32px;
+  color: var(--c-text);
+}
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+  font-family: 'Lora', Georgia, serif;
+  color: var(--c-blue);
+  text-transform: none;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+}
+
+.reveal h1 { font-size: 2.2em; }
+.reveal h2 { font-size: 1.6em; }
+.reveal h3 { font-size: 1.3em; color: var(--c-teal); }
+.reveal h4 { font-size: 1.1em; color: var(--c-text-dim); }
+
+.reveal p, .reveal li {
+  line-height: 1.6;
+  margin-bottom: 0.4em;
+}
+
+.reveal ul, .reveal ol {
+  margin-left: 1em;
+}
+
+.reveal li {
+  margin-bottom: 0.3em;
+}
+
+.reveal a {
+  color: var(--c-blue);
+  text-decoration: underline;
+  text-decoration-color: rgba(88, 196, 221, 0.3);
+}
+
+.reveal a:hover {
+  color: var(--c-teal);
+}
+
+.reveal strong {
+  color: var(--c-yellow);
+  font-weight: 700;
+}
+
+.reveal em {
+  color: var(--c-orange);
+  font-style: italic;
+}
+
+/* ---- Section Title Slides ---- */
+.reveal .section-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.reveal .section-title h2 {
+  font-size: 2.4em;
+  margin-bottom: 0.2em;
+}
+
+.reveal .section-title h2::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-blue), var(--c-teal));
+  margin: 0.3em auto 0;
+  border-radius: 2px;
+  animation: glowLine 2s ease-in-out infinite alternate;
+}
+
+@keyframes glowLine {
+  from { box-shadow: 0 0 5px var(--c-blue); opacity: 0.7; }
+  to { box-shadow: 0 0 15px var(--c-teal); opacity: 1; }
+}
+
+/* ---- Code Blocks ---- */
+.reveal pre {
+  background: var(--c-code-bg);
+  border: 1px solid rgba(88, 196, 221, 0.2);
+  border-radius: 8px;
+  padding: 0.8em 1em;
+  font-size: 0.55em;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  width: 95%;
+  margin: 0.5em auto;
+}
+
+.reveal code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+}
+
+.reveal pre code {
+  color: var(--c-text);
+  font-size: 1em;
+  line-height: 1.5;
+  max-height: 500px;
+}
+
+/* Inline code */
+.reveal p code, .reveal li code {
+  background: var(--c-code-bg);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--c-green);
+}
+
+/* ---- Tables ---- */
+.reveal table {
+  border-collapse: collapse;
+  margin: 0.5em auto;
+  font-size: 0.8em;
+}
+
+.reveal table th {
+  background: rgba(88, 196, 221, 0.15);
+  color: var(--c-blue);
+  font-weight: 700;
+  padding: 0.5em 0.8em;
+  border-bottom: 2px solid var(--c-blue);
+}
+
+.reveal table td {
+  padding: 0.4em 0.8em;
+  border-bottom: 1px solid rgba(236, 230, 208, 0.1);
+}
+
+.reveal table tr:hover td {
+  background: rgba(88, 196, 221, 0.05);
+}
+
+/* ---- Fragment Animations ---- */
+.reveal .fragment.fade-up {
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.5s ease;
+}
+.reveal .fragment.fade-up.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.reveal .fragment.highlight-blue.visible {
+  color: var(--c-blue);
+}
+
+.reveal .fragment.highlight-red.visible {
+  color: var(--c-red);
+}
+
+.reveal .fragment.highlight-green.visible {
+  color: var(--c-green);
+}
+
+/* ---- Math (KaTeX) ---- */
+.reveal .katex {
+  font-size: 1.1em;
+  color: var(--c-text);
+}
+
+.reveal .katex-display {
+  margin: 0.6em 0;
+}
+
+.reveal .math-highlight {
+  color: var(--c-yellow);
+}
+
+.reveal .math-box {
+  background: rgba(88, 196, 221, 0.08);
+  border: 1px solid rgba(88, 196, 221, 0.25);
+  border-radius: 10px;
+  padding: 0.6em 1em;
+  margin: 0.5em auto;
+  display: inline-block;
+}
+
+/* ---- Widget Containers ---- */
+.widget-container {
+  background: rgba(13, 13, 26, 0.6);
+  border: 1px solid rgba(88, 196, 221, 0.2);
+  border-radius: 12px;
+  padding: 1em;
+  margin: 0.5em auto;
+  box-shadow: 0 0 20px rgba(88, 196, 221, 0.08);
+  position: relative;
+}
+
+.widget-container canvas {
+  border-radius: 8px;
+}
+
+/* Slider styles */
+.widget-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--c-bg-light);
+  border-radius: 3px;
+  outline: none;
+  margin: 0.4em 0;
+}
+
+.widget-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-blue);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(88, 196, 221, 0.5);
+  transition: box-shadow 0.2s;
+}
+
+.widget-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 15px rgba(88, 196, 221, 0.8);
+}
+
+.widget-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-blue);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px rgba(88, 196, 221, 0.5);
+}
+
+.widget-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7em;
+  color: var(--c-text-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.widget-value {
+  color: var(--c-yellow);
+  font-weight: 500;
+}
+
+/* Widget buttons */
+.widget-btn {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.65em;
+  padding: 0.4em 1em;
+  border: 1px solid var(--c-blue);
+  background: transparent;
+  color: var(--c-blue);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 0.2em;
+}
+
+.widget-btn:hover {
+  background: rgba(88, 196, 221, 0.15);
+  box-shadow: 0 0 10px rgba(88, 196, 221, 0.3);
+}
+
+.widget-btn.active {
+  background: var(--c-blue);
+  color: var(--c-bg);
+}
+
+/* ---- Two-column Layout ---- */
+.columns {
+  display: flex;
+  gap: 1.5em;
+  align-items: flex-start;
+}
+
+.columns .col {
+  flex: 1;
+  min-width: 0;
+}
+
+.columns .col-60 { flex: 0 0 60%; min-width: 0; }
+.columns .col-55 { flex: 0 0 55%; min-width: 0; }
+.columns .col-50 { flex: 0 0 50%; min-width: 0; }
+.columns .col-45 { flex: 0 0 45%; min-width: 0; }
+.columns .col-40 { flex: 0 0 40%; min-width: 0; }
+
+/* ---- Application Grid ---- */
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1em;
+  margin: 0.5em 0;
+}
+
+.app-card {
+  background: rgba(88, 196, 221, 0.06);
+  border: 1px solid rgba(88, 196, 221, 0.15);
+  border-radius: 10px;
+  padding: 0.8em;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.app-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(88, 196, 221, 0.15);
+}
+
+.app-card .icon {
+  font-size: 2em;
+  margin-bottom: 0.3em;
+}
+
+.app-card .label {
+  font-size: 0.65em;
+  color: var(--c-text-dim);
+}
+
+/* ---- Taxonomy Tree ---- */
+.taxonomy {
+  text-align: left;
+  font-size: 0.85em;
+}
+
+.taxonomy .branch {
+  padding: 0.3em 0.6em;
+  margin: 0.2em 0;
+  border-left: 3px solid var(--c-blue);
+  border-radius: 0 6px 6px 0;
+  background: rgba(88, 196, 221, 0.06);
+}
+
+.taxonomy .branch.supervised { border-left-color: var(--c-green); }
+.taxonomy .branch.unsupervised { border-left-color: var(--c-purple); }
+.taxonomy .branch.reinforcement { border-left-color: var(--c-orange); }
+.taxonomy .branch.recommendation { border-left-color: var(--c-pink); }
+.taxonomy .branch.generative { border-left-color: var(--c-teal); }
+
+/* ---- Comparison Layout ---- */
+.comparison {
+  display: flex;
+  gap: 1em;
+}
+
+.comparison .side {
+  flex: 1;
+  background: rgba(13, 13, 26, 0.5);
+  border-radius: 10px;
+  padding: 0.8em;
+}
+
+.comparison .side.correct {
+  border: 1px solid var(--c-green);
+}
+
+.comparison .side.incorrect {
+  border: 1px solid var(--c-red);
+}
+
+/* ---- Roadmap / Steps ---- */
+.roadmap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  margin: 1em 0;
+}
+
+.roadmap .step {
+  background: rgba(88, 196, 221, 0.1);
+  border: 1px solid rgba(88, 196, 221, 0.3);
+  border-radius: 8px;
+  padding: 0.5em 0.8em;
+  font-size: 0.75em;
+  text-align: center;
+}
+
+.roadmap .step.active {
+  background: rgba(88, 196, 221, 0.25);
+  border-color: var(--c-blue);
+  color: var(--c-blue);
+  font-weight: 700;
+}
+
+.roadmap .arrow {
+  color: var(--c-text-dim);
+  font-size: 1.2em;
+}
+
+/* ---- Quote Style ---- */
+.reveal blockquote {
+  background: rgba(88, 196, 221, 0.06);
+  border-left: 4px solid var(--c-blue);
+  padding: 0.8em 1.2em;
+  margin: 0.5em 0;
+  font-style: italic;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9em;
+}
+
+.reveal blockquote footer {
+  font-style: normal;
+  color: var(--c-text-dim);
+  font-size: 0.8em;
+  margin-top: 0.3em;
+}
+
+/* ---- Footer Attribution ---- */
+.slide-footer {
+  position: fixed;
+  bottom: 12px;
+  right: 20px;
+  font-size: 0.4em;
+  color: rgba(236, 230, 208, 0.3);
+  font-family: 'Fira Code', monospace;
+}
+
+/* ---- Animations ---- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-in {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* ---- Slide overflow scroll ---- */
+.reveal .slides section {
+  overflow-y: auto;
+  max-height: 100%;
+}
+/* Thin scrollbar styling */
+.reveal .slides section::-webkit-scrollbar {
+  width: 4px;
+}
+.reveal .slides section::-webkit-scrollbar-track {
+  background: transparent;
+}
+.reveal .slides section::-webkit-scrollbar-thumb {
+  background: rgba(168, 162, 144, 0.3);
+  border-radius: 2px;
+}
+.reveal .slides section::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 162, 144, 0.5);
+}
+
+/* ---- Home Button ---- */
+.nav-home-btn {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  z-index: 100;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  padding: 6px 12px;
+  border: 1px solid rgba(88,196,221,0.4);
+  background: rgba(27,27,47,0.85);
+  color: var(--c-blue);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.5;
+}
+.nav-home-btn:hover {
+  opacity: 1;
+  background: rgba(88,196,221,0.15);
+  box-shadow: 0 0 10px rgba(88,196,221,0.3);
+}
+
+/* ---- Table of Contents ---- */
+.toc-grid {
+  display: flex;
+  gap: 1.5em;
+  justify-content: center;
+}
+.toc-column {
+  flex: 1;
+  max-width: 400px;
+}
+.toc-item {
+  display: block;
+  cursor: pointer;
+  padding: 0.35em 0.6em;
+  margin: 0.15em 0;
+  border-left: 3px solid transparent;
+  border-radius: 0 6px 6px 0;
+  transition: all 0.2s;
+  font-size: 0.6em;
+  color: var(--c-text);
+  text-decoration: none;
+}
+.toc-item:hover {
+  background: rgba(88,196,221,0.1);
+  border-left-color: var(--c-blue);
+  color: var(--c-blue);
+}
+.toc-item .toc-num {
+  color: var(--c-blue);
+  margin-right: 0.5em;
+  font-weight: 700;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1200px) {
+  .app-grid { grid-template-columns: repeat(2, 1fr); }
+  .columns { flex-direction: column; }
+}
+
+/* ---- Print / PDF Export ---- */
+@media print {
+  .reveal-viewport { background: white; }
+  .reveal { color: #333; }
+  .reveal h1, .reveal h2, .reveal h3 { color: #1a5276; }
+  .widget-container { border-color: #ccc; }
+}
+
+/* ============================================================
+   Extensiones — Curso "IA para Aplicaciones del Mundo Real"
+   ============================================================ */
+
+/* ---- Resource Cards (datasets, herramientas, plataformas) ---- */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9em;
+  margin: 0.6em 0;
+}
+
+.resource-card {
+  background: rgba(88, 196, 221, 0.06);
+  border: 1px solid rgba(88, 196, 221, 0.18);
+  border-radius: 10px;
+  padding: 0.9em 1em;
+  text-align: left;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+.resource-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(88, 196, 221, 0.15);
+  border-color: var(--c-blue);
+}
+
+.resource-card .resource-icon {
+  font-size: 1.6em;
+  margin-bottom: 0.15em;
+}
+
+.resource-card h4 {
+  margin: 0 0 0.2em 0;
+  font-size: 0.95em;
+  color: var(--c-blue);
+}
+
+.resource-card p {
+  font-size: 0.55em;
+  color: var(--c-text-dim);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.resource-card .resource-tag {
+  display: inline-block;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.42em;
+  color: var(--c-teal);
+  border: 1px solid rgba(92, 208, 179, 0.4);
+  border-radius: 4px;
+  padding: 0.1em 0.5em;
+  margin-top: 0.4em;
+}
+
+/* ---- Badges (académico, herramientas) ---- */
+.badge {
+  display: inline-block;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.5em;
+  padding: 0.15em 0.6em;
+  border-radius: 20px;
+  font-weight: 500;
+  margin: 0 0.2em;
+}
+.badge.warn { background: rgba(252, 98, 85, 0.15); color: var(--c-red); border: 1px solid rgba(252,98,85,0.4); }
+.badge.ok { background: rgba(131, 193, 103, 0.15); color: var(--c-green); border: 1px solid rgba(131,193,103,0.4); }
+.badge.info { background: rgba(88, 196, 221, 0.15); color: var(--c-blue); border: 1px solid rgba(88,196,221,0.4); }
+
+/* ---- Pipeline / Flow Diagram (agentic, capstone) ---- */
+.flow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  flex-wrap: wrap;
+  margin: 0.6em 0;
+}
+
+.flow-node {
+  background: rgba(154, 114, 172, 0.1);
+  border: 1px solid rgba(154, 114, 172, 0.4);
+  border-radius: 10px;
+  padding: 0.5em 0.9em;
+  font-size: 0.62em;
+  text-align: center;
+  color: var(--c-text);
+  min-width: 90px;
+}
+
+.flow-node .flow-icon {
+  font-size: 1.3em;
+  display: block;
+  margin-bottom: 0.15em;
+}
+
+.flow-arrow {
+  color: var(--c-text-dim);
+  font-size: 1.1em;
+}

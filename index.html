@@ -1,0 +1,2702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IA para Aplicaciones del Mundo Real — Clases 1 y 2</title>
+
+  <!-- Reveal.js -->
+  <link rel="stylesheet" href="lib/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="lib/reveal.js/dist/theme/black.css" id="theme">
+  <link rel="stylesheet" href="lib/reveal.js/plugin/highlight/monokai.css">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="lib/katex/katex.min.css">
+
+  <!-- Custom 3B1B Theme (compartido con "Introducción a ML") -->
+  <link rel="stylesheet" href="css/theme-3b1b.css">
+
+  <!-- Plotly.js -->
+  <script src="lib/plotly.min.js"></script>
+</head>
+<body>
+
+<button class="nav-home-btn" id="nav-home-btn" title="Ir al inicio">&#8962;</button>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================
+     SECCION 0: PORTADA Y BIENVENIDA (Clase 1 — Clase_01_01.pptx)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <h1 style="font-size:2.3em;">IA para Aplicaciones<br>del Mundo Real</h1>
+    <h3 style="color: var(--c-teal);">Clase 1: Bienvenida, Aplicaciones y Herramientas</h3>
+    <p style="margin-top: 1.5em; color: var(--c-text-dim); font-size: 0.7em;">
+      Universidad Galileo &mdash; Postgrado en Inteligencia Artificial<br>
+      Tercer trimestre 2025
+    </p>
+    <aside class="notes">
+      Bienvenida al curso. Este curso es el complemento práctico de "Introducción a Machine Learning":
+      aquí el foco está en herramientas, aplicaciones reales y el capstone project.
+    </aside>
+  </section>
+
+  <!-- Índice Navegable -->
+  <section data-transition="fade">
+    <h3>Índice</h3>
+    <div class="toc-grid">
+      <div class="toc-column">
+        <h4 style="color: var(--c-blue); font-size: 0.75em; margin-bottom: 0.3em;">Clase 1</h4>
+        <a class="toc-item" onclick="Reveal.slide(0, 0)"><span class="toc-num">0</span>Portada y Bienvenida</a>
+        <a class="toc-item" onclick="Reveal.slide(1, 0)"><span class="toc-num">1</span>Aplicaciones de IA en el Mundo Real</a>
+        <a class="toc-item" onclick="Reveal.slide(2, 0)"><span class="toc-num">2</span>Herramientas del Curso</a>
+      </div>
+      <div class="toc-column">
+        <h4 style="color: var(--c-orange); font-size: 0.75em; margin-bottom: 0.3em;">Clase 2</h4>
+        <a class="toc-item" onclick="Reveal.slide(3, 0)"><span class="toc-num">3</span>Datasets e Ideas de Proyecto</a>
+      </div>
+      <div class="toc-column">
+        <h4 style="color: var(--c-purple); font-size: 0.75em; margin-bottom: 0.3em;">Buenas Prácticas</h4>
+        <a class="toc-item" onclick="Reveal.slide(4, 0)"><span class="toc-num">4</span>Evaluación de Modelos</a>
+        <a class="toc-item" onclick="Reveal.slide(5, 0)"><span class="toc-num">5</span>Train/Test Split, Over/Underfitting</a>
+        <a class="toc-item" onclick="Reveal.slide(6, 0)"><span class="toc-num">6</span>Regularización</a>
+        <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos y Cross-Validation</a>
+      </div>
+    </div>
+    <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
+    <aside class="notes">Fuente: portada compuesta a partir de Clase_01_01.pptx y clase2_ejemplos.pptx.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Curso en Breve</h2>
+    <div class="columns">
+      <div class="col-55">
+        <p style="font-size: 0.68em;"><strong style="color: var(--c-blue);">Objetivo</strong></p>
+        <p class="fragment fade-up" style="font-size: 0.6em;">
+          Capacitar a los estudiantes para aplicar técnicas de inteligencia artificial en problemas
+          reales, iniciando su <strong>capstone project</strong> con apoyo constante de profesores y
+          auxiliares, integrando soluciones prácticas en entornos de producción.
+        </p>
+        <p style="font-size: 0.68em; margin-top: 0.8em;"><strong style="color: var(--c-green);">Competencias</strong></p>
+        <ul style="font-size: 0.58em;">
+          <li class="fragment fade-up">Diseñar e implementar soluciones de IA en problemas del mundo real</li>
+          <li class="fragment fade-up">Integrar IA en sistemas de producción y evaluar su impacto</li>
+          <li class="fragment fade-up">Gestionar un proyecto de IA desde su concepción hasta la implementación</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.68em;"><strong style="color: var(--c-purple);">Contenido del trimestre</strong></p>
+        <div class="roadmap" style="flex-direction: column; align-items: stretch;">
+          <div class="step fragment fade-up">Aplicaciones de IA en el mundo real: LLMs, RAG, búsqueda semántica y agentes</div>
+          <div class="step fragment fade-up">Herramientas y stack tecnológico: de Python al despliegue en producción</div>
+          <div class="step fragment fade-up">Datasets e ideas para tu proyecto</div>
+          <div class="step fragment fade-up">Buenas prácticas de ML: evaluación (incl. curva ROC/AUC), train/test split, selección de modelos e hiperparámetros</div>
+          <div class="step fragment fade-up">Desarrollo del capstone: propuesta, implementación y despliegue</div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 3 ("Contenido:"), actualizado para reflejar los temas realmente cubiertos en el deck (LLMs/RAG/búsqueda semántica agregados a Aplicaciones, y buenas prácticas de ML — evaluación y selección de modelos/hiperparámetros — como tema pendiente de desarrollar en una clase futura). Este curso corre en paralelo a los otros 2 del trimestre y aquí también se resuelven dudas de esos cursos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Metodología</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-60">
+        <div class="flow-row" style="flex-direction: column; align-items: flex-start; gap: 0.6em;">
+          <div class="flow-node fragment fade-up" style="min-width: 100%; text-align:left;"><span class="flow-icon">🎓</span>Clases magistrales</div>
+          <div class="flow-node fragment fade-up" style="min-width: 100%; text-align:left;"><span class="flow-icon">💬</span>Discusiones grupales (estudiantes + catedrático)</div>
+          <div class="flow-node fragment fade-up" style="min-width: 100%; text-align:left;"><span class="flow-icon">🧭</span>Mentoría y solución de dudas del proyecto capstone</div>
+        </div>
+        <p class="fragment fade-up" style="font-size: 0.55em; color: var(--c-text-dim); margin-top: 0.8em;">
+          En este curso también se resuelven dudas de los otros 2 cursos del trimestre.
+        </p>
+      </div>
+      <div class="col-40" style="display:flex; gap: 0.6em; justify-content:center;">
+        <img src="img/Clase_01_01_slide05_img01.png" alt="Bienvenida" style="max-width: 130px; border-radius: 8px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide05_img02.png" alt="Bienvenida" style="max-width: 130px; border-radius: 8px;" class="fragment fade-up">
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slides 4-5. Curso híbrido.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Puntos Importantes: Integridad Académica</h2>
+    <p style="font-size: 0.6em; text-align:center;">
+      <span class="badge warn">Plagios y entregas de mala fe se penalizan con el negativo de la nota</span>
+    </p>
+    <div class="columns" style="margin-top: 0.5em;">
+      <div class="col-55">
+        <ul style="font-size: 0.55em;">
+          <li class="fragment fade-up"><strong>Plagios:</strong> contamos con software de detección de plagios</li>
+          <li class="fragment fade-up">Subir <strong>archivos vacíos</strong> a GitHub asumiendo que no se revisan</li>
+          <li class="fragment fade-up">Subir solo la <strong>descripción del problema</strong> (dada por el curso) sin la solución</li>
+          <li class="fragment fade-up">Subir el documento vacío para generar el link antes del deadline, y trabajarlo después<br>
+            <span style="font-size: 0.85em; color: var(--c-text-dim);">— GitHub registra el historial de commits, esto se nota</span></li>
+          <li class="fragment fade-up">Reutilizar el <strong>enlace de una tarea anterior</strong></li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <img src="img/Clase_01_01_slide02_img01.png" alt="Ejemplo de mala práctica en GitHub" style="max-width: 100%; border-radius: 8px; border: 1px solid rgba(252,98,85,0.4);" class="fragment fade-up">
+        <p style="font-size: 0.45em; color: var(--c-text-dim); text-align:center;">Ejemplo real: repo "proyecto final" con solo el nombre y carné — sin código</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 2. Casos reales detectados en trimestres pasados.</aside>
+  </section>
+</section>
+
+<!-- ============================================================
+     SECCION 1: APLICACIONES DE IA EN EL MUNDO REAL
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Aplicaciones de IA en el Mundo Real</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">La IA está en todas partes — y de eso trata este curso</p>
+    </div>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Todos los Días Usamos ML</h2>
+    <div style="display: flex; justify-content: center; gap: 0.6em; flex-wrap: wrap; margin: 0.3em 0;">
+      <div style="text-align: center; flex: 0 1 160px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide06_img01.png" alt="Netflix Recommends" style="max-width: 160px; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">Recomendaciones</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 160px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide06_img02.png" alt="Amazon Recommended for you" style="max-width: 160px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">E-commerce</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 130px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide06_img03.png" alt="ChatGPT" style="max-width: 110px; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">IA Generativa</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 140px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide06_img04.png" alt="Reconocimiento facial" style="max-width: 140px; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">Reconocimiento facial</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 170px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide06_img05.png" alt="Google Assistant" style="max-width: 150px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">Asistentes de voz</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 170px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide06_img06.png" alt="Spam detector" style="max-width: 170px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">Filtros de spam</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.65em; text-align: center; color: var(--c-text-dim);">
+      ML está en el correo, el teléfono, las redes sociales, el streaming...
+    </p>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 6.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Empresas Disruptivas gracias a ML</h2>
+    <img src="img/Clase_01_01_slide07_img01.png" alt="Disruptive companies using Machine Learning" style="max-width: 78%; border-radius: 10px; display:block; margin: 0 auto;">
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align: center; color: var(--c-text-dim); margin-top: 0.5em;">
+      Netflix, Amazon, Uber, Zillow, Avvo, fitbit... todas se diferencian con <strong style="color: var(--c-yellow);">aplicaciones inteligentes</strong> construidas sobre ML.
+    </p>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 7.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Robótica, Spam y Recomendación</h2>
+    <div style="display: flex; justify-content: center; gap: 1.2em; margin: 0.4em 0; align-items: center;">
+      <div style="text-align: center; width: 170px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide08_img01.png" alt="ASIMO Robot" style="max-width: 140px; border-radius: 8px; display: block; margin: 0 auto;">
+        <p style="font-size: 0.6em; color: var(--c-blue); margin-top: 0.3em;"><strong>Robótica</strong><br>ASIMO (Honda)</p>
+      </div>
+      <div style="text-align: center; width: 220px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide08_img04.png" alt="Gmail spam" style="max-width: 220px; border-radius: 8px; display: block; margin: 0 auto;">
+        <p style="font-size: 0.6em; color: var(--c-red); margin-top: 0.3em;"><strong>Detección de spam</strong></p>
+      </div>
+      <div style="text-align: center; width: 220px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide08_img03.png" alt="Netflix" style="max-width: 200px; border-radius: 6px; display:block; margin: 0 auto;">
+        <p style="font-size: 0.6em; color: var(--c-orange); margin-top: 0.3em;"><strong>Recomendación</strong></p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 8.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Computer Vision</h2>
+    <div style="display: flex; justify-content: center; gap: 0.6em; flex-wrap: wrap; margin: 0.3em 0;">
+      <div style="text-align: center; flex: 0 1 220px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide09_img01.png" alt="Face detection" style="max-width: 220px; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-blue);">Detección de rostros</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 200px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide09_img02.png" alt="Medical imaging" style="max-width: 200px; border-radius: 8px; background: rgba(255,255,255,0.9); padding: 0.2em;">
+        <p style="font-size: 0.5em; color: var(--c-green);">Imágenes médicas (ultrasonido)</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 200px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide09_img03.png" alt="Object detection" style="max-width: 200px; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-orange);">Detección de objetos</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 200px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide09_img04.png" alt="Weapon detection" style="max-width: 200px; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-red);">Detección de armas (seguridad)</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 9. Casos reales de CV en salud y seguridad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Juegos y NLP</h2>
+    <div class="columns" style="align-items: center;">
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide10_img01.png" alt="AlphaGo" style="max-width: 220px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>AlphaGo</strong> venció al campeón mundial de Go</p>
+      </div>
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide10_img02.png" alt="DOTA 2 AI" style="max-width: 240px; border-radius: 8px;">
+        <p style="font-size: 0.55em; color: var(--c-orange);"><strong>OpenAI Five</strong> venció a jugadores profesionales de DOTA 2</p>
+      </div>
+    </div>
+    <div class="columns" style="align-items: center; margin-top: 0.6em;">
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide10_img03.png" alt="Siri" style="max-width: 130px; border-radius: 8px;">
+        <p style="font-size: 0.55em; color: var(--c-purple);"><strong>Siri</strong> — Asistente de voz</p>
+      </div>
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide10_img04.png" alt="Google Translate AR" style="max-width: 180px; border-radius: 8px;">
+        <p style="font-size: 0.55em; color: var(--c-green);"><strong>Google Translate</strong> — traducción en tiempo real (AR)</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 10.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>IA Generativa</h2>
+    <div class="columns" style="align-items: center;">
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide11_img01.png" alt="Modelos generados por IA" style="max-width: 100%; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-teal);">Modelos y contenido generado por IA para marketing (misma "persona", generada por un modelo)</p>
+      </div>
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide11_img02.png" alt="Contenido generado" style="max-width: 55%; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-orange);">Fotografía 100% sintética, sin cámara ni modelo real</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.62em; text-align: center; color: var(--c-text-dim); margin-top: 0.6em;">
+      Modelos que crean contenido nuevo: texto (ChatGPT), imágenes, video, audio y código.
+    </p>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 11. Ejemplo de uso comercial real de generación de imágenes con IA.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>LLMs: Más Allá de RAG y Agentes</h2>
+    <p style="font-size: 0.58em; text-align: center;">
+      No todo uso de un LLM necesita buscar documentos externos (RAG) ni ejecutar acciones (agentes).
+      Un LLM <strong style="color: var(--c-yellow);">solo</strong>, con el texto que le das, ya resuelve
+      muchísimas tareas del mundo real.
+    </p>
+    <div class="app-grid fragment fade-up" style="margin-top: 0.5em;">
+      <div class="app-card fragment fade-up">
+        <div class="icon">📖</div>
+        <div><strong>Comprensión de texto</strong></div>
+        <div class="label">Extraer entidades, intención y campos clave de un documento</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">💬</div>
+        <div><strong>Análisis de sentimiento</strong></div>
+        <div class="label">Opinión de clientes en reviews, encuestas y redes sociales</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">📝</div>
+        <div><strong>Resúmenes automáticos</strong></div>
+        <div class="label">Condensar reportes, transcripciones o artículos largos</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🌐</div>
+        <div><strong>Traducción</strong></div>
+        <div class="label">Entre idiomas, manteniendo tono y contexto</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🏷️</div>
+        <div><strong>Clasificación y etiquetado</strong></div>
+        <div class="label">Tickets de soporte, correos, prioridad, categorías</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🧾</div>
+        <div><strong>Extracción estructurada</strong></div>
+        <div class="label">De texto libre a JSON/tablas (facturas, CVs, contratos)</div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align: center; color: var(--c-text-dim); margin-top: 0.4em;">
+      También: redacción y reescritura, corrección de estilo, y responder preguntas sobre <em>un</em> documento que ya le diste
+      en el prompt (sin necesidad de una base vectorial externa).
+    </p>
+    <div class="columns fragment fade-up" style="margin-top: 0.7em; text-align: center;">
+      <div class="col">
+        <h4 style="color: var(--c-blue); font-size: 0.7em;">Solo LLM</h4>
+        <p style="font-size: 0.48em;">Entiende, resume, clasifica, traduce, redacta — con el texto que le das y lo aprendido en su entrenamiento</p>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-teal); font-size: 0.7em;">LLM + RAG</h4>
+        <p style="font-size: 0.48em;">Además busca información externa y actualizada antes de responder</p>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-purple); font-size: 0.7em;">LLM + Agente</h4>
+        <p style="font-size: 0.48em;">Además decide y ejecuta acciones (herramientas, APIs) en un loop</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Slide propio — antes de ver RAG y Agentic AI (que son patrones de arquitectura sobre un LLM), conviene
+      dejar claro que la mayoría de tareas de NLP de toda la vida (clasificación, resumen, extracción,
+      traducción) hoy se resuelven con un LLM "desnudo", sin RAG ni agentes — y suele ser la opción más simple
+      y barata cuando alcanza.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>RAG y Búsqueda Semántica</h2>
+    <p style="font-size: 0.58em; text-align: center;">
+      <strong style="color: var(--c-yellow);">Retrieval-Augmented Generation</strong>: en vez de confiar solo en lo que el LLM "memorizó",
+      se le da <strong>contexto real y actualizado</strong> recuperado por similitud semántica.
+    </p>
+    <div class="flow-row fragment fade-up" style="margin-top: 0.6em;">
+      <div class="flow-node"><span class="flow-icon">❓</span>Pregunta<br>del usuario</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node"><span class="flow-icon">🔢</span>Embedding<br>(vector)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node" style="border-color: rgba(88,196,221,0.5); background: rgba(88,196,221,0.1);"><span class="flow-icon">🗄️</span>Búsqueda<br>semántica<br>(vector DB)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node"><span class="flow-icon">📄</span>Contexto<br>recuperado</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node" style="border-color: rgba(255,255,0,0.5); background: rgba(255,255,0,0.08);"><span class="flow-icon">🤖</span>LLM genera<br>respuesta</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align: center; color: var(--c-text-dim); margin-top: 0.5em;">
+      La "búsqueda semántica" es exactamente el widget de bases de datos vectoriales que vimos en Herramientas:
+      encontrar los documentos más <em>parecidos en significado</em> a la consulta, no coincidencias exactas de palabras.
+    </p>
+    <div class="resource-grid" style="margin-top: 0.5em; font-size: 0.62em;">
+      <div class="resource-card fragment fade-up"><h4>Soporte al cliente</h4><p>Chatbots que responden citando la documentación interna real de la empresa, en vez de alucinar.</p></div>
+      <div class="resource-card fragment fade-up"><h4>Buscadores empresariales</h4><p>"Pregunta en lenguaje natural" sobre miles de PDFs, wikis o tickets internos.</p></div>
+      <div class="resource-card fragment fade-up"><h4>Asistentes legales / médicos</h4><p>Responden citando las fuentes (leyes, papers, historiales) que sí existen.</p></div>
+      <div class="resource-card fragment fade-up"><h4>Copilots de código</h4><p>Buscan snippets similares en tu propio repositorio antes de sugerir código.</p></div>
+    </div>
+    <aside class="notes">
+      Slide propio (no viene del pptx original) — conecta IA Generativa con el widget de bases de datos
+      vectoriales de la sección de Herramientas. RAG es probablemente la arquitectura de aplicación de IA
+      más usada hoy en productos reales (chatbots empresariales, buscadores internos, asistentes con fuentes).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Más Aplicaciones del Mundo Real</h2>
+    <div class="app-grid">
+      <div class="app-card fragment fade-up">
+        <div class="icon">🕵️</div>
+        <div><strong>Detección de fraude</strong></div>
+        <div class="label">Bancos y fintechs detectan transacciones anómalas en tiempo real</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🏭</div>
+        <div><strong>Mantenimiento predictivo</strong></div>
+        <div class="label">Sensores + ML predicen fallas de maquinaria antes de que ocurran</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">💻</div>
+        <div><strong>Generación de código</strong></div>
+        <div class="label">Copilots que sugieren código basado en el contexto del proyecto</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🎧</div>
+        <div><strong>Chatbots y soporte</strong></div>
+        <div class="label">Resuelven consultas 24/7 conectados a una base de conocimiento (RAG)</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🛡️</div>
+        <div><strong>Moderación de contenido</strong></div>
+        <div class="label">Detecta automáticamente contenido dañino en redes sociales</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">💰</div>
+        <div><strong>Pricing dinámico</strong></div>
+        <div class="label">Ajusta precios según demanda, inventario y comportamiento del usuario</div>
+      </div>
+    </div>
+    <aside class="notes">Slide propio — completa el panorama de aplicaciones reales más allá de lo cubierto en el pptx original (robótica, CV, juegos, NLP, IA generativa, vehículos autónomos, análisis de datos).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Vehículos Autónomos</h2>
+    <div class="columns" style="align-items: center;">
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide12_img01.png" alt="Tesla" style="max-width: 300px; border-radius: 8px;">
+        <p style="font-size: 0.55em; color: var(--c-blue);">Tesla Autopilot</p>
+      </div>
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide12_img02.png" alt="Sensores ADAS" style="max-width: 300px; border-radius: 8px;">
+        <p style="font-size: 0.55em; color: var(--c-green);">Fusión de sensores (cámaras + radar + lidar) para predecir riesgo de accidente</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 12. Drive.AI — vehículo inteligente predice accidente.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Análisis de Datos: los Clásicos</h2>
+    <div style="display: flex; justify-content: center; gap: 0.8em; flex-wrap: wrap; margin: 0.3em 0;">
+      <div style="text-align: center; flex: 0 1 260px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide13_img01.png" alt="Ozone regression" style="max-width: 100%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.5em; color: var(--c-blue);">Regresión no lineal (ozono vs. temperatura)</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 260px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide13_img04.png" alt="K-means clustering" style="max-width: 100%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.5em; color: var(--c-green);">Clustering no supervisado (k-means)</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 220px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide13_img02.png" alt="Iris classification joke" style="max-width: 100%; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-purple);">El dataset más clásico de ML: Iris</p>
+      </div>
+      <div style="text-align: center; flex: 0 1 200px;" class="fragment fade-up">
+        <img src="img/Clase_01_01_slide13_img03.png" alt="Iris: petal y sepal" style="max-width: 100%; border-radius: 8px;">
+        <p style="font-size: 0.5em; color: var(--c-teal);">Sus features: largo/ancho de pétalo y sépalo</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 13. Ejemplos clásicos que reaparecerán durante el trimestre.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Nueva Ola: Agentes de IA</h2>
+    <img src="img/Clase_01_01_slide14_img01.png" alt="What is agentic AI" style="max-width: 72%; border-radius: 10px; display:block; margin: 0 auto;" class="fragment fade-up">
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align: center; color: var(--c-text-dim); margin-top: 0.5em;">
+      Un <strong style="color: var(--c-purple);">agente</strong> combina memoria, herramientas y metas: observa su entorno,
+      razona con un LLM, y ejecuta acciones — en loop.
+    </p>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 14. Puente hacia LangChain/LangGraph, que se ven en la sección de herramientas.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo se Entrena un LLM Moderno</h2>
+    <img src="img/Clase_01_01_slide15_img01.png" alt="Supervised fine-tuning y reinforcement fine-tuning" style="max-width: 85%; border-radius: 10px; display:block; margin: 0 auto;" class="fragment fade-up">
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align: center; color: var(--c-text-dim); margin-top: 0.5em;">
+      Fine-tuning supervisado (imitar ejemplos) + fine-tuning por refuerzo (optimizar una recompensa) —
+      así se construyen los modelos que usaremos como piezas en nuestras aplicaciones.
+    </p>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 15. Cierre de la sección de aplicaciones.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Resumen</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 700px;">
+        La IA ya está integrada en robótica, visión, juegos, lenguaje, vehículos, generación de contenido
+        y agentes autónomos. La pregunta de este curso no es <em>"¿existe ML para esto?"</em> sino
+        <strong style="color: var(--c-yellow);">"¿con qué herramienta lo construyo?"</strong>
+      </p>
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================
+     SECCION 2: HERRAMIENTAS DEL CURSO (Clase_01_02_Tools.pptx)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Herramientas del Curso</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">El stack tecnológico que usaremos en el capstone</p>
+    </div>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Python y Anaconda</h2>
+    <div class="columns" style="align-items: center;">
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide02_img01.png" alt="Python" style="max-width: 260px; border-radius: 8px;">
+        <p style="font-size: 0.55em; color: var(--c-blue); margin-top: 0.4em;">
+          Lenguaje multipropósito, líder en plataformas de machine learning y data science.
+        </p>
+      </div>
+      <div style="flex: 1; text-align: center;" class="fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide03_img01.png" alt="Anaconda" style="max-width: 160px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.55em; color: var(--c-green); margin-top: 0.4em;">
+          Gestor de paquetes y ambientes: separa dependencias entre proyectos. 1000+ paquetes de Data Science.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slides 2-3.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Jupyter Notebooks</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-40" style="text-align:center;">
+        <img src="img/Clase_01_02_Tools_slide04_img01.png" alt="Jupyter" style="max-width: 220px;" class="fragment fade-up">
+      </div>
+      <div class="col-60">
+        <p class="fragment fade-up" style="font-size: 0.6em;">
+          Aplicación web para crear y compartir documentos con código "vivo", visualizaciones y texto.
+        </p>
+        <p class="fragment fade-up" style="font-size: 0.6em;">
+          Soporta 40+ lenguajes (Python, R, Scala...) — el estándar de facto para experimentar en ML.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slide 4. Los siguientes dos slides muestran ejemplos reales.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ejemplo Real: Generación de Texto con RNN</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-55">
+        <p style="font-size: 0.58em;">
+          Red recurrente (LSTM) en TensorFlow entrenada con los cuentos de <strong>H.P. Lovecraft</strong>
+          para generar texto nuevo en su estilo, caracter por caracter.
+        </p>
+        <img src="img/Clase_01_02_Tools_slide05_img01.png" alt="RNN architecture" style="max-width: 100%; border-radius: 8px; margin-top: 0.4em;" class="fragment fade-up">
+      </div>
+      <div class="col-45">
+        <img src="img/Clase_01_02_Tools_slide06_img01.png" alt="Training loss curve" style="max-width: 100%; border-radius: 8px;" class="fragment fade-up">
+        <p style="font-size: 0.5em; color: var(--c-text-dim); text-align:center;">Curvas de entrenamiento (train/validation loss) dentro del notebook</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slides 5-6. Notebook completo en Jupyter, un solo documento con teoría, código y resultados.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ejemplo Real: Transferencia de Estilo</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-45" style="text-align:center;">
+        <img src="img/Clase_01_02_Tools_slide07_img01.png" alt="Style transfer style image" style="max-width: 85%; border-radius: 8px;" class="fragment fade-up">
+        <p style="font-size: 0.45em; color: var(--c-text-dim);">Pintura de Efraín Recinos usada como "estilo"</p>
+      </div>
+      <div class="col-55" style="text-align:center;">
+        <img src="img/Clase_01_02_Tools_slide07_img02.png" alt="Style transfer result iterations" style="max-width: 100%; border-radius: 8px;" class="fragment fade-up">
+        <p style="font-size: 0.45em; color: var(--c-text-dim);">Content + Style → Mixed, iteración por iteración</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Todo esto corre dentro de un único Jupyter notebook usando TensorFlow.
+    </p>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slide 7. Neural style transfer, ejemplo clásico de creatividad computacional.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Stack de Ciencia de Datos</h2>
+    <div class="app-grid">
+      <div class="app-card fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide08_img01.png" alt="NumPy" style="max-height: 55px; border-radius: 6px;">
+        <div><strong>NumPy</strong></div>
+        <div class="label">Vectores, matrices y álgebra lineal</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide09_img01.png" alt="Pandas" style="max-height: 55px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.15em;">
+        <div><strong>Pandas</strong></div>
+        <div class="label">Análisis exploratorio de datos</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide10_img01.png" alt="Matplotlib" style="max-height: 55px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.15em;">
+        <div><strong>Matplotlib</strong></div>
+        <div class="label">Curvas de aprendizaje, imágenes, reportes</div>
+      </div>
+      <div class="app-card fragment fade-up" style="grid-column: span 3;">
+        <img src="img/Clase_01_02_Tools_slide11_img01.png" alt="Scikit-learn" style="max-height: 55px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.15em;">
+        <div><strong>Scikit-learn</strong></div>
+        <div class="label">Clasificación, regresión, clustering y preprocesamiento — prototipado rápido</div>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="text-align:center; margin-top:0.5em;">
+      <img src="img/Clase_01_02_Tools_slide08_img02.png" alt="NumPy broadcasting" style="max-width: 45%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.44em; color: var(--c-text-dim);">Broadcasting: NumPy "estira" automáticamente los arreglos de menor tamaño para poder operar entre matrices de distinta forma</p>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slides 8-11.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Deep Learning: los 3 Grandes Frameworks</h2>
+    <div class="columns">
+      <div style="flex:1; text-align:center;" class="fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide12_img01.png" alt="TensorFlow" style="max-height: 70px; background: rgba(255,255,255,0.95); padding: 0.2em; border-radius: 6px;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top:0.4em;">Google. Escalable, alto desempeño, de equipos pequeños a grandes organizaciones.</p>
+      </div>
+      <div style="flex:1; text-align:center;" class="fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide13_img01.png" alt="Keras" style="max-height: 60px; background: rgba(255,255,255,0.95); padding: 0.2em; border-radius: 6px;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top:0.4em;">API de alto nivel — hoy es <code>tf.keras</code>. Rápido, simple, modular.</p>
+        <p style="font-size: 0.42em; color: var(--c-text-dim);">Úsalo para: clasificación de imágenes, NLP, series temporales, reconocimiento de voz, modelado predictivo</p>
+      </div>
+      <div style="flex:1; text-align:center;" class="fragment fade-up">
+        <img src="img/Clase_01_02_Tools_slide14_img01.png" alt="PyTorch" style="max-height: 45px; background: rgba(255,255,255,0.95); padding: 0.3em; border-radius: 6px;">
+        <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top:0.4em;">Meta (Facebook). Favorito en investigación académica por su agilidad de experimentación.</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slides 12-14.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Ecosistema GenAI: 🤗 + 🦜</h2>
+    <div class="columns">
+      <div class="col-50">
+        <h4 style="color: var(--c-yellow); font-size: 0.8em;">🤗 Hugging Face</h4>
+        <p class="fragment fade-up" style="font-size: 0.55em;">
+          Comunidad y hub de modelos preentrenados (NLP, visión, multimodal). Su librería
+          <code>transformers</code> permite clasificar texto, generar, traducir, resumir — todo con
+          modelos listos para usar.
+        </p>
+      </div>
+      <div class="col-50">
+        <img src="img/Clase_01_02_Tools_slide16_img01.png" alt="LangChain" style="max-height: 40px; background: rgba(255,255,255,0.95); padding: 0.2em; border-radius: 6px;" class="fragment fade-up">
+        <h4 style="color: var(--c-teal); font-size: 0.8em;">🔗 LangChain / LangGraph</h4>
+        <p class="fragment fade-up" style="font-size: 0.55em;">
+          <strong>LangChain:</strong> conecta LLMs con datos externos, APIs y herramientas en cadenas de pasos.<br>
+          <strong>LangGraph:</strong> modela esos flujos como <em>grafos</em> — con ramificaciones, ciclos y
+          condiciones, ideal para agentes complejos.
+        </p>
+      </div>
+    </div>
+    <div style="text-align:center;" class="fragment fade-up">
+      <img src="img/Clase_01_02_Tools_slide17_img01.png" alt="LangChain (cadena lineal) vs LangGraph (grafo con ramificaciones)" style="max-width: 62%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.46em; color: var(--c-text-dim);">LangChain encadena pasos A→B→C; LangGraph permite que A se ramifique según la decisión del agente</p>
+    </div>
+    <div class="flow-row fragment fade-up" style="margin-top: 0.6em;">
+      <div class="flow-node"><span class="flow-icon">💬</span>LLM</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node"><span class="flow-icon">🗂️</span>Datos<br>externos</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node"><span class="flow-icon">🛠️</span>Herramientas<br>(API, código)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node"><span class="flow-icon">🔁</span>Loop de<br>decisiones</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node"><span class="flow-icon">✅</span>Respuesta /<br>Acción</div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slides 15-17. La imagen LangChain/LangGraph es del pptx original; el diagrama de flujo del agente (LLM→...→Acción) es propio.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>OpenCV</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-40" style="text-align:center;">
+        <img src="img/Clase_01_02_Tools_slide18_img01.png" alt="OpenCV" style="max-width: 100%;" class="fragment fade-up">
+      </div>
+      <div class="col-60">
+        <p class="fragment fade-up" style="font-size: 0.58em;">
+          Librería de visión por computadora creada por Intel (2000). El estándar de facto para
+          procesamiento de imágenes y video en tiempo real.
+        </p>
+        <ul style="font-size: 0.5em;">
+          <li class="fragment fade-up">Detección de rostros y objetos, seguimiento de movimiento</li>
+          <li class="fragment fade-up">Reconocimiento de patrones (ojos, manos, matrículas)</li>
+          <li class="fragment fade-up">Realidad aumentada, medición y análisis de video en tiempo real</li>
+          <li class="fragment fade-up">Aplicaciones médicas, de seguridad, industriales y automotrices</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slide 18.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Amazon SageMaker</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_01_02_Tools_slide19_img01.png" alt="Amazon SageMaker" style="max-width: 340px; border-radius: 8px;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.58em; text-align:center; margin: 0.4em 0;">
+      Servicio de AWS que automatiza el ciclo de vida completo de ML, de dato crudo a endpoint en producción.
+    </p>
+    <div class="roadmap fragment fade-up">
+      <div class="step">Data Wrangler<br><span style="font-size:0.8em; color:var(--c-text-dim);">preparar datos</span></div>
+      <span class="arrow">→</span>
+      <div class="step">Studio / Training<br><span style="font-size:0.8em; color:var(--c-text-dim);">entrenar (JumpStart, AutoML)</span></div>
+      <span class="arrow">→</span>
+      <div class="step">Feature Store<br><span style="font-size:0.8em; color:var(--c-text-dim);">reutilizar features entre proyectos</span></div>
+      <span class="arrow">→</span>
+      <div class="step">Pipelines<br><span style="font-size:0.8em; color:var(--c-text-dim);">CI/CD de ML</span></div>
+      <span class="arrow">→</span>
+      <div class="step">Endpoints<br><span style="font-size:0.8em; color:var(--c-text-dim);">deploy escalable</span></div>
+      <span class="arrow">→</span>
+      <div class="step">Model Monitor<br><span style="font-size:0.8em; color:var(--c-text-dim);">observabilidad</span></div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slide 19. Este flujo se practica en los notebooks/scripts de deploy del curso (SageMaker, Hugging Face endpoints).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Bases de Datos Vectoriales</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-40">
+        <p style="font-size: 0.55em;">
+          Almacenan <strong>embeddings</strong> (vectores numéricos) que representan texto, imágenes, audio
+          o código, generados por un modelo (BERT, CLIP, OpenAI Embeddings...).
+        </p>
+        <p class="fragment fade-up" style="font-size: 0.55em;">
+          Una consulta también se convierte en vector, y se buscan los vectores más
+          <strong style="color: var(--c-yellow);">similares</strong> (nearest neighbors) — no coincidencias
+          exactas como en SQL.
+        </p>
+        <p class="fragment fade-up" style="font-size: 0.5em; color: var(--c-text-dim);">
+          Distancias comunes: euclidiana, coseno, Manhattan, Hamming.
+        </p>
+      </div>
+      <div class="col-60">
+        <div class="widget-container">
+          <canvas id="vectordb-canvas" width="560" height="360" style="width:100%; max-width:560px; display:block; margin:0 auto;"></canvas>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4em; gap:1em;">
+            <div class="widget-label" style="flex:1;">k vecinos <span class="widget-value" id="vectordb-k-value">5</span>
+              <input type="range" id="vectordb-k-slider" class="widget-slider" min="1" max="9" step="1" value="5" style="width:100px; margin-left:0.5em;">
+            </div>
+            <button class="widget-btn" id="vectordb-reset-btn">Reordenar docs</button>
+          </div>
+          <div id="vectordb-results" style="margin-top:0.5em;"></div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slide 20. Widget propio (js/widgets/vectordb-widget.js) — no había imagen en el pptx original. Cada color es una categoría semántica; al hacer click se coloca una query y se resaltan sus k vecinos más cercanos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Proveedores de Bases Vectoriales</h2>
+    <div class="resource-grid" style="font-size: 0.7em;">
+      <div class="resource-card fragment fade-up"><h4>FAISS</h4><p>Meta. Búsquedas rápidas y locales, ideal para prototipado.</p><span class="resource-tag">local</span></div>
+      <div class="resource-card fragment fade-up"><h4>Pinecone</h4><p>Gestionado en la nube, alta disponibilidad, muy usado con LLMs.</p><span class="resource-tag">managed</span></div>
+      <div class="resource-card fragment fade-up"><h4>Weaviate</h4><p>Búsqueda híbrida (texto + vector), soporte para modelos propios. Ideal para RAG.</p><span class="resource-tag">RAG</span></div>
+      <div class="resource-card fragment fade-up"><h4>Milvus</h4><p>Alto rendimiento a gran escala, arquitectura distribuida.</p><span class="resource-tag">escala</span></div>
+      <div class="resource-card fragment fade-up"><h4>Qdrant</h4><p>Ligera y moderna, enfocada en NLP y LLMs, API sencilla.</p><span class="resource-tag">local</span></div>
+      <div class="resource-card fragment fade-up"><h4>Chroma</h4><p>Simple y local — la más popular para prototipos de RAG con LangChain.</p><span class="resource-tag">RAG</span></div>
+      <div class="resource-card fragment fade-up"><h4>pgvector</h4><p>Extensión de PostgreSQL — vectores directo en tus tablas SQL.</p><span class="resource-tag">SQL</span></div>
+      <div class="resource-card fragment fade-up"><h4>Redis / OpenSearch / Elasticsearch</h4><p>Añaden búsqueda vectorial a motores ya conocidos — útil si ya los usas.</p><span class="resource-tag">híbrido</span></div>
+      <div class="resource-card fragment fade-up"><h4>Zilliz Cloud</h4><p>Servicio gestionado basado en Milvus — experiencia de base vectorial completa en la nube.</p><span class="resource-tag">managed</span></div>
+      <div class="resource-card fragment fade-up"><h4>Vald</h4><p>Diseñada para Kubernetes, con autoescalado y despliegue nativo en la nube.</p><span class="resource-tag">escala</span></div>
+      <div class="resource-card fragment fade-up"><h4>Vespa.ai</h4><p>Motor de Yahoo para búsquedas vectoriales complejas, ranking y filtrado en tiempo real.</p><span class="resource-tag">escala</span></div>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slide 21 (13 proveedores en total).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Control de Versiones: Git y GitHub</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-45" style="text-align:center;">
+        <img src="img/Clase_01_02_Tools_slide22_img01.png" alt="Git" style="max-width: 220px;" class="fragment fade-up">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">Recupera versiones previas, trabaja en equipo, mantiene historial de cambios</p>
+      </div>
+      <div class="col-55" style="text-align:center;">
+        <img src="img/Clase_01_02_Tools_slide22_img02.png" alt="Sin control de versiones" style="max-width: 90%; border-radius: 8px;" class="fragment fade-up">
+        <p style="font-size: 0.45em; color: var(--c-text-dim);">La alternativa sin Git — no lo hagas 😅</p>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="text-align:center; margin-top:0.6em;">
+      <img src="img/Clase_01_02_Tools_slide23_img01.png" alt="GitHub" style="max-width: 200px;">
+      <p style="font-size: 0.55em; color: var(--c-text-dim);">Renderiza notebooks de Jupyter, portafolio en línea y trabajo colaborativo — donde entregarás tu capstone.</p>
+    </div>
+    <aside class="notes">Fuente: Clase_01_02_Tools.pptx, slides 22-23. Conecta directamente con "Puntos importantes" de la primera sección.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Resumen: Herramientas</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 720px;">
+        Python + Jupyter como base &rarr; NumPy/Pandas/Matplotlib/Scikit-learn para el análisis &rarr;
+        TensorFlow/Keras/PyTorch para deep learning &rarr; Hugging Face/LangChain/LangGraph para GenAI &rarr;
+        SageMaker para producción &rarr; Git/GitHub para todo el proceso.
+      </p>
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================
+     SECCION 3: CLASE 2 — DATASETS E IDEAS DE PROYECTO
+     (clase2_ejemplos.pptx)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Clase 2: Datasets e Ideas de Proyecto</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">¿Dónde encuentro datos y una buena idea para mi capstone?</p>
+    </div>
+    <aside class="notes">Portada de Clase 2. Fuente: clase2_ejemplos.pptx.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Datasets</h2>
+    <div class="resource-grid">
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">📊</div>
+        <h4>Kaggle</h4>
+        <p>Gran variedad de datasets (CSV, JSON, imágenes) + competencias con soluciones publicadas.</p>
+        <span class="resource-tag">kaggle.com</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">🎓</div>
+        <h4>UCI Machine Learning Repository</h4>
+        <p>Repositorio histórico de datasets etiquetados y limpios — el clásico de la academia.</p>
+        <span class="resource-tag">archive.ics.uci.edu</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">🔎</div>
+        <h4>Google Dataset Search</h4>
+        <p>Índice tipo buscador sobre datasets publicados en distintas fuentes de la web.</p>
+        <span class="resource-tag">datasetsearch.research.google.com</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">🏛️</div>
+        <h4>Data.gov</h4>
+        <p>Portal de datos abiertos del gobierno de EE.UU. (clima, criminalidad, salud, etc).</p>
+        <span class="resource-tag">data.gov</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">🔄</div>
+        <h4>OpenML</h4>
+        <p>Datasets con control de versiones, discusiones abiertas y benchmarking de modelos.</p>
+        <span class="resource-tag">openml.org</span>
+      </div>
+    </div>
+    <aside class="notes">Fuente: clase2_ejemplos.pptx, slides 2-6. Usar cards en vez de screenshots crudos para mantener consistencia visual con el tema oscuro.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ideas y Proyectos</h2>
+    <div class="resource-grid">
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">🏆</div>
+        <h4>Kaggle Competitions</h4>
+        <p>Muy buena fuente de ideas de proyecto — algunas con premios de miles de dólares.</p>
+        <span class="resource-tag">kaggle.com/competitions</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">📄</div>
+        <h4>Papers with Code</h4>
+        <p>Repositorio de papers + datasets + implementaciones de referencia listas para adaptar.</p>
+        <span class="resource-tag">paperswithcode.com</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">👥</div>
+        <h4>AIcrowd</h4>
+        <p>Comunidad y competencias de IA — ideas frescas fuera del circuito de Kaggle.</p>
+        <span class="resource-tag">aicrowd.com</span>
+      </div>
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">🌍</div>
+        <h4>DrivenData</h4>
+        <p>Competencias con enfoque de <strong>impacto social</strong> — buen ángulo para un capstone con propósito.</p>
+        <span class="resource-tag">drivendata.org</span>
+      </div>
+    </div>
+    <aside class="notes">Fuente: clase2_ejemplos.pptx, slides 7-10.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Cuál Uso Según mi Necesidad?</h2>
+    <table style="font-size: 0.62em;">
+      <tr><th>Necesito...</th><th>Uso</th></tr>
+      <tr class="fragment fade-up"><td>Un dataset limpio y clásico para practicar rápido</td><td>UCI ML Repository</td></tr>
+      <tr class="fragment fade-up"><td>Explorar qué existe sobre un tema muy específico</td><td>Google Dataset Search</td></tr>
+      <tr class="fragment fade-up"><td>Datos abiertos de gobierno (clima, salud, criminalidad)</td><td>Data.gov</td></tr>
+      <tr class="fragment fade-up"><td>Comparar cómo le fue a otros con el mismo dataset</td><td>OpenML / Papers with Code</td></tr>
+      <tr class="fragment fade-up"><td>Una idea de proyecto con premio y comunidad activa</td><td>Kaggle Competitions</td></tr>
+      <tr class="fragment fade-up"><td>Que mi capstone tenga impacto social</td><td>DrivenData</td></tr>
+    </table>
+    <aside class="notes">Tabla de síntesis propia para ayudar a decidir por dónde empezar el capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Hacia tu Capstone</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 700px;">
+        Con las herramientas de la Clase 1 y las fuentes de datos e ideas de la Clase 2, ya tienes lo
+        necesario para proponer tu proyecto. La próxima mentoría: definir el problema, el dataset y el
+        primer prototipo.
+      </p>
+    </div>
+    <aside class="notes">Cierre de Clase 2 — conecta con la mentoría de proyecto capstone mencionada en la metodología del curso.</aside>
+  </section>
+</section>
+<!-- ============================================================
+     SECCION 4: BUENAS PRÁCTICAS — EVALUACIÓN DE MODELOS
+     (Copia de Clase_15_Buenas_Practicas_Evaluacion_Intro_naive_bayes.pptx,
+     únicamente la parte de evaluación — slides 2-47; Naive Bayes excluido)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Buenas Prácticas: Evaluación de Modelos</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">¿Qué tan bueno es en realidad tu modelo?</p>
+    </div>
+    <aside class="notes">Fuente: Copia de Clase_15_Buenas_Practicas_Evaluacion_Intro_naive_bayes.pptx (solo la parte de evaluación, slides 2-47).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Por Qué Evaluar?</h2>
+    <p style="font-size: 0.6em;">
+      Ya conocemos ML supervisado, varios algoritmos, y buenas prácticas para mejorar el performance.
+      Pero, <strong style="color: var(--c-yellow);">¿cómo sabemos qué tan bueno es un sistema de ML?</strong>
+      Necesitamos una forma de evaluarlo y reportar los resultados de manera clara.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.58em;">
+      Analogía con el aprendizaje humano: así como usamos exámenes y notas para medir qué tan bien aprendió
+      un estudiante, usamos <strong>métricas de evaluación</strong> para medir qué tan bien "aprendió" un modelo.
+    </p>
+    <div class="comparison fragment fade-up" style="margin-top: 0.6em;">
+      <div class="side">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>Entrenamos con...</strong></p>
+        <p style="font-size: 0.5em;">MSE, cross-entropy — funciones de costo a minimizar, útiles para el optimizador pero poco intuitivas para reportar.</p>
+      </div>
+      <div class="side">
+        <p style="font-size: 0.55em; color: var(--c-green);"><strong>Reportamos y evaluamos con...</strong></p>
+        <p style="font-size: 0.5em;">Accuracy, precision, recall, F1 — métricas entendibles para doctores, gerentes, jueces, clientes...</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.5em;">
+      No le decimos a un doctor "el sistema tiene una entropía-cruzada de 1.12" — le decimos "el sistema acierta el 92% de las veces".
+    </p>
+    <aside class="notes">Fuente: pptx, slides 2-5.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Métricas de Regresión: RMSE</h2>
+    <p style="font-size: 0.58em;">
+      En regresión entrenamos minimizando el MSE. Para <strong>reportar</strong>, sacamos su raíz cuadrada
+      (RMSE) — así el error queda en las mismas unidades que <code>y</code>.
+    </p>
+    <p class="katex-block fragment fade-up">\text{MSE} = \frac{1}{m}\sum_{i=1}^{m}\left(h_\theta(x^{(i)}) - y^{(i)}\right)^2 \qquad \text{RMSE} = \sqrt{\text{MSE}}</p>
+    <div class="fragment fade-up" style="text-align:center; margin-top: 0.5em;">
+      <pre><code class="language-python">import math
+
+MSE = 9000
+print("Error promedio del sistema:", math.sqrt(MSE), "dólares")
+# Error promedio del sistema: 94.87 dólares</code></pre>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.52em; text-align:center; color: var(--c-text-dim);">
+      Ejemplo: un sistema de predicción de precios de casas con MSE=9000 se reporta a gerencia como
+      "en promedio nos equivocamos por ~$95".
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.48em; margin-top: 0.5em;">
+      ⚠️ <strong>Cuidado con la variante ×½:</strong> si entrenaste minimizando
+      <span class="katex-inline">\frac{1}{2m}\sum(h_\theta(x^{(i)})-y^{(i)})^2</span> (muy común, simplifica la derivada),
+      ese valor <strong>no</strong> es el MSE real — multiplícalo por 2 antes de sacar la raíz para obtener el
+      mismo RMSE reportable: <code>RMSE = sqrt(2 * MSE_mitad)</code>.
+    </blockquote>
+    <aside class="notes">Fuente: pptx, slides 6-7. La slide 7 muestra explícitamente el caso con MSE=4500 (versión ×½) llegando al mismo RMSE≈94.87 al multiplicar por 2 antes de la raíz — error común de estudiantes si se olvida este paso.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Clasificación: Accuracy y Error</h2>
+    <div class="columns">
+      <div class="col-50">
+        <p style="font-size: 0.58em;"><strong style="color: var(--c-green);">Accuracy</strong>: qué fracción de predicciones fueron correctas.</p>
+        <p class="katex-block">\text{accuracy} = \frac{\text{aciertos}}{\text{total}}</p>
+      </div>
+      <div class="col-50">
+        <p style="font-size: 0.58em;"><strong style="color: var(--c-red);">Error</strong>: qué fracción fueron incorrectas — el complemento del accuracy.</p>
+        <p class="katex-block">\text{error} = 1 - \text{accuracy}</p>
+      </div>
+    </div>
+    <table class="fragment fade-up" style="font-size: 0.58em; margin-top: 0.4em;">
+      <tr><th>Sistema</th><th>Predicciones</th><th>Correctas</th><th>Accuracy</th></tr>
+      <tr><td>Detección de enfermedad</td><td>8</td><td>3</td><td>0.375</td></tr>
+      <tr><td>Detección de fraude</td><td>100</td><td>65</td><td>0.65</td></tr>
+      <tr><td>Detección de spam</td><td>64</td><td>32</td><td>0.5</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.5em; margin-top: 0.5em;">
+      📝 <strong>Analogía:</strong> en un examen de 100 preguntas falso/verdadero — accuracy es
+      <em>cuántas respuestas obtuviste correctas</em>; error es <em>cuántas fallaste</em>.
+    </blockquote>
+    <aside class="notes">Fuente: pptx, slides 8-10.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Matriz de Confusión</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Eval_slide13_img01.png" alt="Matriz de confusión" style="max-width: 100%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      </div>
+      <div class="col-50">
+        <ul style="font-size: 0.55em;">
+          <li class="fragment fade-up"><strong style="color: var(--c-green);">Verdadero Positivo (TP)</strong>: predice positivo y acierta</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-green);">Verdadero Negativo (TN)</strong>: predice negativo y acierta</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-red);">Falso Positivo (FP)</strong>: predice positivo, era negativo (error tipo 1 / falsa alarma)</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-red);">Falso Negativo (FN)</strong>: predice negativo, era positivo (error tipo 2)</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.48em; margin-top: 0.5em;">
+      📝 <strong>Analogía</strong> (examen falso/verdadero): <strong style="color:var(--c-red);">FP</strong> = la respuesta
+      correcta era "falso" y marcaste "verdadero"; <strong style="color:var(--c-red);">FN</strong> = era "verdadero" y
+      marcaste "falso"; <strong style="color:var(--c-green);">TP/TN</strong> = acertaste marcando "verdadero"/"falso".
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      No todos los errores cuestan igual: en medicina, un falso negativo (no detectar la enfermedad) suele ser
+      más costoso que un falso positivo (un examen de más).
+    </p>
+    <aside class="notes">Fuente: pptx, slides 11-14.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>TP / TN / FP / FN en la Práctica</h2>
+    <p style="font-size: 0.55em;">
+      Un ejemplo real: validación de un modelo de <strong style="color:var(--c-yellow);">detección de armas</strong>
+      en cámaras de seguridad (el mismo caso de uso de la sección de Aplicaciones). Cada imagen tiene un recuadro
+      <strong>punteado</strong> (ground truth, lo que sí había) y uno <strong>sólido</strong> (lo que el modelo predijo).
+    </p>
+    <div style="text-align:center;" class="fragment fade-up">
+      <img src="img/confusion_matrix_weapon_detection.png" alt="Ejemplos de TP, TN, FP y FN en un detector de armas" style="max-width: 92%; border-radius: 10px;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.5em;">
+      El <strong style="color: var(--c-red);">FP</strong> (marcar el rostro de una persona como arma) y el
+      <strong style="color: var(--c-orange);">FN</strong> (no detectar el arma real) están en la <em>misma
+      imagen</em> — el ejemplo perfecto de por qué, en seguridad, no todos los errores cuestan igual.
+    </p>
+    <aside class="notes">
+      Imagen propia, generada a partir de una captura real de un dashboard de validación (Weights &amp; Biases /
+      similar) de un modelo MobileNetV2 de detección de armas. Se recortaron 2 de los 8 paneles originales
+      (el más claro para TP y el más claro para FN+FP) y se sobrepusieron recuadros de color con
+      js/PIL (ver scratchpad) — TP=verde, TN=teal (ejemplo ilustrativo, no viene marcado en el dataset original
+      ya que en detección de objetos casi todo el fondo es "negativo" implícito), FN=naranja, FP=rojo. Conecta
+      directamente con la slide de Computer Vision de la Clase 1 (detección de armas) y con el ejemplo de costo
+      asimétrico de errores que se menciona justo antes de esta slide.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema de los Datasets Desbalanceados</h2>
+    <p style="font-size: 0.56em;">
+      Un dataset <strong style="color: var(--c-yellow);">desbalanceado (skewed)</strong>: las clases no están
+      distribuidas uniformemente. Ahí, el accuracy puede mentir.
+    </p>
+    <div class="columns" style="align-items:center; margin-top: 0.4em;">
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Eval_slide15_img01.png" alt="Detección de parqueos disponibles" style="max-width: 90%; border-radius: 8px;" class="fragment fade-up">
+        <p style="font-size: 0.48em; color: var(--c-text-dim);">1000 parqueos, solo 10 disponibles. Un modelo que <em>siempre</em> dice "ocupado" ya tiene 99% de accuracy.</p>
+      </div>
+      <div class="col-50">
+        <pre class="fragment fade-up"><code class="language-python">def detect_cancer(x1, x2, x3):
+    return 0  # ¡bug! siempre dice "sano"</code></pre>
+        <img src="img/Clase_Eval_slide17_img01.png" alt="Bug detector de cáncer" style="max-width: 100%; border-radius: 6px; margin-top:0.3em;" class="fragment fade-up">
+        <p style="font-size: 0.48em; color: var(--c-text-dim);">Si el 95% de pacientes no tiene cáncer, este bug obtiene 95% de accuracy — y falla en detectar a todos los enfermos.</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 15-17. Este es el motivo por el que necesitamos precision, recall y specificity.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Precision, Recall, Specificity y NPV</h2>
+    <div class="app-grid" style="font-size: 0.85em; grid-template-columns: repeat(4, 1fr);">
+      <div class="app-card fragment fade-up">
+        <div><strong style="color: var(--c-blue);">Precision (PPV)</strong></div>
+        <p class="katex-block" style="font-size: 0.8em;">\frac{TP}{TP+FP}</p>
+        <div class="label">De lo que predije "positivo", ¿qué % en verdad lo era?</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div><strong style="color: var(--c-orange);">Recall (Sensitividad)</strong></div>
+        <p class="katex-block" style="font-size: 0.8em;">\frac{TP}{TP+FN}</p>
+        <div class="label">De los que en verdad eran positivos, ¿qué % detecté?</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div><strong style="color: var(--c-teal);">Specificity</strong></div>
+        <p class="katex-block" style="font-size: 0.8em;">\frac{TN}{TN+FP}</p>
+        <div class="label">De los que en verdad eran negativos, ¿qué % identifiqué?</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div><strong style="color: var(--c-purple);">NPV</strong></div>
+        <p class="katex-block" style="font-size: 0.8em;">\frac{TN}{TN+FN}</p>
+        <div class="label">De lo que predije "negativo", ¿qué % en verdad lo era?</div>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.46em; margin-top: 0.5em;">
+      📝 <strong>Analogía</strong> (examen falso/verdadero, 100 preguntas): <strong style="color:var(--c-blue);">precision</strong> =
+      de todas las que marcaste "verdadero", ¿qué % en verdad lo era? <strong style="color:var(--c-orange);">recall</strong> =
+      de todas las que en verdad eran "verdadero", ¿qué % marcaste como "verdadero"? <strong style="color:var(--c-teal);">specificity</strong>
+      y <strong style="color:var(--c-purple);">NPV</strong> = lo mismo que recall y precision, pero mirando las respuestas "falso"
+      en vez de las "verdadero".
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim);">
+      NPV es menos común de encontrar pre-implementado, pero se calcula igual que precision, solo invirtiendo
+      qué clase se considera "positiva".
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Con el detector de cáncer que siempre dice "sano": accuracy=95%, pero <strong style="color:var(--c-red);">recall = 0</strong>
+      — nunca detecta a un paciente enfermo. El accuracy solo no lo delata; el recall sí.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 18-26 (Precisión/PPV, NPV, Recall/Sensitivity, Specificity).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿De Dónde Vienen estas Fórmulas?</h2>
+    <p style="font-size: 0.55em; text-align:center;">
+      Todas las métricas de clasificación salen de la <strong style="color:var(--c-yellow);">misma tabla 2×2</strong>
+      — solo cambia qué celdas sumas arriba y abajo de la fracción.
+    </p>
+    <div style="text-align:center;" class="fragment fade-up">
+      <img src="img/Clase_Eval_slide27_img01.png" alt="Todas las métricas derivadas de la matriz de confusión" style="max-width: 78%; border-radius: 10px; background: rgba(255,255,255,0.95); padding: 0.4em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      "Test" (filas) = lo que predijo el modelo · "Gold standard" (columnas) = la verdad real
+    </p>
+    <div class="fragment fade-up" style="display:flex; justify-content:center; gap:1.5em; margin-top: 0.6em;">
+      <div style="text-align:center;">
+        <img src="img/Clase_Eval_slide20_img01.png" alt="Precision como fracción del círculo" style="max-height: 110px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.42em; color: var(--c-text-dim);">Precision: la porción verde (TP) de todo lo que prediqué positivo (TP+FP)</p>
+      </div>
+      <div style="text-align:center;">
+        <img src="img/Clase_Eval_slide24_img01.png" alt="Recall como fracción del círculo" style="max-height: 110px; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.42em; color: var(--c-text-dim);">Recall: la porción verde (TP) de todos los positivos reales (TP+FN)</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Fuente: pptx, slides 20, 22, 24, 26 y 27 (Scalë 2016 / material del curso). Estas 5 imágenes existían en
+      el pptx original mostrando visualmente el origen de cada métrica a partir de la matriz de confusión y no
+      se habían incluido en la primera migración — el slide 27 en particular es el resumen maestro: Sensitivity,
+      Specificity, PPV, NPV y Accuracy, las 5 derivadas de la misma tabla 2×2 (Test +/- vs. Gold standard +/-).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Umbral de Decisión</h2>
+    <div class="widget-container">
+      <canvas id="confusion-threshold-canvas" width="620" height="300" style="width:100%; max-width:620px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.5em; flex-wrap:wrap;">
+        <div class="widget-label">Umbral <span class="widget-value" id="confusion-threshold-value">0.50</span>
+          <input type="range" id="confusion-threshold-slider" class="widget-slider" min="0" max="1" step="0.01" value="0.5" style="width:160px; margin-left:0.5em;">
+        </div>
+        <button class="widget-btn confusion-threshold-preset" data-threshold="0">Umbral 0.0</button>
+        <button class="widget-btn confusion-threshold-preset" data-threshold="0.2">Priorizar Recall (medicina)</button>
+        <button class="widget-btn confusion-threshold-preset" data-threshold="0.5">Umbral 0.5</button>
+        <button class="widget-btn confusion-threshold-preset" data-threshold="0.8">Priorizar Precision (legal)</button>
+        <button class="widget-btn confusion-threshold-preset" data-threshold="1">Umbral 1.0</button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:2em; margin-top:0.6em; flex-wrap:wrap;">
+        <div id="confusion-threshold-matrix"></div>
+        <div id="confusion-threshold-metrics" style="min-width:180px;"></div>
+        <div>
+          <div class="widget-label" style="font-size:0.6em; color:var(--c-text-dim); margin-bottom:0.2em;">💰 Impacto de negocio (ejemplo)</div>
+          <div id="confusion-threshold-business" style="min-width:200px;"></div>
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      El umbral no es solo una decisión técnica — es una decisión de negocio. Mueve el umbral y observa cómo
+      cambia el <strong>impacto neto</strong>: no siempre 0.5 es el óptimo.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.5em;">
+      📐 <strong>Casos extremos</strong> — prueba los botones 0.0 / 1.0: con umbral <strong>0.0</strong> el modelo
+      predice "positivo" siempre (recall=1, specificity=0, precisión=línea base). Con umbral <strong>1.0</strong>
+      predice "negativo" siempre (recall=0, precisión=0, specificity=1). Ningún extremo es útil — el punto óptimo
+      vive en medio.
+    </blockquote>
+    <div class="fragment fade-up" style="margin-top: 0.5em; text-align:center;">
+      <table style="font-size: 0.5em; margin: 0 auto;">
+        <tr><th>Umbral</th><th>Falsos Positivos</th><th>Precision</th><th>Recall</th></tr>
+        <tr><td>⬆️ Sube</td><td style="color:var(--c-green);">↓ baja</td><td style="color:var(--c-green);">↑ sube</td><td style="color:var(--c-red);">↓ baja</td></tr>
+        <tr><td>⬇️ Baja</td><td style="color:var(--c-red);">↑ sube</td><td style="color:var(--c-red);">↓ baja</td><td style="color:var(--c-green);">↑ sube</td></tr>
+      </table>
+      <p style="font-size: 0.42em; color: var(--c-text-dim);">Resumen frontera de decisión — tarjeta de referencia rápida</p>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/confusion-threshold-widget.js) — no había un widget interactivo en el pptx
+      original, solo scatter plots estáticos y una tabla fija con 3 umbrales (slides 30-34). El panel de
+      "impacto de negocio" reemplaza esa tabla estática con un cálculo en vivo para cualquier umbral (TP=+$150
+      tratar a tiempo, FP=−$20 examen de más, FN=−$300 paciente sin tratar). Mover el umbral hacia la izquierda
+      sube el recall y baja la precisión; hacia la derecha, al revés. Los botones preset ilustran el trade-off
+      médico/legal discutido en el pptx (slide 35). Los botones 0.0/1.0 y la tarjeta de resumen cubren
+      explícitamente las slides 32 y 47 del pptx (casos extremos del umbral y resumen frontera de decisión).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Precision vs Recall: el Trade-off</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Eval_slide28_img01.png" alt="Comparación de clasificadores A y B" style="max-width: 90%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;" class="fragment fade-up">
+        <p style="font-size: 0.5em; color: var(--c-text-dim);">2 modelos de detección de cáncer — ¿cuál es mejor?</p>
+      </div>
+      <div class="col-50">
+        <ul style="font-size: 0.55em;">
+          <li class="fragment fade-up">Buscamos <strong style="color: var(--c-blue);">precision alta</strong> si un falso positivo es costoso (asustar a un paciente sano, encarcelar a un inocente)</li>
+          <li class="fragment fade-up">Buscamos <strong style="color: var(--c-orange);">recall alto</strong> si un falso negativo es costoso (dejar sin tratar a un enfermo, liberar a un culpable)</li>
+          <li class="fragment fade-up">Subir el umbral &rarr; sube precision, baja recall. Bajarlo &rarr; al revés.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="display:flex; justify-content:center; gap:1em; margin-top:0.3em;">
+      <div style="text-align:center;">
+        <img src="img/Clase_Eval_slide33_img01.png" alt="Frontera de decisión, umbral A" style="max-width: 90%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.42em; color: var(--c-text-dim);">Umbral más laxo</p>
+      </div>
+      <div style="text-align:center;">
+        <img src="img/Clase_Eval_slide33_img02.png" alt="Frontera de decisión, umbral B" style="max-width: 90%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.42em; color: var(--c-text-dim);">Umbral más estricto</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim); margin-top:0.3em;">
+      Mismos clientes, misma pendiente de frontera — solo cambia dónde corta. La frontera de decisión también
+      define qué clientes se consideran "compradores"
+    </p>
+    <div class="comparison fragment fade-up" style="margin-top: 0.5em;">
+      <div class="side">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>⚖️ Precisión alta</strong></p>
+        <p style="font-size: 0.48em;">
+          Un sistema de ML usado por jueces indica si un sospechoso es culpable (y=1). Con precisión alta se
+          evitan falsos positivos: se reduce la cantidad de <strong>inocentes encarcelados</strong> — pero
+          varios culpables podrían salir libres.
+        </p>
+      </div>
+      <div class="side">
+        <p style="font-size: 0.55em; color: var(--c-orange);"><strong>⚖️ Recall alto</strong></p>
+        <p style="font-size: 0.48em;">
+          El mismo sistema con recall alto evita falsos negativos: se reduce la cantidad de
+          <strong>culpables que salen en libertad</strong> — pero varios inocentes podrían ser encarcelados.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 28-35. La tabla estática de impacto de negocio (slide 34) ahora vive de forma dinámica en el widget de la slide anterior. Las 2 imágenes de la slide 33 muestran el mismo dataset con 2 fronteras de decisión distintas — se restauró la comparación lado a lado que es el punto central del slide original. El ejemplo de jueces/culpable-inocente (slide 35 del pptx) se restauró como bloque explícito propio, en vez de solo mencionarlo entre paréntesis.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>F1-Score: un Solo Número</h2>
+    <p style="font-size: 0.58em;">
+      ¿Qué hacemos si ambas métricas importan? El <strong style="color: var(--c-yellow);">F1-score</strong>
+      combina precision y recall en un solo número (su media armónica).
+    </p>
+    <p class="katex-block fragment fade-up">F_1 = 2 \cdot \frac{\text{precision} \cdot \text{recall}}{\text{precision} + \text{recall}}</p>
+    <div style="text-align:center;" class="fragment fade-up">
+      <img src="img/Clase_Eval_slide36_img01.png" alt="F1 score de dos clasificadores" style="max-width: 60%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.5em; color: var(--c-text-dim);">Con precision/recall solos no era obvio cuál modelo ganaba — el F1 sí distingue (A=92.4% vs B=91.0%)</p>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 36.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Métricas en Problemas Multi-clase</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45" style="text-align:center;">
+        <img src="img/Clase_Eval_slide37_img01.png" alt="Métricas por clase" style="max-width: 85%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;" class="fragment fade-up">
+        <p style="font-size: 0.46em; color: var(--c-text-dim);">Opción 1: una instancia de la métrica por cada clase</p>
+      </div>
+      <div class="col-55">
+        <ul style="font-size: 0.55em;">
+          <li class="fragment fade-up"><strong>Opción 1 — por clase:</strong> K clases &rarr; K resultados. Útil si necesitas detalle por clase.</li>
+          <li class="fragment fade-up"><strong>Opción 2 — macro-promedio:</strong> promedia las K métricas en un solo número. Todas las clases pesan igual.</li>
+          <li class="fragment fade-up"><strong>Opción 3 — cálculo global:</strong> junta todos los aciertos/errores sin importar la clase — da más peso a las clases más frecuentes.</li>
+        </ul>
+        <table class="fragment fade-up" style="font-size: 0.55em; margin-top: 0.4em;">
+          <tr><th></th><th>Opción 1</th><th>Opción 2</th></tr>
+          <tr><td>Clase 1</td><td>acc₁ = 1/3</td><td rowspan="3" style="vertical-align:middle;">promedio<br>= (1/3+3/3+1/3)/3<br>= <strong style="color:var(--c-yellow);">0.55</strong></td></tr>
+          <tr><td>Clase 2</td><td>acc₂ = 3/3</td></tr>
+          <tr><td>Clase 3</td><td>acc₃ = 1/3</td></tr>
+        </table>
+        <div class="fragment fade-up" style="display:flex; align-items:center; gap:0.6em; margin-top: 0.4em;">
+          <img src="img/Clase_Eval_slide42_img01.png" alt="Cálculo global, opción 3" style="max-width: 130px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+          <p style="font-size: 0.48em; color: var(--c-text-dim); margin:0;">
+            Opción 3 (global) con precisión: de 5 predicciones "positivo" en total (columna Label=1), 3 acertaron
+            (Ground Truth=1 también) &rarr; precisión = 3/5
+          </p>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 37-43. Ejemplo real de multi-etiqueta médica (pneumonía/masa/edema) de deeplearning.ai; los números del ejemplo de accuracy por clase son del pptx original (slides 38-42); la imagen de Opción 3 es la versión sin etiquetas de categoría (slide 42) usada para el cálculo global.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo Calcularlas en la Práctica</h2>
+    <p style="font-size: 0.58em;">No hace falta implementarlas a mano — <code>scikit-learn</code> ya las provee:</p>
+    <pre class="fragment fade-up"><code class="language-python">from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    confusion_matrix, classification_report
+)
+
+accuracy_score(y_real, y_pred)
+precision_score(y_real, y_pred)
+recall_score(y_real, y_pred)
+f1_score(y_real, y_pred)
+confusion_matrix(y_real, y_pred)
+print(classification_report(y_real, y_pred))  # resumen completo</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      TensorFlow también expone estas métricas en <code>tf.metrics</code> para usarlas durante el entrenamiento.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.55em; margin-top: 0.5em;">Ejemplo real (3 clases, 5 predicciones) con <code>classification_report</code>:</p>
+    <pre class="fragment fade-up"><code class="language-python">>>> from sklearn.metrics import classification_report
+>>> y_true = [0, 1, 2, 2, 2]
+>>> y_pred = [0, 0, 2, 2, 1]
+>>> print(classification_report(y_true, y_pred, target_names=['class 0','class 1','class 2']))
+              precision   recall   f1-score   support
+
+     class 0       0.50     1.00       0.67        1
+     class 1       0.00     0.00       0.00        1
+     class 2       1.00     0.67       0.80        3
+
+avg / total       0.70     0.60       0.61        5</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align:center; color: var(--c-text-dim);">
+      <code>class 1</code> tiene precision y recall en <strong style="color:var(--c-red);">0.00</strong> — el modelo
+      nunca acertó esa clase (la confundió con <code>class 2</code>). Un vistazo al reporte lo delata de inmediato.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 44-45. El ejemplo numérico (y_true/y_pred y su salida real) es del pptx original, slide 44 — se agregó tras auditoría, antes solo estaba el código genérico sin ejecutar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Resumen: Cheat-Sheet de Métricas</h2>
+    <table style="font-size: 0.56em;">
+      <tr><th>Métrica</th><th>Pregunta que responde</th></tr>
+      <tr class="fragment fade-up"><td>Accuracy</td><td>¿Qué % de predicciones fueron correctas?</td></tr>
+      <tr class="fragment fade-up"><td>Precision (PPV)</td><td>De lo que predije positivo, ¿qué % lo era en verdad?</td></tr>
+      <tr class="fragment fade-up"><td>Recall / Sensitividad</td><td>De los positivos reales, ¿qué % detecté?</td></tr>
+      <tr class="fragment fade-up"><td>Specificity</td><td>De los negativos reales, ¿qué % identifiqué?</td></tr>
+      <tr class="fragment fade-up"><td>F1-score</td><td>¿Cómo resumo precision y recall en un solo número?</td></tr>
+      <tr class="fragment fade-up"><td>RMSE</td><td>(Regresión) ¿cuál es mi error típico, en unidades de y?</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.6em;">
+      Falta una pieza: todas estas métricas dependen de <strong>un</strong> umbral fijo. ¿Cómo comparamos
+      modelos sin comprometernos a un solo umbral? &rarr; <strong style="color: var(--c-yellow);">curva ROC/AUC</strong>
+    </p>
+    <aside class="notes">Fuente: pptx, slides 46-47.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Curva ROC: el Resumen de Todos los Umbrales</h2>
+    <p style="font-size: 0.58em;">
+      Cada métrica que vimos depende de <strong style="color:var(--c-yellow);">un</strong> umbral elegido. La
+      curva <strong>ROC</strong> (Receiver Operating Characteristic) resuelve esto graficando, para
+      <em>todos</em> los umbrales posibles a la vez:
+    </p>
+    <div class="app-grid" style="font-size: 0.85em; grid-template-columns: repeat(2, 1fr);">
+      <div class="app-card fragment fade-up">
+        <div><strong style="color: var(--c-blue);">Eje Y: True Positive Rate</strong></div>
+        <p class="katex-block" style="font-size: 0.8em;">TPR = \frac{TP}{TP+FN}</p>
+        <div class="label">Es exactamente el <strong>recall</strong> que ya conoces</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div><strong style="color: var(--c-orange);">Eje X: False Positive Rate</strong></div>
+        <p class="katex-block" style="font-size: 0.8em;">FPR = \frac{FP}{FP+TN} = 1-\text{specificity}</p>
+        <div class="label">El complemento de la <strong>specificity</strong></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align:center; margin-top: 0.5em;">
+      Cada punto de la curva = (FPR, TPR) para <strong>un</strong> umbral distinto. Barremos el umbral de 1 a 0
+      y trazamos el recorrido completo.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.48em; margin-top: 0.4em;">
+      💡 <strong>AUC (Area Under the Curve):</strong> el área bajo esa curva, un solo número entre 0.5 y 1.0 que
+      resume qué tan bien el modelo <em>ordena</em> los positivos por encima de los negativos —
+      independientemente del umbral que termines usando en producción.
+    </blockquote>
+    <aside class="notes">Fuente: pptx, slide 47 (mencionado como ejercicio) — contenido de concepto desarrollado para esta unidad, ya no como tarea sino como tema del curso.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Curva ROC</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-60">
+        <div class="widget-container">
+          <canvas id="roc-curve-canvas" width="420" height="320" style="width:100%; max-width:420px; display:block; margin:0 auto;"></canvas>
+          <div style="display:flex; justify-content:center; align-items:center; margin-top:0.5em;">
+            <div class="widget-label">Umbral <span class="widget-value" id="roc-curve-threshold-value">0.50</span>
+              <input type="range" id="roc-curve-threshold-slider" class="widget-slider" min="0" max="1" step="0.01" value="0.5" style="width:160px; margin-left:0.5em;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-40">
+        <div id="roc-curve-info"></div>
+        <p style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.6em;">
+          Mismo dataset de 32 pacientes del widget de umbral. Mueve el slider: el punto amarillo recorre la
+          curva — es el mismo par (FPR, TPR) que ya calculabas antes, ahora ubicado en su curva completa.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/roc-curve-widget.js) — reutiliza el mismo dataset sintético del widget de
+      umbral de decisión para que el estudiante conecte ambos conceptos: el punto que movía en la matriz de
+      confusión es un solo punto sobre esta curva. El área sombreada bajo la curva es el AUC, calculado por
+      la regla del trapecio sobre los pares (FPR, TPR) de cada umbral posible.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Interpretando el AUC</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-50">
+        <table style="font-size: 0.58em;">
+          <tr><th>AUC</th><th>Interpretación</th></tr>
+          <tr class="fragment fade-up"><td>1.0</td><td style="color:var(--c-green);">Perfecto (caso ideal, raro en la práctica)</td></tr>
+          <tr class="fragment fade-up"><td>0.9 – 1.0</td><td style="color:var(--c-green);">Excelente</td></tr>
+          <tr class="fragment fade-up"><td>0.8 – 0.9</td><td style="color:var(--c-teal);">Bueno</td></tr>
+          <tr class="fragment fade-up"><td>0.7 – 0.8</td><td style="color:var(--c-orange);">Aceptable</td></tr>
+          <tr class="fragment fade-up"><td>0.5 – 0.7</td><td style="color:var(--c-red);">Pobre</td></tr>
+          <tr class="fragment fade-up"><td>0.5</td><td style="color:var(--c-text-dim);">Igual que adivinar al azar</td></tr>
+        </table>
+        <p class="fragment fade-up" style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.5em;">
+          ⚠️ Con datasets muy desbalanceados (recuerda el ejemplo de los parqueos), el AUC puede verse
+          optimista — ahí conviene revisar también la curva <strong>precision-recall</strong>.
+        </p>
+      </div>
+      <div class="col-50">
+        <pre><code class="language-python">from sklearn.metrics import roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
+
+fpr, tpr, thresholds = roc_curve(y_real, y_score)
+auc = roc_auc_score(y_real, y_score)
+
+plt.plot(fpr, tpr, label=f"AUC = {auc:.3f}")
+plt.plot([0, 1], [0, 1], "--", color="gray")  # azar
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend()
+plt.show()</code></pre>
+        <p class="fragment fade-up" style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.3em;">
+          <code>y_score</code> son las probabilidades predichas (no las clases 0/1) — ROC/AUC necesita el
+          score continuo para poder barrer todos los umbrales.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Contenido nuevo de esta unidad (tema de curso, ya no tarea). Tabla de rangos de interpretación es una convención de la industria, no viene literal del pptx original.</aside>
+  </section>
+</section>
+
+<!-- ============================================================
+     SECCION 5: BUENAS PRÁCTICAS — TRAIN/TEST SPLIT,
+     OVERFITTING Y UNDERFITTING
+     (Copia de Clase_16_Buenas_Practicas_Train_test_Split.pptx)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Buenas Prácticas: Train/Test Split</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">¿Tu modelo aprendió, o solo memorizó?</p>
+    </div>
+    <aside class="notes">Fuente: Copia de Clase_16_Buenas_Practicas_Train_test_Split.pptx.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Antes de Actuar, Diagnostica</h2>
+    <p style="font-size: 0.58em;">
+      Ya sabemos evaluar y comparar modelos. Pero si el rendimiento no es aceptable,
+      <strong style="color: var(--c-yellow);">¿qué hacemos?</strong> Hay muchas acciones posibles — el reto
+      es saber cuál conviene.
+    </p>
+    <div class="app-grid fragment fade-up">
+      <div class="app-card"><div class="icon">📈</div><div class="label">Conseguir más datos (más observaciones)</div></div>
+      <div class="app-card"><div class="icon">🧩</div><div class="label">Conseguir más features</div></div>
+      <div class="app-card"><div class="icon">✂️</div><div class="label">Usar menos features (feature selection)</div></div>
+      <div class="app-card"><div class="icon">➗</div><div class="label">Agregar features polinomiales</div></div>
+      <div class="app-card"><div class="icon">⚖️</div><div class="label">Agregar / reducir regularización</div></div>
+      <div class="app-card"><div class="icon">🔀</div><div class="label">Usar un modelo distinto</div></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align:center; color: var(--c-text-dim); margin-top: 0.5em;">
+      Sin <strong>diagnóstico</strong> (ML debugging), elegir entre estas opciones es adivinar — y adivinar
+      puede costar meses de trabajo en la dirección equivocada.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 2-4.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Aprender vs. Memorizar</h2>
+    <p style="font-size: 0.58em;">
+      El objetivo de un modelo no es acertar en los datos que ya vio — es <strong style="color: var(--c-yellow);">generalizar</strong>
+      a datos nuevos que nunca observó durante el entrenamiento.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.56em;">
+      Analogía: un estudiante de matemáticas aprende con ejemplos, pero el objetivo es que resuelva
+      <em>problemas nuevos</em> en el examen — no que memorice las respuestas de los ejercicios de clase.
+    </p>
+    <div class="comparison fragment fade-up" style="margin-top: 0.5em;">
+      <div class="side incorrect">
+        <p style="font-size: 0.55em; color: var(--c-red);"><strong>❌ Memorizar y repetir</strong></p>
+        <p style="font-size: 0.5em;">Entrenar y evaluar con el mismo dataset — es como estudiar los ejemplos y tener esos mismos ejemplos en el examen.</p>
+      </div>
+      <div class="side correct">
+        <p style="font-size: 0.55em; color: var(--c-green);"><strong>✅ Aprender y generalizar</strong></p>
+        <p style="font-size: 0.5em;">Evaluar con datos que el modelo nunca vio — el verdadero examen.</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 5-8.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>División Train / Test</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-55" style="text-align:center;">
+        <img src="img/Clase_Split_slide10_img01.png" alt="División train/test" style="max-width: 100%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+        <p style="font-size: 0.45em; color: var(--c-text-dim);">Crédito: Andrew Ng</p>
+      </div>
+      <div class="col-45">
+        <ul style="font-size: 0.55em;">
+          <li class="fragment fade-up"><strong style="color: var(--c-blue);">Training-set</strong>: se usa para entrenar el modelo</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-red);">Test-set</strong>: se oculta durante el entrenamiento; se usa solo para evaluar qué tan bien generaliza</li>
+        </ul>
+        <p class="fragment fade-up" style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 0.4em;">
+          La separación debe ser <strong>aleatoria</strong> (no por orden) y de preferencia
+          <strong>estratificada</strong>: si el dataset original tiene 65%/35% entre clases, train-set y
+          test-set deben mantener esa misma proporción.
+        </p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.5em; margin-top: 0.5em;">
+      📝 <strong>Analogía:</strong> el profesor tiene un libro con 10 problemas. Estudiamos (aprendemos) con 7
+      de ellos — el profesor oculta los otros 3, que usará en el examen para evaluar qué tanto
+      <em>aprendimos</em> (en lugar de qué tanto memorizamos los 7 ya vistos).
+    </blockquote>
+    <aside class="notes">Fuente: pptx, slides 9-11.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Métricas: Train vs. Test</h2>
+    <p style="font-size: 0.56em;">
+      Con 2 datasets, cada métrica tiene ahora 2 versiones — <strong>train-accuracy/test-accuracy</strong>,
+      <strong>train-MSE/test-MSE</strong>, y así con el resto de métricas que ya conoces.
+    </p>
+    <table class="fragment fade-up" style="font-size: 0.58em;">
+      <tr><th>Modelo</th><th>Train Accuracy</th><th>Test Accuracy</th><th>Train Precision</th><th>Test Precision</th></tr>
+      <tr><td>A</td><td>0.90</td><td style="color:var(--c-green);">0.92</td><td>0.55</td><td>0.52</td></tr>
+      <tr><td>B</td><td>0.90</td><td style="color:var(--c-red);">0.80</td><td>0.60</td><td>0.65</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align:center; color: var(--c-text-dim);">
+      Mismo train-accuracy (0.90) en ambos — pero el modelo B generaliza peor: su test-accuracy cae a 0.80.
+      El train-accuracy solo no distingue esto; hay que mirar siempre el par train/test.
+    </p>
+    <div class="columns fragment fade-up" style="align-items:center; margin-top: 0.6em;">
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Split_slide13_img01.png" alt="Reprobado en el examen real" style="max-height: 110px; border-radius: 8px;">
+        <p style="font-size: 0.48em; color: var(--c-text-dim);">Buena nota en los ejercicios de práctica (train)...</p>
+      </div>
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Split_slide13_img02.png" alt="Buen resultado esperado" style="max-height: 110px; border-radius: 8px;">
+        <p style="font-size: 0.48em; color: var(--c-text-dim);">...pero lo que de verdad importa es el examen real (test)</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 12-13.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Qué Tan Bueno es "Suficientemente Bueno"?</h2>
+    <p style="font-size: 0.56em;">Necesitamos una referencia contra la cual comparar el rendimiento del test-set.</p>
+    <blockquote class="fragment fade-up" style="font-size: 0.5em;">
+      📝 <strong>Analogía:</strong> así como necesitamos una <em>nota mínima de aprobación</em> para concluir
+      que sí aprendimos una materia, un modelo necesita una referencia mínima para considerarse "bueno".
+    </blockquote>
+    <div class="resource-grid" style="font-size: 0.65em;">
+      <div class="resource-card fragment fade-up"><h4>Nivel humano</h4><p>Si un médico diagnostica con 85% de exactitud, buscamos que el sistema alcance al menos ese nivel.</p></div>
+      <div class="resource-card fragment fade-up"><h4>Mejor que el azar</h4><p>Sin expertos humanos de referencia, comparamos contra una selección aleatoria.</p></div>
+      <div class="resource-card fragment fade-up"><h4>Requisito explícito</h4><p>El negocio define la meta: "necesitamos 90% de exactitud para este caso de uso".</p></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.6em;">
+      Ningún sistema llega a 100% — el <strong style="color: var(--c-purple);">error de Bayes</strong> es el
+      límite teórico de error que ni el mejor modelo posible puede eliminar (ruido inherente al problema).
+      Pasado ese punto, seguir optimizando ya no vale la pena.
+    </p>
+    <div class="fragment fade-up" style="text-align:center; margin-top:0.4em;">
+      <img src="img/Clase_Split_slide14_img01.png" alt="Bayes Error Rate vs Human-level accuracy vs mi modelo" style="max-width: 60%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.44em; color: var(--c-text-dim);">Mi modelo mejora con el tiempo y se acerca asintóticamente al error de Bayes — nunca lo cruza</p>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 14.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>En la Práctica: <code>scikit-learn</code></h2>
+    <pre><code class="language-python">from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,       # 20% para test
+    stratify=y,          # mantiene la proporción de clases
+    random_state=42       # reproducibilidad
+)</code></pre>
+    <aside class="notes">Fuente: pptx, slide 15 (referencia a la documentación de sklearn.model_selection.train_test_split).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Diagnóstico de ML: 2 Problemas Comunes</h2>
+    <p style="font-size: 0.58em; text-align:center;">
+      Si el rendimiento en test es malo, casi siempre es por uno de estos dos motivos
+      (o ambos) — y cada uno tiene una <strong>acción correctiva distinta</strong>.
+    </p>
+    <div class="flow-row fragment fade-up" style="margin-top: 0.8em;">
+      <div class="flow-node" style="border-color: rgba(255,134,47,0.5); background: rgba(255,134,47,0.08);">
+        <span class="flow-icon">📉</span><strong style="color: var(--c-orange);">Underfitting</strong><br>alto sesgo (bias)
+      </div>
+      <div class="flow-node" style="border-color: rgba(252,98,85,0.5); background: rgba(252,98,85,0.08);">
+        <span class="flow-icon">📈</span><strong style="color: var(--c-red);">Overfitting</strong><br>alta varianza
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.6em;">
+      Analogía: ¿qué pasa si reprobamos el examen con ejercicios nuevos? Antes de "estudiar más" a ciegas,
+      hay que entender <em>por qué</em> fallamos.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 16-17.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Overfitting (Sobre-ajuste)</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-50">
+        <p style="font-size: 0.56em;">
+          Buen rendimiento en <strong style="color:var(--c-blue);">train</strong>, mal rendimiento en
+          <strong style="color:var(--c-red);">test</strong> — el modelo <em>memorizó</em> en vez de aprender el patrón.
+        </p>
+        <p class="fragment fade-up" style="font-size: 0.52em; margin-top: 0.4em;">Ocurre más con:</p>
+        <ul class="fragment fade-up" style="font-size: 0.52em;">
+          <li>Polinomios de alto grado</li>
+          <li>Demasiadas features</li>
+          <li>Redes con muchas capas/neuronas</li>
+          <li>Pocos datos de entrenamiento</li>
+          <li>Entrenar demasiado tiempo</li>
+        </ul>
+      </div>
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Split_slide19_img01.png" alt="Overfitting" style="max-width: 85%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;" class="fragment fade-up">
+        <p style="font-size: 0.46em; color: var(--c-text-dim);">La curva verde persigue cada punto en vez de seguir el patrón (la curva negra)</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.5em; margin-top: 0.5em;">
+      📝 <strong>Analogía:</strong> memorizamos de principio a fin los ejercicios vistos en clase, sin entender
+      la esencia del tema — nos va perfecto en un examen que repite esos mismos ejercicios, pero fallamos con
+      ejercicios nuevos.
+    </blockquote>
+    <div class="fragment fade-up" style="text-align:center; margin-top:0.6em;">
+      <img src="img/overfitting_training_curves_real.png" alt="Curvas de val/loss de 4 corridas de entrenamiento reales" style="max-width: 78%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.44em; color: var(--c-text-dim);">
+        En la práctica: 4 corridas del mismo detector de armas (dashboard real de entrenamiento). El
+        <strong style="color:var(--c-orange);">val/class_predictions_loss</strong> de 2 de las 4 corridas
+        <strong>vuelve a subir</strong> después del step ~20 — el modelo sigue mejorando en train, pero empieza
+        a memorizar en vez de generalizar. Las otras 2 corridas (regularizadas/afinadas distinto) no lo hacen.
+      </p>
+    </div>
+    <aside class="notes">
+      Fuente: pptx, slides 18-19 (analogía y definición) + imagen real aportada por el usuario, no del pptx —
+      mismo modelo MobileNetV2 de detección de armas usado en la slide de TP/TN/FP/FN, dando continuidad al
+      caso de uso real del curso. La curva "val/loss" combinada plana/creciente y el "val/class_predictions_loss"
+      claramente creciente en 2 de las 4 corridas son la firma clásica de overfitting vista en un dashboard de
+      entrenamiento real (tipo Weights &amp; Biases), no en un ejemplo sintético de juguete.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Overfitting en la Práctica: Train vs. Val</h2>
+    <p style="font-size: 0.55em; text-align:center;">
+      Aún más directo: graficar <strong style="color: var(--c-blue);">train</strong> (línea sólida) y
+      <strong style="color: var(--c-orange);">val</strong> (línea punteada) <em>del mismo modelo</em> en la misma
+      gráfica. La brecha entre ambas <strong style="color:var(--c-yellow);">es</strong> el overfitting.
+    </p>
+    <div style="text-align:center;" class="fragment fade-up">
+      <img src="img/overfitting_train_vs_val_curves_real.png" alt="Curvas train vs val de 5 métricas, mismo modelo, 2 corridas" style="max-width: 82%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      En las 5 métricas (<code>AR_medium</code>, <code>AR_small</code>, <code>box_predictions_loss</code>,
+      <code>class_predictions_loss</code>, <code>loss</code>) el patrón se repite: el <strong>train</strong>
+      (sólida) sigue mejorando toda la corrida, mientras el <strong>val</strong> (punteada) se estanca desde muy
+      temprano — la brecha nunca se cierra. Exactamente lo que predice la tabla de "Diagnosticar sin Graficar":
+      train error bajo + test error alto = overfitting.
+    </p>
+    <aside class="notes">
+      Imagen real aportada por el usuario (mismo dashboard/modelo de detección de armas que las 2 slides
+      anteriores). A diferencia de la imagen previa (que comparaba val/loss entre 4 corridas distintas), esta
+      compara train vs. val <em>dentro de la misma corrida</em> — es la forma más directa de ver overfitting:
+      no hace falta comparar entre modelos, solo mirar si las 2 líneas convergen o se separan.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Underfitting (Bajo Ajuste)</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-50">
+        <p style="font-size: 0.56em;">
+          Mal rendimiento tanto en <strong style="color:var(--c-blue);">train</strong> como en
+          <strong style="color:var(--c-red);">test</strong> — el modelo ni siquiera capturó el patrón de los datos.
+        </p>
+        <p class="fragment fade-up" style="font-size: 0.52em; margin-top: 0.4em;">Ocurre más con:</p>
+        <ul class="fragment fade-up" style="font-size: 0.52em;">
+          <li>Polinomios de bajo grado (línea recta para datos curvos)</li>
+          <li>Muy pocas features</li>
+          <li>Redes con pocas capas/neuronas</li>
+          <li>Entrenar muy poco tiempo</li>
+        </ul>
+      </div>
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Split_slide21_img01.png" alt="Underfitting" style="max-width: 75%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;" class="fragment fade-up">
+        <img src="img/Clase_Split_slide22_img01.png" alt="Underfitting en regresión" style="max-width: 75%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em; margin-top: 0.4em;" class="fragment fade-up">
+        <p style="font-size: 0.46em; color: var(--c-text-dim);">Una línea recta no captura un patrón curvo</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.5em; margin-top: 0.5em;">
+      📝 <strong>Analogía:</strong> no logramos entender ni absorber el patrón de un tema nuevo, pero tampoco
+      lo memorizamos — así que nos va mal incluso con los mismos ejercicios ya vistos en clase.
+    </blockquote>
+    <aside class="notes">Fuente: pptx, slides 20-22.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Diagnosticar sin Graficar</h2>
+    <p style="font-size: 0.56em;">
+      Con más de 2 features no podemos graficar los datos — pero <strong style="color:var(--c-yellow);">comparar
+      el error de train contra el de test</strong> nos da el diagnóstico igual:
+    </p>
+    <table class="fragment fade-up" style="font-size: 0.6em; margin-top: 0.5em;">
+      <tr><th>Diagnóstico</th><th>Train Error</th><th>Test Error</th></tr>
+      <tr><td style="color: var(--c-green);">Buen ajuste</td><td>Bajo</td><td>Bajo</td></tr>
+      <tr><td style="color: var(--c-orange);">Underfitting (sesgo)</td><td>Alto</td><td>Alto</td></tr>
+      <tr><td style="color: var(--c-red);">Overfitting (varianza)</td><td>Bajo</td><td>Alto</td></tr>
+    </table>
+    <div class="fragment fade-up" style="display:flex; justify-content:center; gap:1em; margin-top:0.6em;">
+      <div style="text-align:center;">
+        <img src="img/Clase_Split_slide21_img01.png" alt="Underfitting" style="max-height: 110px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.42em; color: var(--c-orange);">Underfitting</p>
+      </div>
+      <div style="text-align:center;">
+        <img src="img/Clase_Split_slide21_img02.png" alt="Ajuste adecuado" style="max-height: 110px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.42em; color: var(--c-green);">Ajuste adecuado</p>
+      </div>
+      <div style="text-align:center;">
+        <img src="img/Clase_Split_slide19_img01.png" alt="Overfitting" style="max-height: 110px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.42em; color: var(--c-red);">Overfitting</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 23-24. Overfitting: modelos muy complejos. Underfitting: modelos muy simples. Comparación visual de 3 paneles armada con imágenes del pptx (slide 21 tenía las dos primeras sin usar).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Complejidad del Modelo</h2>
+    <div class="widget-container">
+      <canvas id="bias-variance-canvas" width="640" height="300" style="width:100%; max-width:640px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.5em; flex-wrap:wrap;">
+        <div class="widget-label">Grado del polinomio <span class="widget-value" id="bias-variance-degree-value">3</span>
+          <input type="range" id="bias-variance-slider" class="widget-slider" min="1" max="10" step="1" value="3" style="width:160px; margin-left:0.5em;">
+        </div>
+        <div id="bias-variance-info" style="min-width:220px;"></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Sube el grado: el train error baja siempre, pero el test error baja... y luego vuelve a subir. Ese es
+      el punto donde el modelo dejó de aprender el patrón y empezó a memorizar el ruido.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/bias-variance-widget.js) — visualiza en vivo las slides 18-25 del pptx
+      (overfitting/underfitting + la curva de error vs. complejidad de Andrew Ng). Ajusta un polinomio real
+      por mínimos cuadrados sobre un dataset fijo train/test.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Curvas de Aprendizaje vs. Iteraciones</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Split_slide26_img01.png" alt="Loss vs iteraciones" style="max-width: 90%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;" class="fragment fade-up">
+        <p style="font-size: 0.46em; color: var(--c-text-dim);">Error vs. iteraciones/epochs</p>
+      </div>
+      <div class="col-50">
+        <p class="fragment fade-up" style="font-size: 0.55em;">
+          También podemos graficar el error como función de las <strong>iteraciones de entrenamiento</strong>:
+          otra forma de ver el mismo diagnóstico de underfitting/overfitting, útil cuando el modelo se
+          entrena de forma iterativa (redes neuronales, gradient boosting).
+        </p>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="text-align:center; margin-top:0.5em;">
+      <img src="img/Clase_Split_slide26_img02.png" alt="Training vs Test-Set Performance" style="max-width: 40%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.42em; color: var(--c-text-dim);">El mismo patrón bias/varianza que exploraste en el widget de complejidad, visto en su forma clásica de libro de texto</p>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 26 (2 imágenes en la misma slide original).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Curva de Aprendizaje vs. Tamaño del Dataset</h2>
+    <p style="font-size: 0.56em;">
+      Al inicio de esta unidad vimos "conseguir más datos" como una de las 6 acciones posibles. Esta curva
+      responde esa pregunta directamente: <strong style="color:var(--c-yellow);">¿realmente ayudaría?</strong>
+    </p>
+    <div class="widget-container">
+      <canvas id="learning-curve-canvas" width="620" height="270" style="width:100%; max-width:620px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.6em; margin-top:0.5em; flex-wrap:wrap;">
+        <button class="widget-btn learning-curve-scenario-btn active" data-scenario="bias">Alto Sesgo</button>
+        <button class="widget-btn learning-curve-scenario-btn" data-scenario="variance">Alta Varianza</button>
+        <button class="widget-btn learning-curve-scenario-btn" data-scenario="ideal">Balance Ideal</button>
+        <div class="widget-label">m <span class="widget-value" id="learning-curve-m-value">100</span>
+          <input type="range" id="learning-curve-m-slider" class="widget-slider" min="2" max="200" step="1" value="100" style="width:120px; margin-left:0.5em;">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:2em; margin-top:0.5em; flex-wrap:wrap;">
+        <div id="learning-curve-info" style="min-width:190px;"></div>
+        <div id="learning-curve-verdict" style="max-width:260px; font-size:0.52em; color:var(--c-text-dim);"></div>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="display:flex; justify-content:center; gap:0.8em; margin-top:0.6em; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <img src="img/Clase_Split_slide27_img01.png" alt="High bias / ideal / high variance" style="max-height: 90px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">stackoverflow.com</p>
+      </div>
+      <div style="text-align:center;">
+        <img src="img/Clase_Split_slide28_img01.png" alt="Learning curve, Chris Albon" style="max-height: 90px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">chrisalbon.com</p>
+      </div>
+      <div style="text-align:center;">
+        <img src="img/Clase_Split_slide29_img01.png" alt="High bias / high variance / good trade-off" style="max-height: 90px; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">sebastianraschka.com</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/learning-curve-widget.js) — el pptx original dedicaba 3 slides (27-29) a este
+      tema pero solo con referencias externas (stackoverflow, chrisalbon, sebastianraschka), sin ejemplo
+      interactivo. El widget deja explorar en vivo los 3 patrones clásicos y da un veredicto accionable sobre
+      si conseguir más datos ayudaría — cierre práctico de la pregunta planteada al inicio de la clase.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Hacia la Selección de Modelos</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 720px;">
+        Ya sabemos diagnosticar. Pero con tantos modelos e hiperparámetros disponibles
+        (regresión lineal/polinomial, árboles, k-NN, regresión logística, SVM...), elegir el mejor a ojo —
+        o solo con una gráfica — deja de ser posible en más de 2 dimensiones. Necesitamos un método
+        <strong style="color: var(--c-yellow);">numérico y sistemático</strong> de selección de modelos.
+      </p>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 30-31 (cierre del pptx original — el método de selección de modelos con validation set queda para la siguiente unidad de buenas prácticas).</aside>
+  </section>
+</section>
+
+<!-- ============================================================
+     SECCION 6: BUENAS PRÁCTICAS — REGULARIZACIÓN
+     (Copia de Clase_17_Buenas_Practicas_Regularización.pptx)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Buenas Prácticas: Regularización</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">Cómo atacar el overfitting sin tirar información a la basura</p>
+    </div>
+    <aside class="notes">Fuente: Copia de Clase_17_Buenas_Practicas_Regularización.pptx.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Recapitulando y la Pregunta de Hoy</h2>
+    <p style="font-size: 0.58em;">En la clase anterior aprendimos a diagnosticar. Hoy respondemos 2 preguntas:</p>
+    <div class="app-grid fragment fade-up">
+      <div class="app-card"><div class="icon">🛡️</div><div class="label">¿Cómo atacamos el <strong>overfitting</strong>? (regularización)</div></div>
+      <div class="app-card"><div class="icon">🎯</div><div class="label">¿Cómo seleccionamos el <strong>mejor modelo</strong> para un problema dado?</div></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.6em;">
+      Train/test split, overfitting/underfitting y ML debugging ya están en tu caja de herramientas — hoy
+      agregamos las técnicas para <em>corregir</em> lo que el diagnóstico revela.
+    </p>
+    <aside class="notes">Fuente: pptx, slide 2.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Underfitting y Overfitting en Regresión</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Reg_slide03_img01.png" alt="Underfitting, buen ajuste y overfitting en regresión" style="max-width: 92%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin: 0.5em 0;">Regresión: grado del polinomio — de subajustado (línea) a sobreajustado (curva exagerada)</p>
+    <p style="font-size: 0.52em; text-align:center; color: var(--c-text-dim);">Ambos problemas afectan tanto a regresión como a clasificación.</p>
+    <aside class="notes">Fuente: pptx, slide 3. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Underfitting y Overfitting en Clasificación</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Reg_slide04_img01.png" alt="Underfitting, buen ajuste y overfitting en clasificación" style="max-width: 88%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top:0.5em;">Misma idea, ahora con la frontera de decisión: de una línea recta (underfit) a una frontera que persigue cada punto (overfit)</p>
+    <aside class="notes">Fuente: pptx, slide 4. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Primera Idea: Reducir Features</h2>
+    <p style="font-size: 0.58em;">
+      El overfitting está asociado a modelos muy complejos (muchas features). Es natural pensar:
+      <strong style="color: var(--c-yellow);">si reducimos features, reducimos el overfitting.</strong>
+    </p>
+    <div class="comparison fragment fade-up" style="margin-top: 0.5em;">
+      <div class="side">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>Manual</strong></p>
+        <p style="font-size: 0.5em;">Elegir a mano qué features usar y cuáles desechar — con conocimiento de dominio, análisis exploratorio o correlación entre variables.</p>
+      </div>
+      <div class="side">
+        <p style="font-size: 0.55em; color: var(--c-teal);"><strong>Automática</strong></p>
+        <p style="font-size: 0.5em;">Un algoritmo de selección de modelos decide — lo veremos en la próxima sección.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.48em; margin-top: 0.5em;">
+      ⚠️ Desechar features es también desechar <strong>información</strong> del problema — no siempre podemos
+      darnos ese lujo.
+    </blockquote>
+    <aside class="notes">Fuente: pptx, slides 5-6.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Una Mejor Idea: Regularización</h2>
+    <p style="font-size: 0.6em;">
+      Para modelos que <em>necesitan</em> ser complejos (muchas features) y no hay suficiente data:
+      <strong style="color: var(--c-yellow);">regularización.</strong>
+    </p>
+    <ul class="fragment fade-up" style="font-size: 0.56em;">
+      <li>No es un algoritmo — es <strong>cualquier técnica</strong> cuyo fin es atacar el overfitting</li>
+      <li>Reduce la <strong>magnitud</strong> de cada parámetro θ (no elimina features, reduce su aporte)</li>
+      <li>Funciona bien cuando hay muchas features, pero cada una contribuye poco a predecir <code>y</code></li>
+      <li>Genera hipótesis <strong>menos complejas</strong> → menos riesgo de overfitting</li>
+    </ul>
+    <aside class="notes">Fuente: pptx, slide 7.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Intuición: Penalizar Magnitudes Grandes</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Reg_slide14_img01.png" alt="Regularización suaviza la curva sobreajustada" style="max-width: 80%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.54em; text-align:center; margin-top: 0.4em;">
+      Penalizar los parámetros θ por ser grandes obliga a <strong>gradient descent</strong> a buscar valores
+      pequeños — la curva sobreajustada (azul) se "relaja" hacia el patrón real (rosa).
+    </p>
+    <aside class="notes">Fuente: pptx, slides 8-9, 14. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ejemplo: Penalizar θ₃ y θ₄</h2>
+    <p style="font-size: 0.56em;">
+      ¿Cómo penalizamos matemáticamente un parámetro grande? Agregando su valor (al cuadrado) a la función
+      de costo, multiplicado por un factor grande:
+    </p>
+    <p class="katex-block fragment fade-up">J(\theta) = \frac{1}{2m}\sum_{i=1}^{m}\left(h_\theta(x^{(i)}) - y^{(i)}\right)^2 + \frac{1000}{2m}\left(\theta_3^2 + \theta_4^2\right)</p>
+    <p class="fragment fade-up" style="font-size: 0.52em; text-align:center; color: var(--c-text-dim);">
+      Como gradient descent minimiza el costo, la única forma de lograrlo es haciendo θ₃ y θ₄ casi 0 — la
+      hipótesis resultante se parece a la cuadrática "correcta", sin necesidad de eliminar esas features a mano.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 10-11.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Fórmula General: L2 / Ridge</h2>
+    <p style="font-size: 0.56em;">
+      En el ejemplo anterior penalizamos solo 2 parámetros a mano. En general, se penalizan
+      <strong>todos</strong> los parámetros (excepto θ₀) con un solo factor λ:
+    </p>
+    <p class="katex-block fragment fade-up">J(\theta) = \frac{1}{2m}\left[\sum_{i=1}^{m}\left(h_\theta(x^{(i)}) - y^{(i)}\right)^2 + \lambda\sum_{j=1}^{n}\theta_j^2\right]</p>
+    <p class="fragment fade-up" style="font-size: 0.52em; text-align:center;">
+      <strong style="color: var(--c-yellow);">λ (lambda)</strong> es el <strong>factor de regularización</strong> —
+      otro <strong>hyper-parámetro</strong>: no se aprende durante el entrenamiento, nosotros lo elegimos.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 12-13.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Factor de Regularización (λ)</h2>
+    <div class="widget-container">
+      <canvas id="regularization-canvas" width="640" height="300" style="width:100%; max-width:640px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.5em; flex-wrap:wrap;">
+        <div class="widget-label">λ <span class="widget-value" id="regularization-lambda-value">0.01</span>
+          <input type="range" id="regularization-slider" class="widget-slider" min="0" max="11" step="1" value="3" style="width:160px; margin-left:0.5em;">
+        </div>
+        <button class="widget-btn regularization-preset" data-idx="0">Sin regularización (λ=0)</button>
+        <button class="widget-btn regularization-preset" data-idx="3">λ razonable</button>
+        <button class="widget-btn regularization-preset" data-idx="11">λ muy grande</button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:2em; margin-top:0.5em; flex-wrap:wrap;">
+        <div id="regularization-info" style="min-width:200px;"></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Grado 8 fijo (propenso a overfitting). Sube λ y observa cómo se <strong>encoge</strong> cada barra θⱼ —
+      exactamente la idea de la slide anterior, pero para los 8 parámetros a la vez.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/regularization-widget.js) — el pptx no tenía un ejemplo interactivo de esto,
+      solo las slides estáticas 9-14 y 20 (efecto de λ demasiado grande). El bar-chart de la derecha visualiza
+      directamente "la regularización reduce la magnitud de cada parámetro" (slide 7) para un caso con 8
+      features simultáneas, algo que el pptx solo mostraba a mano para 2 parámetros.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Gradient Descent con Regularización</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Reg_slide16_img01.png" alt="Gradient descent con regularización" style="max-width: 78%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      θ₀ se actualiza igual que siempre (nunca se regulariza). Para <code>j ≥ 1</code>, cada paso multiplica
+      θⱼ por un factor <code>(1 − α·λ/m)</code> ligeramente menor a 1 <strong>antes</strong> de dar el paso normal
+      del gradiente — por eso los parámetros se "encogen".
+    </p>
+    <aside class="notes">Fuente: pptx, slides 15-16. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>L1 (Lasso) vs. L2 (Ridge)</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-50">
+        <p style="font-size: 0.55em;"><strong style="color: var(--c-blue);">L2 / Ridge</strong> (lo que ya vimos)</p>
+        <p class="katex-block fragment fade-up" style="font-size: 0.75em;">\lambda\sum_{j=1}^{n}\theta_j^2</p>
+        <p class="fragment fade-up" style="font-size: 0.48em;">Penalización suave — no produce ceros exactos, solo para regularizar.</p>
+      </div>
+      <div class="col-50">
+        <p style="font-size: 0.55em;"><strong style="color: var(--c-orange);">L1 / Lasso</strong></p>
+        <p class="katex-block fragment fade-up" style="font-size: 0.75em;">\lambda\sum_{j=1}^{n}|\theta_j|</p>
+        <p class="fragment fade-up" style="font-size: 0.48em;">Puede llevar parámetros a <strong>exactamente 0</strong> — sirve también para <em>feature selection</em>.</p>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="text-align:center; margin-top: 0.4em;">
+      <img src="img/Clase_Reg_slide19_img01.png" alt="Forma de la penalización L1 vs L2" style="max-width: 42%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.44em; color: var(--c-text-dim);">L1 tiene una esquina en 0 (empuja a cero exacto); L2 es suave (solo encoge, nunca llega a 0 exacto)</p>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 17-19.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cuidado: λ Demasiado Grande → Underfitting</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Reg_slide20_img01.png" alt="Lambda muy grande produce underfitting" style="max-width: 85%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.52em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Con λ muy grande, <strong>todos</strong> los θⱼ (excepto θ₀) colapsan a ~0 — la hipótesis se vuelve una
+      línea recta: <strong style="color: var(--c-orange);">el caso inverso</strong> de lo que buscábamos
+      (underfitting). λ=0 equivale a no tener regularización.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      ¿Cómo sabemos cuánta regularización aplicar? Necesitamos un algoritmo de selección de modelos —
+      siguiente sección.
+    </p>
+    <aside class="notes">Fuente: pptx, slide 20. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Regularización en Redes Neuronales</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 720px;">
+        L1/L2 aplican a cualquier modelo paramétrico. Las redes profundas además tienen 2 herramientas
+        propias, casi omnipresentes en la práctica moderna:
+        <strong style="color: var(--c-yellow);">Dropout</strong> y
+        <strong style="color: var(--c-yellow);">Batch Normalization</strong>.
+      </p>
+    </div>
+    <aside class="notes">
+      Contenido propio — no está en el pptx original (que es de 2022, previo a la adopción masiva de estas
+      técnicas en el curso). Se agrega porque son, junto con L1/L2, las herramientas de regularización más
+      usadas hoy en día en deep learning, y todo estudiante que use TensorFlow/PyTorch en su capstone las
+      encontrará de inmediato.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dropout: Apagar Neuronas al Azar</h2>
+    <p style="font-size: 0.56em;">
+      En cada paso de entrenamiento, cada neurona de una capa oculta se <strong style="color: var(--c-red);">apaga</strong>
+      (su salida se pone en 0) de forma aleatoria e independiente, con probabilidad <code>p</code>.
+    </p>
+    <p class="katex-block fragment fade-up" style="font-size: 0.75em;">r_j \sim \text{Bernoulli}(1-p) \qquad \tilde{y} = \frac{r \odot y}{1-p}</p>
+    <ul class="fragment fade-up" style="font-size: 0.54em;">
+      <li>La red no puede depender de ninguna neurona en particular — debe distribuir el aprendizaje</li>
+      <li>Equivale a entrenar (y promediar) un número exponencial de sub-redes que comparten los mismos pesos</li>
+      <li>En <strong style="color: var(--c-green);">inferencia</strong> se usan <strong>todas</strong> las neuronas — el escalado por <code>(1-p)</code> durante el entrenamiento ("inverted dropout") ya deja lista la magnitud correcta</li>
+    </ul>
+    <blockquote class="fragment fade-up" style="font-size: 0.48em; margin-top: 0.4em;">
+      📝 <strong>Analogía:</strong> es como estudiar en equipo donde cada sesión faltan al azar algunos
+      compañeros — nadie puede depender de que "fulano siempre trae los apuntes de tal tema", todos terminan
+      aprendiendo un poco de todo.
+    </blockquote>
+    <aside class="notes">Contenido propio (Srivastava et al., 2014, "Dropout: A Simple Way to Prevent Neural Networks from Overfitting"). No está en el pptx original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora Dropout en una Red</h2>
+    <div class="widget-container">
+      <canvas id="dropout-canvas" width="640" height="260" style="width:100%; max-width:640px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.5em; flex-wrap:wrap;">
+        <div class="widget-label">p <span class="widget-value" id="dropout-p-value">0.30</span>
+          <input type="range" id="dropout-p-slider" class="widget-slider" min="0" max="0.7" step="0.05" value="0.3" style="width:140px; margin-left:0.5em;">
+        </div>
+        <button class="widget-btn dropout-preset" data-p="0">p=0</button>
+        <button class="widget-btn dropout-preset" data-p="0.3">p=0.3 (típico)</button>
+        <button class="widget-btn dropout-preset" data-p="0.7">p=0.7</button>
+        <button class="widget-btn" id="dropout-step-btn">Nuevo paso de entrenamiento</button>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em;">
+        <button class="widget-btn dropout-mode-btn active" data-mode="train">Modo: Entrenamiento</button>
+        <button class="widget-btn dropout-mode-btn" data-mode="infer">Modo: Inferencia</button>
+      </div>
+      <div style="display:flex; justify-content:center; margin-top:0.4em;">
+        <div id="dropout-info" style="min-width:280px;"></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      Sube <code>p</code> o haz click en "Nuevo paso" para ver una sub-red distinta cada vez. Cambia a
+      "Inferencia" para ver que todas las neuronas se reactivan.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/dropout-widget.js) — no hay equivalente en el pptx (que no cubre dropout).
+      Red feedforward 4-6-6-3; solo las 2 capas ocultas son "droppable" (input/output nunca se apagan, la
+      convención más común). Cada click en "Nuevo paso" resamplea una máscara Bernoulli(1-p) independiente
+      por neurona oculta.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dropout en la Práctica</h2>
+    <div class="columns">
+      <div class="col-50">
+        <p style="font-size: 0.55em; color: var(--c-orange);"><strong>TensorFlow / Keras</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.5em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">model = tf.keras.Sequential([
+  tf.keras.layers.Dense(128,
+      activation='relu'),
+  tf.keras.layers.Dropout(0.3),
+  tf.keras.layers.Dense(64,
+      activation='relu'),
+  tf.keras.layers.Dropout(0.3),
+  tf.keras.layers.Dense(10,
+      activation='softmax')
+])
+# Keras activa/desactiva Dropout
+# segun training=True/False</code></pre>
+      </div>
+      <div class="col-50">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>PyTorch</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.5em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">class Net(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.fc1 = nn.Linear(784, 128)
+    self.drop1 = nn.Dropout(p=0.3)
+    self.fc2 = nn.Linear(128, 10)
+
+  def forward(self, x):
+    x = F.relu(self.fc1(x))
+    x = self.drop1(x)
+    return self.fc2(x)</code></pre>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.46em; margin-top: 0.4em;">
+      ⚠️ <strong>Bug clásico en PyTorch:</strong> hay que llamar <code>model.train()</code> antes de entrenar
+      y <code>model.eval()</code> antes de evaluar/predecir — si se te olvida, sigues aplicando dropout (y
+      usando estadísticas de batch en BatchNorm) durante la evaluación, y tus métricas salen ruidosas o peores
+      de lo real. Keras lo maneja solo con <code>model.fit()</code> / <code>model.predict()</code>.
+    </blockquote>
+    <aside class="notes">Contenido propio. El bug de olvidar model.eval() es de los más comunes al pasar de Keras a PyTorch.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Batch Normalization: Estabilizar (no Regularizar)</h2>
+    <p style="font-size: 0.56em;">
+      Normaliza las activaciones de una capa usando la media y varianza del <strong>mini-batch</strong> actual,
+      y luego aplica una transformación aprendible:
+    </p>
+    <p class="katex-block fragment fade-up">\hat{x} = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} \qquad y = \gamma \hat{x} + \beta</p>
+    <p class="fragment fade-up" style="font-size: 0.54em;">
+      Su objetivo original: acelerar y estabilizar el entrenamiento (permite learning rates más altos, reduce
+      la sensibilidad a la inicialización) — <strong>no</strong> fue diseñado para regularizar.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.5em; margin-top: 0.4em; border-color: rgba(255,255,0,0.4);">
+      💡 <strong style="color: var(--c-yellow);">Pero tiene un efecto regularizador secundario:</strong> μ<sub>B</sub> y
+      σ²<sub>B</sub> se calculan sobre <em>ese</em> mini-batch — cambian ligeramente según qué ejemplos cayeron juntos.
+      Ese ruido, inyectado en cada paso de entrenamiento, actúa un poco como el ruido de dropout y reduce
+      (levemente) el overfitting — es un <em>efecto colateral</em>, no el propósito de la técnica.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio (Ioffe & Szegedy, 2015). No está en el pptx original. La aclaración de que NO es un
+      regularizador "por diseño" es importante — es un error común de estudiantes asumir que sí lo es.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora Batch Normalization</h2>
+    <div class="widget-container">
+      <canvas id="batchnorm-canvas" width="680" height="230" style="width:100%; max-width:680px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.8em; margin-top:0.4em; flex-wrap:wrap; font-size:0.75em;">
+        <div class="widget-label">μ <span class="widget-value" id="batchnorm-mu-value">2.0</span>
+          <input type="range" id="batchnorm-mu-slider" class="widget-slider" min="-3" max="5" step="0.5" value="2" style="width:100px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label">σ <span class="widget-value" id="batchnorm-sigma-value">1.5</span>
+          <input type="range" id="batchnorm-sigma-slider" class="widget-slider" min="0.3" max="3" step="0.1" value="1.5" style="width:100px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label">γ <span class="widget-value" id="batchnorm-gamma-value">1.0</span>
+          <input type="range" id="batchnorm-gamma-slider" class="widget-slider" min="0.2" max="3" step="0.1" value="1" style="width:100px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label">β <span class="widget-value" id="batchnorm-beta-value">0.0</span>
+          <input type="range" id="batchnorm-beta-slider" class="widget-slider" min="-3" max="3" step="0.5" value="0" style="width:100px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em;">
+        <button class="widget-btn" id="batchnorm-newbatch-btn">Nuevo mini-batch</button>
+        <button class="widget-btn batchnorm-mode-btn active" data-mode="train">Modo: Entrenamiento</button>
+        <button class="widget-btn batchnorm-mode-btn" data-mode="infer">Modo: Inferencia</button>
+      </div>
+      <div style="display:flex; justify-content:center; margin-top:0.4em;">
+        <div id="batchnorm-info" style="min-width:320px;"></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      μ/σ simulan el "covariate shift" de la capa; γ/β son los parámetros aprendibles. En modo Entrenamiento,
+      cada "Nuevo mini-batch" cambia ligeramente μ_B/σ_B (el ruido regularizador); en Inferencia se usa el
+      promedio móvil acumulado — fijo, sin ruido.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/batchnorm-widget.js) — no hay equivalente en el pptx. Las muestras "crudas" se
+      generan de una N(μ,σ) sintética. El promedio móvil (running mean/var, momentum=0.9) se actualiza en cada
+      mini-batch de entrenamiento, igual que en la implementación real de BatchNorm.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Batch Normalization en la Práctica</h2>
+    <div class="columns">
+      <div class="col-50">
+        <p style="font-size: 0.55em; color: var(--c-orange);"><strong>TensorFlow / Keras</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.5em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">model = tf.keras.Sequential([
+  tf.keras.layers.Dense(128),
+  tf.keras.layers.BatchNormalization(),
+  tf.keras.layers.Activation('relu'),
+  tf.keras.layers.Dense(10,
+      activation='softmax')
+])
+# usa stats del batch si training=True,
+# running mean/var si training=False</code></pre>
+      </div>
+      <div class="col-50">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>PyTorch</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.5em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">class Net(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.fc1 = nn.Linear(784, 128)
+    self.bn1 = nn.BatchNorm1d(128)
+    self.fc2 = nn.Linear(128, 10)
+
+  def forward(self, x):
+    x = F.relu(self.bn1(self.fc1(x)))
+    return self.fc2(x)</code></pre>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Igual que Dropout: <code>model.train()</code> usa estadísticas del batch actual,
+      <code>model.eval()</code> usa el promedio móvil acumulado (<code>running_mean</code> /
+      <code>running_var</code>).
+    </p>
+    <aside class="notes">Contenido propio.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dropout vs. BatchNorm vs. L1/L2</h2>
+    <table style="font-size: 0.52em;">
+      <tr><th>Técnica</th><th>¿Por qué existe?</th><th>¿Regulariza?</th><th>Train vs. Test</th></tr>
+      <tr class="fragment fade-up"><td>L1 / L2</td><td>Penalizar magnitud de θ</td><td style="color:var(--c-green);">Sí (directo)</td><td>Igual — mismos pesos</td></tr>
+      <tr class="fragment fade-up"><td>Dropout</td><td>Evitar co-adaptación de neuronas</td><td style="color:var(--c-green);">Sí (directo)</td><td>Apaga neuronas / usa todas</td></tr>
+      <tr class="fragment fade-up"><td>BatchNorm</td><td>Estabilizar y acelerar el entrenamiento</td><td style="color:var(--c-orange);">Leve (efecto secundario)</td><td>Stats del batch / promedio móvil</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align:center; color: var(--c-text-dim); margin-top: 0.6em;">
+      Las 3 se combinan sin problema en la misma red — no son mutuamente excluyentes. Es común ver
+      <code>Dense → BatchNorm → ReLU → Dropout</code> repetido capa tras capa.
+    </p>
+    <aside class="notes">Contenido propio — cierre de la sub-sección de regularización en deep learning, antes de generalizar a árboles/KNN.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Regularización Más Allá de la Regresión</h2>
+    <div class="app-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="app-card fragment fade-up">
+        <div class="icon">🌳</div>
+        <div><strong>Árboles</strong></div>
+        <div class="label">La profundidad = capacidad del modelo. Más profundidad → más overfitting.</div>
+        <pre style="font-size:0.55em; text-align:left; margin-top:0.4em;"><code class="language-python">DecisionTreeClassifier(max_depth=5)</code></pre>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">🌲</div>
+        <div><strong>Ensembles</strong></div>
+        <div class="label">Random forests: combinan muchos árboles (con distintas features) para reducir varianza.</div>
+      </div>
+      <div class="app-card fragment fade-up">
+        <div class="icon">📍</div>
+        <div><strong>KNN</strong></div>
+        <div class="label">K muy pequeño → alto riesgo de overfitting (memoriza vecinos, incl. anomalías).</div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 21-23. La misma idea de "complejidad vs. generalización" del widget de regularización aplica a cualquier familia de modelos, no solo a regresión con features polinomiales.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Evidencia: Árboles y KNN Sobreajustados</h2>
+    <div class="columns" style="align-items:center;">
+      <div class="col-50" style="text-align:center;">
+        <img src="img/Clase_Reg_slide21_img01.png" alt="Árbol de decisión sobreajustado: train vs test accuracy" style="max-width: 95%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.48em; color: var(--c-text-dim);">Árbol sin límite de profundidad: train=0.93, test=0.64</p>
+      </div>
+      <div class="col-50 fragment fade-up" style="text-align:center;">
+        <img src="img/Clase_Reg_slide23_img01.png" alt="Error vs K en KNN" style="max-width: 95%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.2em;">
+        <p style="font-size: 0.48em; color: var(--c-text-dim);">K=1 memoriza (error de train = 0); el mejor K está en un punto intermedio</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 21 y 23.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Aún Falta: ¿Cómo Elegimos λ (o el Modelo)?</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 720px;">
+        Ya tenemos varios modelos (regresión lineal/polinomial, árboles, KNN, regresión logística...) y
+        varios hyper-parámetros (grado del polinomio, λ...). Elegir a ojo — graficando — deja de ser posible
+        en más de 2 dimensiones. Necesitamos un método <strong style="color: var(--c-yellow);">sistemático</strong>.
+      </p>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 24-25 (cierre del pptx original — puente hacia la siguiente unidad de Model Selection / Cross-Validation).</aside>
+  </section>
+</section>
+
+<!-- ============================================================
+     SECCION 7: BUENAS PRÁCTICAS — SELECCIÓN DE MODELOS Y
+     CROSS-VALIDATION
+     (Copia de Clase_18_model_selection_cross_validation.pptx)
+     ============================================================ -->
+
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Selección de Modelos y Cross-Validation</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.7em;">¿Cómo elegimos el mejor modelo sin poder graficarlo?</p>
+    </div>
+    <aside class="notes">Fuente: Copia de Clase_18_model_selection_cross_validation.pptx.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema: Usar el Test-Set para Elegir</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_CV_slide06_img01.png" alt="10 modelos candidatos con distinto grado de polinomio" style="max-width: 55%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align:center; margin-top: 0.4em;">
+      Entrenamos 10 candidatos (grados 1 a 10) en el train-set y evaluamos los 10 en el test-set.
+      Elegimos el de mejor rendimiento — digamos, grado 5.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.55em; text-align:center; color: var(--c-red);">
+      Pero al usar el modelo en datos realmente nuevos, <strong>no</strong> tiene el rendimiento esperado.
+      ¿Qué pasó?
+    </p>
+    <aside class="notes">Fuente: pptx, slides 6-9.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Por Qué Falla Esto?</h2>
+    <p style="font-size: 0.58em;">
+      La idea del test-set es evaluar con datos que el modelo <strong>nunca</strong> vio. Pero al usarlo
+      también para <em>elegir</em> el grado del polinomio, el test-set "ve" indirectamente el proceso de
+      selección — deja de ser un estimado honesto de cómo se comportará el modelo en datos nuevos.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.56em; text-align:center; color: var(--c-yellow); margin-top: 0.5em;">
+      Necesitamos separar "elegir el modelo" de "evaluar el modelo elegido".
+    </p>
+    <aside class="notes">Fuente: pptx, slide 9.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Solución: 3 Conjuntos de Datos</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_CV_slide12_img01.png" alt="División en train, cross-validation y test set" style="max-width: 48%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <ul class="fragment fade-up" style="font-size: 0.55em; margin-top: 0.4em;">
+      <li><strong style="color: var(--c-blue);">Train-set</strong>: encuentra los mejores <em>parámetros</em> (gradient descent)</li>
+      <li><strong style="color: var(--c-teal);">Cross-validation set</strong>: elige los mejores <em>hyper-parámetros</em> o el mejor modelo</li>
+      <li><strong style="color: var(--c-red);">Test-set</strong>: evalúa — una sola vez — cómo se comportará el elegido en datos nuevos</li>
+    </ul>
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      El nuevo set también se conoce como <em>validation</em>, <em>development</em> o <em>hold-out</em> set.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 10-12. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>En la Práctica: <code>scikit-learn</code></h2>
+    <pre><code class="language-python">from sklearn.model_selection import train_test_split
+
+# Primero separamos el test-set (20%)
+X_train_full, X_test, y_train_full, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Del 80% restante, separamos el cross-validation set (25% de ese 80% = 20% del total)
+X_train, X_cv, y_train, y_cv = train_test_split(
+    X_train_full, y_train_full, test_size=0.25, random_state=42
+)
+# Resultado: 60% train / 20% cv / 20% test</code></pre>
+    <aside class="notes">Fuente: pptx, slide 13. Hay muchas formas de hacer el split; esta (2 llamadas a train_test_split) es la más directa con sklearn.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>3 Versiones de Cada Métrica</h2>
+    <p style="font-size: 0.56em;">Con 3 conjuntos, cada métrica de evaluación tiene ahora 3 versiones — la definición es la misma, solo cambia el set de datos:</p>
+    <p class="katex-block fragment fade-up" style="font-size: 0.7em;">J_{train}(\theta) = \frac{1}{2m}\sum_{i=1}^{m}\left(h_\theta(x^{(i)}) - y^{(i)}\right)^2</p>
+    <p class="katex-block fragment fade-up" style="font-size: 0.7em;">J_{cv}(\theta) = \frac{1}{2m_{cv}}\sum_{i=1}^{m_{cv}}\left(h_\theta(x_{cv}^{(i)}) - y_{cv}^{(i)}\right)^2</p>
+    <p class="katex-block fragment fade-up" style="font-size: 0.7em;">J_{test}(\theta) = \frac{1}{2m_{test}}\sum_{i=1}^{m_{test}}\left(h_\theta(x_{test}^{(i)}) - y_{test}^{(i)}\right)^2</p>
+    <aside class="notes">Fuente: pptx, slides 14-15.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Algoritmo de Selección de Modelos</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.85em;">
+      <div class="step fragment fade-up">1. Crear una lista de <strong>modelos candidatos</strong> (distinto grado, features, λ...)</div>
+      <div class="step fragment fade-up">2. Separar el dataset en <strong>train / cv / test</strong></div>
+      <div class="step fragment fade-up">3. Entrenar cada candidato usando el <strong>train-set</strong></div>
+      <div class="step fragment fade-up">4. Evaluar todos los candidatos en el <strong>cross-validation set</strong></div>
+      <div class="step fragment fade-up">5. Elegir el candidato con mejor métrica en CV</div>
+      <div class="step fragment fade-up">6. Evaluar el elegido en el <strong>test-set</strong> — estimado honesto para datos nuevos</div>
+      <div class="step fragment fade-up">7. Si el resultado no es satisfactorio → diagnosticar under/overfitting y corregir</div>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 16. No es completamente automático: la lista de candidatos aún se define a mano.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo Mismo Aplica al Factor de Regularización λ</h2>
+    <p style="font-size: 0.56em;">
+      El grado del polinomio y λ son ambos hyper-parámetros — se seleccionan exactamente con el mismo proceso.
+      Con 10 grados × 5 valores de λ tendríamos <strong>50 modelos</strong> candidatos a evaluar en el
+      cross-validation set.
+    </p>
+    <div class="fragment fade-up" style="text-align:center; margin-top: 0.4em;">
+      <img src="img/Clase_CV_slide18_img01.png" alt="Efecto de lambda grande, intermedio y pequeño" style="max-width: 78%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+      <p style="font-size: 0.44em; color: var(--c-text-dim);">λ grande → underfitting (alto sesgo); λ pequeño → overfitting (alta varianza); intermedio → "just right"</p>
+    </div>
+    <aside class="notes">Fuente: pptx, slides 17-18. Créditos: Andrew Ng.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Error vs. λ: el Mismo Patrón en Forma de U</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_CV_slide20_img01.png" alt="Curvas de error de train y CV contra lambda" style="max-width: 82%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      <code>J_train</code> crece con λ (a mayor regularización, peor ajuste a los propios datos de entrenamiento).
+      <code>J_cv</code> forma una "U": alto en varianza (λ chico) y alto en sesgo (λ grande) — el mínimo es el
+      punto "just right".
+    </p>
+    <aside class="notes">Fuente: pptx, slides 19-20. Créditos: Andrew Ng. Es exactamente la misma curva-U del widget de bias-variance (Clase 16), pero con λ en el eje X en vez del grado del polinomio.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Elige el Modelo por Cross-Validation</h2>
+    <div class="widget-container">
+      <div style="display:flex; justify-content:center; gap:0.5em; margin-bottom:0.3em;">
+        <button class="widget-btn cv-mode-btn active" data-mode="degree">Grado de polinomio</button>
+        <button class="widget-btn cv-mode-btn" data-mode="lambda">Factor de regularización (λ)</button>
+      </div>
+      <canvas id="cv-canvas" width="680" height="270" style="width:100%; max-width:680px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.35em; flex-wrap:wrap;">
+        <input type="range" id="cv-slider" class="widget-slider" min="0" max="9" step="1" value="3" style="width:200px;">
+        <button class="widget-btn" id="cv-select-btn">Elegir por Cross-Validation</button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:2em; margin-top:0.35em; flex-wrap:wrap;">
+        <div id="cv-info" style="min-width:190px;"></div>
+        <div id="cv-verdict" style="max-width:320px; font-size:0.48em; color:var(--c-text-dim);"></div>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/cross-validation-widget.js) — opera en vivo el contenido de las slides 6-20:
+      3 curvas de error (train/cv/test) para 2 hyper-parámetros distintos (grado y λ) sobre un dataset con
+      split fijo 60/20/20. El botón "Elegir por Cross-Validation" salta al mínimo de la curva de CV y compara
+      contra el mínimo real de la curva de test — en el modo λ de este dataset, CV elige λ=0.1 pero el mínimo
+      real de test está en λ=0.01, ilustrando de forma concreta por qué CV es una buena guía pero el test-set
+      sigue siendo necesario para la evaluación final honesta (el punto central de las slides 6-9).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Estrategias Correctivas Según el Diagnóstico</h2>
+    <table style="font-size: 0.55em;">
+      <tr><th>Acción</th><th>Ayuda con...</th></tr>
+      <tr class="fragment fade-up"><td>Conseguir más datos (más observaciones)</td><td style="color: var(--c-red);">Overfitting</td></tr>
+      <tr class="fragment fade-up"><td>Conseguir más datos (más features)</td><td style="color: var(--c-orange);">Underfitting</td></tr>
+      <tr class="fragment fade-up"><td>Usar menos features</td><td style="color: var(--c-red);">Overfitting</td></tr>
+      <tr class="fragment fade-up"><td>Features polinomiales / mayor grado</td><td style="color: var(--c-orange);">Underfitting</td></tr>
+      <tr class="fragment fade-up"><td>Incrementar regularización (λ↑)</td><td style="color: var(--c-red);">Overfitting</td></tr>
+      <tr class="fragment fade-up"><td>Decrementar regularización (λ↓)</td><td style="color: var(--c-orange);">Underfitting</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align:center; color: var(--c-text-dim); margin-top: 0.5em;">
+      Cada estrategia funciona bien según el problema diagnosticado — por eso el diagnóstico siempre va primero.
+    </p>
+    <aside class="notes">Fuente: pptx, slides 23-24.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Un Proceso Iterativo</h2>
+    <div class="columns" style="align-items: center;">
+      <div class="col-55">
+        <ul style="font-size: 0.56em;">
+          <li class="fragment fade-up">Elegir una <strong>métrica de evaluación</strong> a optimizar (según el problema y la aplicación)</li>
+          <li class="fragment fade-up">Usar una <strong>bitácora</strong> para anotar configuración y métricas de cada experimento</li>
+          <li class="fragment fade-up">Usar el <strong>cross-validation set</strong> para diagnosticar (under/overfitting)</li>
+          <li class="fragment fade-up">Aplicar la acción correctiva según el diagnóstico — y repetir</li>
+        </ul>
+      </div>
+      <div class="col-45" style="text-align:center;">
+        <div class="flow-row fragment fade-up" style="flex-direction:column; align-items:center; gap:0.4em;">
+          <div class="flow-node" style="min-width:70%;"><span class="flow-icon">💡</span>Idea</div>
+          <span class="flow-arrow" style="transform:rotate(90deg);">→</span>
+          <div class="flow-node" style="min-width:70%;"><span class="flow-icon">💻</span>Código</div>
+          <span class="flow-arrow" style="transform:rotate(90deg);">→</span>
+          <div class="flow-node" style="min-width:70%;"><span class="flow-icon">🧪</span>Experimento</div>
+        </div>
+        <p style="font-size: 0.42em; color: var(--c-text-dim); margin-top:0.3em;">...y vuelta a empezar</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 25. El diagrama circular Idea→Código→Experimento se recreó con los estilos del tema en vez del gráfico beige original del pptx.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Estrategia Recomendada: Primero Underfitting, Luego Overfitting</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.85em;">
+      <div class="step fragment fade-up">1. Crear lo más rápido posible un <strong>prototipo</strong> del algoritmo de ML</div>
+      <div class="step fragment fade-up">2. Iterar agregando complejidad (más features polinomiales...) hasta llegar a <strong style="color:var(--c-red);">overfitting</strong></div>
+      <div class="step fragment fade-up">3. Una vez en overfitting: <strong>regularizar</strong> o conseguir <strong>más datos</strong></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.5em; text-align:center; color: var(--c-text-dim); margin-top: 0.5em;">
+      Un solo problema a la vez: empezar resolviendo underfitting, y solo entonces pasar a resolver overfitting.
+    </p>
+    <aside class="notes">Fuente: pptx, slide 26.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Recurso Recomendado</h2>
+    <div class="resource-grid" style="max-width: 500px; margin: 0 auto;">
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">📖</div>
+        <h4>Machine Learning Yearning</h4>
+        <p>Andrew Ng — guía práctica de estrategia para proyectos de ML: cuándo conseguir más datos, cómo
+          estructurar train/dev/test, y cómo priorizar el siguiente experimento.</p>
+        <span class="resource-tag">github.com/ajaymache/machine-learning-yearning</span>
+      </div>
+    </div>
+    <aside class="notes">Fuente: pptx, slide 27.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Buenas Prácticas: el Recorrido Completo</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 720px;">
+        Evaluación de modelos (métricas, matriz de confusión, ROC/AUC) &rarr; train/test split y diagnóstico
+        (over/underfitting) &rarr; regularización &rarr; selección de modelos con cross-validation. Con esto
+        ya tienes el ciclo completo para llevar un modelo de "funciona en mis datos" a
+        <strong style="color: var(--c-yellow);">"funciona de verdad, y sé por qué"</strong> — listo para
+        aplicarlo en tu capstone.
+      </p>
+    </div>
+    <aside class="notes">Slide de cierre propio — conecta las 4 clases de Buenas Prácticas entre sí y con el objetivo del curso (capstone project).</aside>
+  </section>
+</section>
+
+</div>
+</div>
+
+<!-- Reveal.js core -->
+<script src="lib/reveal.js/dist/reveal.js"></script>
+<script src="lib/reveal.js/plugin/notes/notes.js"></script>
+<script src="lib/reveal.js/plugin/highlight/highlight.js"></script>
+
+<!-- KaTeX -->
+<script src="lib/katex/katex.min.js"></script>
+<script src="lib/katex/contrib/auto-render.min.js"></script>
+
+<!-- Widgets -->
+<script src="js/widgets/vectordb-widget.js"></script>
+<script src="js/widgets/confusion-threshold-widget.js"></script>
+<script src="js/widgets/bias-variance-widget.js"></script>
+<script src="js/widgets/learning-curve-widget.js"></script>
+<script src="js/widgets/roc-curve-widget.js"></script>
+<script src="js/widgets/regularization-widget.js"></script>
+<script src="js/widgets/cross-validation-widget.js"></script>
+<script src="js/widgets/dropout-widget.js"></script>
+<script src="js/widgets/batchnorm-widget.js"></script>
+
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: true,
+  // navigationMode 'linear': las flechas ←/→ recorren TODAS las slides en orden,
+  // incluyendo el contenido vertical de cada tema.
+  navigationMode: 'linear',
+  transition: 'fade',
+  transitionSpeed: 'default',
+  backgroundTransition: 'fade',
+  center: true,
+  width: 960,
+  height: 700,
+  margin: 0.04,
+  plugins: [ RevealHighlight, RevealNotes ]
+});
+
+// ============================================================
+// Home button navigation
+// ============================================================
+const navHomeBtn = document.getElementById('nav-home-btn');
+navHomeBtn.addEventListener('click', () => Reveal.slide(0, 0));
+navHomeBtn.style.display = 'none';
+Reveal.on('slidechanged', function(e) {
+  navHomeBtn.style.display = (e.indexh === 0 && e.indexv === 0) ? 'none' : 'block';
+});
+
+// ============================================================
+// KaTeX Render — clases .katex-block (display) y .katex-inline
+// ============================================================
+function renderKaTeX() {
+  document.querySelectorAll('.katex-block').forEach(el => {
+    try {
+      katex.render(el.textContent, el, { displayMode: true, throwOnError: false });
+    } catch (e) { console.warn('KaTeX error:', e); }
+  });
+  document.querySelectorAll('.katex-inline').forEach(el => {
+    try {
+      katex.render(el.textContent, el, { displayMode: false, throwOnError: false });
+    } catch (e) { console.warn('KaTeX error:', e); }
+  });
+}
+renderKaTeX();
+
+// ============================================================
+// Lazy-load widgets on slide change
+// ============================================================
+let widgetsInitialized = {};
+
+Reveal.on('slidechanged', function(event) {
+  const slide = event.currentSlide;
+  if (slide.querySelector('#vectordb-canvas') && !widgetsInitialized.vectordb) {
+    if (typeof initVectorDBWidget === 'function') {
+      initVectorDBWidget();
+      widgetsInitialized.vectordb = true;
+    }
+  }
+  if (slide.querySelector('#confusion-threshold-canvas') && !widgetsInitialized.confusionThreshold) {
+    if (typeof initConfusionThresholdWidget === 'function') {
+      initConfusionThresholdWidget();
+      widgetsInitialized.confusionThreshold = true;
+    }
+  }
+  if (slide.querySelector('#bias-variance-canvas') && !widgetsInitialized.biasVariance) {
+    if (typeof initBiasVarianceWidget === 'function') {
+      initBiasVarianceWidget();
+      widgetsInitialized.biasVariance = true;
+    }
+  }
+  if (slide.querySelector('#learning-curve-canvas') && !widgetsInitialized.learningCurve) {
+    if (typeof initLearningCurveWidget === 'function') {
+      initLearningCurveWidget();
+      widgetsInitialized.learningCurve = true;
+    }
+  }
+  if (slide.querySelector('#roc-curve-canvas') && !widgetsInitialized.rocCurve) {
+    if (typeof initROCCurveWidget === 'function') {
+      initROCCurveWidget();
+      widgetsInitialized.rocCurve = true;
+    }
+  }
+  if (slide.querySelector('#regularization-canvas') && !widgetsInitialized.regularization) {
+    if (typeof initRegularizationWidget === 'function') {
+      initRegularizationWidget();
+      widgetsInitialized.regularization = true;
+    }
+  }
+  if (slide.querySelector('#cv-canvas') && !widgetsInitialized.crossValidation) {
+    if (typeof initCrossValidationWidget === 'function') {
+      initCrossValidationWidget();
+      widgetsInitialized.crossValidation = true;
+    }
+  }
+  if (slide.querySelector('#dropout-canvas') && !widgetsInitialized.dropout) {
+    if (typeof initDropoutWidget === 'function') {
+      initDropoutWidget();
+      widgetsInitialized.dropout = true;
+    }
+  }
+  if (slide.querySelector('#batchnorm-canvas') && !widgetsInitialized.batchnorm) {
+    if (typeof initBatchNormWidget === 'function') {
+      initBatchNormWidget();
+      widgetsInitialized.batchnorm = true;
+    }
+  }
+});
+</script>
+
+</body>
+</html>
