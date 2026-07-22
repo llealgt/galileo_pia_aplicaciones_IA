@@ -170,6 +170,34 @@
   background: rgba(88, 196, 221, 0.05);
 }
 
+/* ---- Metric-highlight table (dummy dataset widget) ---- */
+.metric-demo-table th,
+.metric-demo-table td {
+  padding: 0.12em 0.6em;
+}
+
+.widget-btn.metric-table-btn {
+  font-size: 0.56em;
+  padding: 0.3em 0.7em;
+  margin: 0.1em 0.15em;
+}
+
+.metric-row td {
+  transition: opacity 0.25s ease, background 0.25s ease;
+}
+
+.metric-row-dim td {
+  opacity: 0.25;
+}
+
+.metric-row-correct td {
+  background: rgba(131, 193, 103, 0.22);
+}
+
+.metric-row-incorrect td {
+  background: rgba(252, 98, 85, 0.22);
+}
+
 /* ---- Fragment Animations ---- */
 .reveal .fragment.fade-up {
   transform: translateY(20px);
@@ -586,6 +614,17 @@
   padding: 0.9em 1em;
   text-align: left;
   transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  display: block;
+  cursor: pointer;
+}
+
+/* Cuando el card es un <a> (enlace clickable): anular el subrayado azul
+   global de .reveal a, que de otro modo gana por especificidad y se
+   hereda visualmente al h4/p internos. Los colores de .resource-card
+   h4/p ya son mas especificos que .reveal a y no necesitan tocarse. */
+.reveal a.resource-card,
+.reveal a.resource-card:hover {
+  text-decoration: none;
 }
 
 .resource-card:hover {

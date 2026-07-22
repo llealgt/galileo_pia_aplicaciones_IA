@@ -1115,6 +1115,44 @@ print("Error promedio del sistema:", math.sqrt(MSE), "dólares")
   </section>
 
   <section data-transition="fade">
+    <h2>¿Qué "Mira" Cada Métrica?</h2>
+    <p style="font-size: 0.4em; text-align:center; margin-bottom:0.2em;">
+      Mismos 10 pacientes — cada métrica calcula su fracción sobre un
+      <strong style="color: var(--c-yellow);">subconjunto distinto</strong> de filas (las atenuadas no entran al cálculo).
+    </p>
+    <div class="widget-container" style="padding: 0.6em 1em;">
+      <div style="display:flex; justify-content:center; gap:0.4em; margin-bottom:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn metric-table-btn active" data-metric="original">Dataset Original</button>
+        <button class="widget-btn metric-table-btn" data-metric="accuracy">Accuracy</button>
+        <button class="widget-btn metric-table-btn" data-metric="precision">Precision</button>
+        <button class="widget-btn metric-table-btn" data-metric="recall">Recall</button>
+        <button class="widget-btn metric-table-btn" data-metric="specificity">Specificity</button>
+        <button class="widget-btn metric-table-btn" data-metric="npv">NPV</button>
+      </div>
+      <table class="metric-demo-table" style="font-size: 0.42em;">
+        <thead>
+          <tr><th>Paciente</th><th>Valor real (y)</th><th>Predicción (ŷ)</th><th>¿Acertó?</th></tr>
+        </thead>
+        <tbody id="metric-table-body"></tbody>
+      </table>
+      <div style="text-align:center; margin-top:0.3em;">
+        <p id="metric-table-title" style="font-size:0.5em; color:var(--c-blue); margin-bottom:0.1em;"></p>
+        <p id="metric-table-desc" style="font-size:0.42em; color:var(--c-text-dim); max-width:600px; margin:0 auto;"></p>
+        <p id="metric-table-formula" style="font-size:0.65em; margin-top:0.2em; font-family:'Fira Code', monospace;"></p>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/metric-table-widget.js) — no está en el pptx original. Complementa la slide
+      anterior (definiciones) y la siguiente (fórmulas derivadas de la matriz de confusión) con un ejemplo
+      manipulable: 10 pacientes fijos (3 TP, 4 TN, 1 FP, 2 FN). Al cambiar de métrica se atenúan las filas
+      que no participan en esa fracción, y las que sí participan se pintan verde (acierto) o rojo (error) —
+      el objetivo es que quede visualmente claro que precision/NPV filtran por la predicción del modelo,
+      mientras que recall/specificity filtran por el valor real, aunque las 4 métricas usan los mismos 10
+      pacientes.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>¿De Dónde Vienen estas Fórmulas?</h2>
     <p style="font-size: 0.55em; text-align:center;">
       Todas las métricas de clasificación salen de la <strong style="color:var(--c-yellow);">misma tabla 2×2</strong>
@@ -2279,6 +2317,100 @@ X_train, X_test, y_train, y_test = train_test_split(
   </section>
 
   <section data-transition="fade">
+    <h2>Data Augmentation: Más Datos sin Recolectar Más Datos</h2>
+    <p style="font-size: 0.5em;">
+      Al inicio de esta unidad vimos "conseguir más datos" como acción contra el overfitting —
+      <strong style="color: var(--c-yellow);">data augmentation</strong> lo logra sin recolectar ni etiquetar
+      una sola observación nueva: genera copias modificadas de los datos que ya tienes, con transformaciones
+      que <strong>no cambian la etiqueta</strong>.
+    </p>
+    <div class="app-grid fragment fade-up" style="grid-template-columns: repeat(4, 1fr); margin-top: 0.4em;">
+      <div class="app-card" style="padding:0.5em;"><div class="icon" style="font-size:1.4em; margin-bottom:0.15em;">🔄</div><div class="label" style="font-size:0.55em;">Flip horizontal/vertical</div></div>
+      <div class="app-card" style="padding:0.5em;"><div class="icon" style="font-size:1.4em; margin-bottom:0.15em;">🔁</div><div class="label" style="font-size:0.55em;">Rotación</div></div>
+      <div class="app-card" style="padding:0.5em;"><div class="icon" style="font-size:1.4em; margin-bottom:0.15em;">🔍</div><div class="label" style="font-size:0.55em;">Zoom / Crop</div></div>
+      <div class="app-card" style="padding:0.5em;"><div class="icon" style="font-size:1.4em; margin-bottom:0.15em;">🎨</div><div class="label" style="font-size:0.55em;">Brillo / Color jitter</div></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      También: traslación/shear, ruido, cutout (borrado aleatorio de parches) — y no es exclusivo de imágenes:
+      en texto se usan sinónimos/back-translation, en audio cambios de tono/velocidad, en datos tabulares
+      desbalanceados técnicas como SMOTE.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em;">
+      ⚠️ La transformación no debe cambiar el significado: voltear horizontalmente la foto de un gato sigue
+      siendo un gato, pero voltear un dígito escrito a mano puede convertir un "6" en un "9".
+    </blockquote>
+    <aside class="notes">
+      Contenido propio — introducción breve, no un tema a profundidad. Data augmentation reduce el overfitting
+      exponiendo al modelo a más variedad sin necesitar más observaciones reales; combina bien con
+      regularización L1/L2/Dropout/BatchNorm (no son mutuamente excluyentes).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Data Augmentation en la Práctica</h2>
+    <div class="columns">
+      <div class="col-50">
+        <p style="font-size: 0.55em; color: var(--c-orange);"><strong>TensorFlow / Keras</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.5em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">data_augmentation = tf.keras.Sequential([
+  tf.keras.layers.RandomFlip("horizontal"),
+  tf.keras.layers.RandomRotation(0.1),
+  tf.keras.layers.RandomZoom(0.1),
+])
+
+# data_augmentation solo actua en training
+model = tf.keras.Sequential([
+  data_augmentation,
+  tf.keras.layers.Rescaling(1./255),
+  tf.keras.layers.Conv2D(
+      32, 3, activation='relu'),
+  # ...resto de la red
+])</code></pre>
+      </div>
+      <div class="col-50">
+        <p style="font-size: 0.55em; color: var(--c-blue);"><strong>PyTorch</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.5em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">from torchvision import transforms
+
+train_transform = transforms.Compose([
+  transforms.RandomHorizontalFlip(),
+  transforms.RandomRotation(10),
+  transforms.ColorJitter(
+      brightness=0.2, contrast=0.2),
+  transforms.ToTensor(),
+])
+
+train_ds = datasets.ImageFolder(
+    "train/", transform=train_transform)</code></pre>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      En ambos frameworks, las transformaciones se aplican de forma aleatoria <strong>solo durante el
+      entrenamiento</strong> — en evaluación/inferencia se usan las imágenes sin modificar (mismo patrón
+      train/eval que ya vimos con Dropout y BatchNorm).
+    </p>
+    <aside class="notes">Contenido propio. Ejemplo corto — no cubre augmentation de texto/audio ni técnicas avanzadas (mixup, cutmix, AutoAugment).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Para Profundizar</h2>
+    <div class="resource-grid" style="max-width: 560px; margin: 0 auto;">
+      <a class="resource-card fragment fade-up"
+         href="https://www.slideshare.net/slideshow/an-introduction-to-data-augmentation-techniques-in-ml-frameworks-a-presentation-from-amd/250110127"
+         target="_blank" rel="noopener noreferrer">
+        <div class="resource-icon">📊</div>
+        <h4>An Introduction to Data Augmentation Techniques in ML Frameworks</h4>
+        <p>Presentación de AMD — panorama de técnicas de data augmentation y cómo se implementan en distintos
+          frameworks de ML.</p>
+        <span class="resource-tag">slideshare.net ↗</span>
+      </a>
+    </div>
+    <aside class="notes">
+      Fuente: https://www.slideshare.net/slideshow/an-introduction-to-data-augmentation-techniques-in-ml-frameworks-a-presentation-from-amd/250110127
+      — recurso externo sugerido por el catedrático para profundizar en el tema, fuera del alcance de esta
+      introducción.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Regularización Más Allá de la Regresión</h2>
     <div class="app-grid" style="grid-template-columns: repeat(3, 1fr);">
       <div class="app-card fragment fade-up">
@@ -2589,6 +2721,7 @@ X_train, X_cv, y_train, y_cv = train_test_split(
 <script src="js/widgets/cross-validation-widget.js"></script>
 <script src="js/widgets/dropout-widget.js"></script>
 <script src="js/widgets/batchnorm-widget.js"></script>
+<script src="js/widgets/metric-table-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -2693,6 +2826,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initBatchNormWidget === 'function') {
       initBatchNormWidget();
       widgetsInitialized.batchnorm = true;
+    }
+  }
+  if (slide.querySelector('#metric-table-body') && !widgetsInitialized.metricTable) {
+    if (typeof initMetricTableWidget === 'function') {
+      initMetricTableWidget();
+      widgetsInitialized.metricTable = true;
     }
   }
 });
