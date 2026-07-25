@@ -2073,6 +2073,169 @@ X_train, X_test, y_train, y_test = train_test_split(
   </section>
 
   <section data-transition="fade">
+    <h2>¿Qué Features Importan de Verdad?</h2>
+    <p style="font-size: 0.54em;">
+      Esa propiedad de L1 nos lleva a una pregunta práctica que aparece en casi todo proyecto real:
+      de las <em>N</em> columnas que metí al modelo, <strong style="color: var(--c-yellow);">¿cuáles
+      realmente están aportando?</strong> A eso se le llama <strong>feature importance</strong>.
+    </p>
+    <div class="columns" style="margin-top: 0.2em;">
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.5em; color: var(--c-blue);"><strong>¿Para qué sirve?</strong></p>
+        <ul style="font-size: 0.45em;">
+          <li><strong>Interpretabilidad:</strong> explicarle al negocio <em>por qué</em> el modelo decide lo que decide.</li>
+          <li><strong>Feature selection:</strong> quitar columnas que no aportan → modelo más simple, rápido y barato de mantener.</li>
+          <li><strong>Debugging:</strong> si <code>id_cliente</code> sale como la feature más importante, algo está muy mal (data leakage).</li>
+        </ul>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.5em; color: var(--c-orange);"><strong>En un modelo lineal</strong></p>
+        <p class="katex-block" style="font-size: 0.62em;">\text{importancia}_j = |\theta_j|</p>
+        <p style="font-size: 0.44em;">
+          El coeficiente θⱼ dice cuánto cambia la predicción por cada unidad que cambia esa feature.
+          Mientras más grande su magnitud, más "peso" tiene esa feature en la decisión.
+        </p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.3em;">
+      ⚠️ <strong>Condición indispensable:</strong> los coeficientes solo son comparables entre sí si las features
+      están <strong>estandarizadas</strong> (misma escala). Si <code>area</code> está en m² y <code>precio_barrio</code>
+      en quetzales, sus θ están en unidades distintas y compararlos no significa nada — hay que aplicar
+      <code>StandardScaler</code> <em>antes</em>.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio, como puente entre la propiedad de L1 (slide 19 del pptx: "sirve también para feature
+      selection") y su uso práctico. El punto de la estandarización es el error #1 que cometen los estudiantes al
+      interpretar coeficientes: sin escalar, el coeficiente más grande suele ser simplemente el de la feature con
+      unidades más pequeñas.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>L1 vs. L2: Feature Importance</h2>
+    <div class="widget-container">
+      <canvas id="feature-importance-canvas" width="880" height="300" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.35em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn fi-method-btn" data-method="l1">L1 / Lasso</button>
+        <button class="widget-btn fi-btn fi-method-btn" data-method="l2">L2 / Ridge</button>
+        <div class="widget-label" style="font-size:0.8em;">λ <span class="widget-value" id="feature-importance-lambda-value">0</span>
+          <input type="range" id="feature-importance-slider" class="widget-slider" min="0" max="10" step="1" value="0" style="width:120px; margin-left:0.4em;">
+        </div>
+        <button class="widget-btn fi-btn fi-preset-btn" data-idx="0">λ=0</button>
+        <button class="widget-btn fi-btn fi-preset-btn" data-idx="5">λ bueno</button>
+        <button class="widget-btn fi-btn fi-preset-btn" data-idx="9">λ excesivo</button>
+      </div>
+      <div id="feature-importance-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.35em; font-size:0.62em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Precio de casas con 10 features, pero <strong>solo 3 se usaron para generar el precio</strong>
+      (<code>area_m2</code>, <code>antiguedad</code>, <code>habitaciones</code>); las otras 7 son ruido.
+      Sube λ con <strong style="color:var(--c-orange);">L1</strong> y observa cómo el ruido llega a <strong>cero exacto</strong>;
+      repítelo con <strong style="color:var(--c-blue);">L2</strong> y verás que <em>nada</em> llega a cero.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/feature-importance-widget.js). Guion sugerido: (1) empezar en λ=0 — las 10 features
+      tienen coeficiente distinto de cero, el ruido "parece" aportar algo; (2) con L1, presionar "λ bueno" (λ=0.2):
+      quedan exactamente las 3 reales, el indicador se pone verde y el MSE de test MEJORA respecto a λ=0 (1.98 vs 2.04);
+      (3) cambiar a L2 con el mismo λ: todas las barras encogen pero ninguna desaparece — "features usadas: 10/10";
+      (4) "λ excesivo": L1 mata también features reales → conecta con la siguiente slide (underfitting).
+      El panel derecho (regularization path) es el mismo gráfico que produce lasso_path() en sklearn.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Feature Importance en sklearn</h2>
+    <div class="columns">
+      <div class="col-45">
+        <p style="font-size: 0.52em; color: var(--c-orange);"><strong>Lasso → selección automática</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.44em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">from sklearn.linear_model import Lasso
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import (
+    StandardScaler)
+
+# StandardScaler es OBLIGATORIO para
+# poder comparar los coeficientes
+model = make_pipeline(
+    StandardScaler(),
+    Lasso(alpha=0.2)   # alpha == lambda
+).fit(X_train, y_train)
+
+coef = model[-1].coef_
+imp = pd.Series(coef, index=X.columns)
+imp = imp[imp != 0].sort_values(key=abs)
+imp.plot.barh()           # <- la grafica</code></pre>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.52em; color: var(--c-teal);"><strong>Permutation importance (cualquier modelo)</strong></p>
+        <pre class="fragment fade-up" style="font-size: 0.44em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">from sklearn.inspection import (
+    permutation_importance)
+
+# Baraja UNA columna y mide cuanto
+# empeora la metrica: si no empeora,
+# esa feature no estaba aportando
+r = permutation_importance(
+    model, X_test, y_test,
+    n_repeats=10, random_state=42)
+
+imp = pd.Series(r.importances_mean,
+                index=X.columns)
+imp.sort_values().plot.barh()</code></pre>
+        <p class="fragment fade-up" style="font-size: 0.4em; color: var(--c-text-dim);">
+          Funciona con redes neuronales, árboles, SVM… cualquier modelo, porque solo necesita
+          <code>predict()</code>. Y se mide sobre <strong>test</strong>, no sobre train.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Contenido propio. Nota para el catedrático: <code>Lasso(alpha=...)</code> — sklearn le llama alpha a lo que
+      en las fórmulas del curso es λ, y eso confunde a los estudiantes; vale la pena decirlo explícitamente.
+      El notebook de regularización acompaña esta parte.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Otras Formas de Medir Importancia</h2>
+    <table style="font-size: 0.42em; width: 100%;">
+      <tr><th>Método</th><th>Qué mide</th><th>Modelos</th><th>Ojo con…</th></tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-orange);">Coeficientes</strong> (L1/L2)</td>
+        <td>Peso de cada feature en la ecuación lineal</td>
+        <td>Lineales</td>
+        <td>Exige estandarizar; solo captura relaciones lineales</td>
+      </tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-green);">Impurity</strong> (<code>feature_importances_</code>)</td>
+        <td>Cuánto reduce la impureza esa feature en los splits</td>
+        <td>Árboles, RF, GBM</td>
+        <td>Sesgada hacia features con muchos valores distintos</td>
+      </tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-teal);">Permutation</strong></td>
+        <td>Cuánto empeora la métrica al barajar esa columna</td>
+        <td>Cualquiera</td>
+        <td>Con features correlacionadas subestima a ambas</td>
+      </tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-purple);">SHAP</strong></td>
+        <td>Contribución de la feature a <em>cada</em> predicción individual</td>
+        <td>Cualquiera</td>
+        <td>Costoso de calcular; librería aparte</td>
+      </tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em;">
+      🔬 <strong>La trampa de las features correlacionadas:</strong> si <code>area_m2</code> y <code>area_pies2</code>
+      están ambas en el dataset, L1 se queda con <strong>una sola</strong> (arbitrariamente) y le da 0 a la otra —
+      no porque la otra sea inútil, sino porque ya es redundante. <strong>Importancia baja ≠ feature inútil.</strong>
+    </blockquote>
+    <aside class="notes">
+      Contenido propio. El punto de cierre (importancia baja ≠ inútil) es el que más se malinterpreta en proyectos
+      reales: los estudiantes tienden a borrar columnas basándose solo en un ranking de importancia. Si hay tiempo,
+      mencionar que ese comportamiento arbitrario de L1 ante correlación es justamente lo que motiva Elastic Net
+      (L1 + L2 combinadas), que reparte el peso entre las features correlacionadas en vez de escoger una.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Cuidado: λ Demasiado Grande → Underfitting</h2>
     <div style="text-align:center;">
       <img src="img/Clase_Reg_slide20_img01.png" alt="Lambda muy grande produce underfitting" style="max-width: 85%; border-radius: 8px; background: rgba(255,255,255,0.95); padding: 0.3em;">
@@ -2722,6 +2885,7 @@ X_train, X_cv, y_train, y_cv = train_test_split(
 <script src="js/widgets/dropout-widget.js"></script>
 <script src="js/widgets/batchnorm-widget.js"></script>
 <script src="js/widgets/metric-table-widget.js"></script>
+<script src="js/widgets/feature-importance-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -2832,6 +2996,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initMetricTableWidget === 'function') {
       initMetricTableWidget();
       widgetsInitialized.metricTable = true;
+    }
+  }
+  if (slide.querySelector('#feature-importance-canvas') && !widgetsInitialized.featureImportance) {
+    if (typeof initFeatureImportanceWidget === 'function') {
+      initFeatureImportanceWidget();
+      widgetsInitialized.featureImportance = true;
     }
   }
 });
