@@ -63,7 +63,7 @@
         <a class="toc-item" onclick="Reveal.slide(4, 0)"><span class="toc-num">4</span>Evaluación de Modelos</a>
         <a class="toc-item" onclick="Reveal.slide(5, 0)"><span class="toc-num">5</span>Train/Test Split, Over/Underfitting</a>
         <a class="toc-item" onclick="Reveal.slide(6, 0)"><span class="toc-num">6</span>Regularización</a>
-        <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos y Cross-Validation</a>
+        <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos, CV e Hyper-parameter Tuning</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -2849,10 +2849,486 @@ X_train, X_cv, y_train, y_cv = train_test_split(
 
   <section data-transition="fade">
     <div class="section-title">
+      <h2>De un CV-set a K-Fold Cross-Validation</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 760px;">
+        Hasta aquí usamos <strong>un solo</strong> cross-validation set. Funciona, pero tiene un problema:
+        si el cv-set es pequeño, <strong style="color: var(--c-yellow);">qué modelo gana depende de la
+        suerte del corte</strong>. Vamos a arreglarlo — y luego a automatizar la búsqueda de
+        hyper-parámetros.
+      </p>
+    </div>
+    <aside class="notes">
+      Contenido propio. El pptx original (basado en el curso de Andrew Ng) solo cubre el hold-out set único;
+      k-fold y el tuning automatizado son estándar en la práctica actual y son lo que los estudiantes van a
+      usar en el capstone, así que se agregan aquí.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema de un Solo CV-set</h2>
+    <div class="columns">
+      <div class="col-45">
+        <p style="font-size: 0.5em;">
+          Con un 20% de los datos para validar, el cv-set puede quedarse en unas pocas decenas de
+          observaciones. Con tan pocos datos:
+        </p>
+        <ul style="font-size: 0.45em;">
+          <li class="fragment fade-up">La métrica tiene <strong>mucho ruido</strong>: mover 2 o 3
+            observaciones cambia el resultado.</li>
+          <li class="fragment fade-up">Estamos <strong>desperdiciando datos</strong>: ese 20% nunca se usa
+            para entrenar.</li>
+          <li class="fragment fade-up">El modelo que gana puede ser simplemente el que tuvo
+            <strong style="color: var(--c-red);">suerte</strong> con ese corte.</li>
+        </ul>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.48em; color: var(--c-orange);"><strong>Evidencia</strong></p>
+        <p style="font-size: 0.44em;">
+          Repitiendo el mismo experimento con <strong>15 semillas distintas</strong> (mismos datos, mismos
+          6 modelos, solo cambia dónde cae el corte), el ganador fue:
+        </p>
+        <table style="font-size: 0.42em; width: 100%;">
+          <tr><th>Modelo</th><th>Veces que ganó</th></tr>
+          <tr><td>Logistic Regression</td><td>5</td></tr>
+          <tr><td>Red Neuronal (MLP)</td><td>4</td></tr>
+          <tr><td>KNN</td><td>3</td></tr>
+          <tr><td>SVM (RBF)</td><td>2</td></tr>
+          <tr><td>Random Forest</td><td>1</td></tr>
+        </table>
+        <p style="font-size: 0.4em; color: var(--c-text-dim); margin-top: 0.3em;">
+          <strong>5 ganadores distintos</strong> para el mismo problema. La decisión era, en buena parte, azar.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Los números salen del notebook 09 del curso (sección 2.2), ejecutado sobre breast cancer. Vale la pena
+      correrlo en vivo: es el argumento más convincente para justificar k-fold.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>K-Fold Cross-Validation</h2>
+    <p style="font-size: 0.52em;">
+      En vez de <em>un</em> corte, hacemos <strong>k</strong> cortes. Los datos se parten en k bloques
+      (<em>folds</em>) del mismo tamaño y se entrena k veces: cada vez, un fold distinto hace de validación
+      y los otros k−1 de entrenamiento.
+    </p>
+    <p class="katex-block fragment fade-up" style="font-size: 0.8em;">\text{score}_{CV} = \frac{1}{k}\sum_{i=1}^{k} \text{score}_i</p>
+    <div class="columns fragment fade-up" style="margin-top: 0.2em;">
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-green);"><strong>Qué ganamos</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Cada observación se usa para validar <strong>exactamente una vez</strong>, y para entrenar k−1 veces.</li>
+          <li>El resultado es un <strong>promedio</strong>, mucho menos ruidoso.</li>
+          <li>La <strong>desviación estándar</strong> entre folds nos dice cuánta confianza merece.</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-orange);"><strong>Qué cuesta</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Entrenar <strong>k modelos</strong> en vez de uno (k veces más lento).</li>
+          <li>k = 5 o k = 10 son los valores habituales.</li>
+          <li>En clasificación se usa <strong><code>StratifiedKFold</code></strong>, que mantiene la
+            proporción de clases en cada fold.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. Mencionar que el test-set sigue apartado: k-fold se aplica solo sobre el conjunto de desarrollo.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora K-Fold Cross-Validation</h2>
+    <div class="widget-container">
+      <canvas id="kfold-canvas" width="860" height="300" style="width:100%; max-width:860px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em; flex-wrap:wrap;">
+        <div class="widget-label" style="font-size:0.8em;">k <span class="widget-value" id="kfold-k-value">5</span>
+          <input type="range" id="kfold-slider" class="widget-slider" min="3" max="10" step="1" value="5" style="width:120px; margin-left:0.4em;">
+        </div>
+        <button class="widget-btn fi-btn" id="kfold-next">Siguiente fold</button>
+        <button class="widget-btn fi-btn" id="kfold-animate">Animar todo</button>
+        <button class="widget-btn fi-btn" id="kfold-reset">Reiniciar</button>
+      </div>
+      <div id="kfold-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.35em; font-size:0.62em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Cambia <strong>k</strong> y observa: más folds → más modelos entrenados, pero cada uno entrena con más
+      datos. El número que reportamos es el <strong>promedio</strong>, y la desviación estándar dice si la
+      diferencia entre dos modelos es real o es ruido.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/kfold-widget.js). Los scores son ilustrativos pero deterministas. Guion:
+      empezar con k=5 y "Animar todo"; luego subir a k=10 y notar que se entrenan 10 modelos. Recalcar que
+      el costo de k-fold es multiplicar por k TODO lo que venga después (incluida la búsqueda de
+      hyper-parámetros: 36 combinaciones × 5 folds = 180 entrenamientos).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Parámetros vs. Hyper-parámetros</h2>
+    <div class="comparison">
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Parámetros</h3>
+        <p style="font-size: 0.85em;">Los ajusta <strong>el algoritmo</strong> durante el entrenamiento
+          (gradient descent, ecuación normal...).</p>
+        <p style="font-size: 0.8em; color: var(--c-text-dim);">Los pesos θ de una regresión, los pesos de
+          una red neuronal, los cortes de un árbol.</p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Hyper-parámetros</h3>
+        <p style="font-size: 0.85em;">Los elegimos <strong>nosotros</strong>, antes de entrenar. El
+          algoritmo los recibe como configuración.</p>
+        <p style="font-size: 0.8em; color: var(--c-text-dim);">λ, el grado del polinomio, <code>C</code> y
+          <code>gamma</code> de un SVM, <code>max_depth</code>, el learning rate, cuántas capas.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.4em;">
+      Buscar la mejor combinación de hyper-parámetros se llama <strong style="color: var(--c-yellow);">hyper-parameter
+      tuning</strong>, y es exactamente el paso 1 del algoritmo de selección de modelos ("crear una lista de
+      candidatos") hecho de forma sistemática en vez de a mano.
+    </blockquote>
+    <aside class="notes">Contenido propio. Conectar con λ, que ya vimos en la unidad de regularización: era nuestro primer hyper-parámetro.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema: la Explosión Combinatoria</h2>
+    <p style="font-size: 0.52em;">
+      Probar hyper-parámetros a mano funciona con 2 o 3 valores. Pero el número de combinaciones
+      <strong>se multiplica</strong> con cada hyper-parámetro nuevo:
+    </p>
+    <table style="font-size: 0.44em; width: 100%; max-width: 760px; margin: 0.3em auto;">
+      <tr><th>Hyper-parámetros</th><th>Valores c/u</th><th>Combinaciones</th><th>× 5 folds =</th></tr>
+      <tr class="fragment fade-up"><td>2</td><td>6</td><td>36</td><td>180 entrenamientos</td></tr>
+      <tr class="fragment fade-up"><td>3</td><td>6</td><td>216</td><td>1,080 entrenamientos</td></tr>
+      <tr class="fragment fade-up"><td>4</td><td>6</td><td>1,296</td><td>6,480 entrenamientos</td></tr>
+      <tr class="fragment fade-up"><td>5</td><td>6</td><td>7,776</td><td><strong style="color:var(--c-red);">38,880 entrenamientos</strong></td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.3em;">
+      Si cada entrenamiento tarda 1 minuto, la última fila son <strong style="color: var(--c-red);">27 días</strong>.
+      Necesitamos estrategias más inteligentes que "probar todo".
+    </p>
+    <aside class="notes">
+      Contenido propio. Este es el argumento que motiva random search y la optimización bayesiana. En deep
+      learning cada entrenamiento puede tardar horas, no minutos — ahí la aritmética es todavía más brutal.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Estrategia 1: Grid Search</h2>
+    <div class="columns">
+      <div class="col-45">
+        <p style="font-size: 0.48em;">
+          Definimos una <strong>lista de valores</strong> por hyper-parámetro y probamos
+          <strong>todas las combinaciones</strong>.
+        </p>
+        <p style="font-size: 0.44em; color: var(--c-green);"><strong>✓ A favor:</strong> exhaustivo,
+          reproducible y trivial de paralelizar. Si el óptimo está en la grilla, lo encuentra.</p>
+        <p style="font-size: 0.44em; color: var(--c-red);"><strong>✗ En contra:</strong> costo exponencial,
+          y solo prueba los valores que pusiste. Gasta la mayoría del presupuesto en zonas malas.</p>
+      </div>
+      <div class="col-45">
+        <pre class="fragment fade-up" style="font-size: 0.42em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">from sklearn.model_selection import (
+    GridSearchCV)
+
+param_grid = {
+    "clf__C":     [0.01, 0.1, 1, 10, 100],
+    "clf__gamma": [1e-4, 1e-3, 1e-2, 0.1],
+}
+
+grid = GridSearchCV(
+    pipe, param_grid,
+    scoring="f1", cv=5, n_jobs=-1)
+grid.fit(X_dev, y_dev)
+
+grid.best_params_   # mejor combinacion
+grid.best_score_    # su score en CV</code></pre>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. Recordar que GridSearchCV hace el ciclo completo: entrena, evalua con CV y guarda el mejor. Con refit=True (default) reentrena el mejor con todos los datos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Estrategia 2: Random Search</h2>
+    <div class="columns">
+      <div class="col-45">
+        <p style="font-size: 0.48em;">
+          En vez de una grilla, definimos una <strong>distribución</strong> por hyper-parámetro y muestreamos
+          combinaciones al azar, con un <strong>presupuesto fijo</strong> de evaluaciones.
+        </p>
+        <p style="font-size: 0.44em;">
+          Suena peor, pero: normalmente <strong>solo unos pocos hyper-parámetros importan de verdad</strong>.
+          Con una grilla 6×6 cada uno toma solo <strong>6 valores distintos</strong>; con 36 muestras
+          aleatorias, toma <strong style="color: var(--c-yellow);">36</strong>.
+        </p>
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">Bergstra &amp; Bengio (2012),
+          <em>Random Search for Hyper-Parameter Optimization</em>.</p>
+      </div>
+      <div class="col-45">
+        <pre class="fragment fade-up" style="font-size: 0.42em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">from sklearn.model_selection import (
+    RandomizedSearchCV)
+from scipy.stats import loguniform
+
+param_dist = {
+    "clf__C":     loguniform(1e-2, 1e3),
+    "clf__gamma": loguniform(1e-4, 1e1),
+}
+
+rand = RandomizedSearchCV(
+    pipe, param_dist,
+    n_iter=36,        # presupuesto
+    scoring="f1", cv=5, n_jobs=-1)
+rand.fit(X_dev, y_dev)</code></pre>
+        <p class="fragment fade-up" style="font-size: 0.4em; color: var(--c-text-dim);">
+          <code>loguniform</code> porque <code>C</code> y <code>gamma</code> se exploran en escala
+          logarítmica: interesa 0.01 vs 0.1, no 500 vs 501.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. Ventaja practica clave: el presupuesto lo fijas tú (n_iter), no la grilla — puedes parar cuando se acabe el tiempo disponible.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Estrategia 3: Optimización Bayesiana</h2>
+    <p style="font-size: 0.5em;">
+      Grid y random son <strong>ciegos</strong>: el intento nº 36 no aprende nada de los 35 anteriores.
+      La idea bayesiana es <strong style="color: var(--c-yellow);">usar los resultados previos para decidir
+      dónde probar después</strong>.
+    </p>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.8em;">
+      <div class="step fragment fade-up">1. Construir un <strong>modelo sustituto</strong> (<em>surrogate</em>),
+        barato, que aproxima <code>hyper-parámetros → métrica</code> con lo ya evaluado</div>
+      <div class="step fragment fade-up">2. Con ese modelo, elegir el punto más prometedor, balanceando
+        <strong style="color:var(--c-green);">explotación</strong> (cerca de lo que ya funcionó) y
+        <strong style="color:var(--c-orange);">exploración</strong> (zonas con mucha incertidumbre)</div>
+      <div class="step fragment fade-up">3. Evaluarlo de verdad con CV, agregar el resultado y
+        <strong>repetir</strong></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      La librería más usada hoy es <strong>Optuna</strong>, cuyo sampler por defecto es
+      <strong>TPE</strong> (<em>Tree-structured Parzen Estimator</em>): modela qué distribución de
+      hyper-parámetros produce buenos resultados frente a malos.
+    </p>
+    <aside class="notes">
+      Contenido propio. Otras librerías: Hyperopt, scikit-optimize, Ray Tune, Keras Tuner. En la nube:
+      SageMaker Automatic Model Tuning y Vertex AI Vizier — relevante para el capstone.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Optimización Bayesiana con Optuna</h2>
+    <div class="columns">
+      <div class="col-45">
+        <pre style="font-size: 0.4em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">import optuna
+
+def objective(trial):
+    C = trial.suggest_float(
+        "C", 1e-2, 1e3, log=True)
+    gamma = trial.suggest_float(
+        "gamma", 1e-4, 1e1, log=True)
+
+    pipe = Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", SVC(C=C, gamma=gamma)),
+    ])
+    return cross_val_score(
+        pipe, X_dev, y_dev,
+        cv=5, scoring="f1").mean()
+
+study = optuna.create_study(
+    direction="maximize")
+study.optimize(objective, n_trials=36)</code></pre>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-teal);"><strong>Su ventaja menos obvia:
+          espacios condicionales</strong></p>
+        <p style="font-size: 0.42em;">
+          Puede elegir <strong>primero la arquitectura</strong> y, según cuál salga, pedir
+          hyper-parámetros distintos — algo que una grilla no expresa de forma natural:
+        </p>
+        <pre class="fragment fade-up" style="font-size: 0.38em; max-width: 100%; overflow-x: auto; box-sizing: border-box;"><code class="language-python">tipo = trial.suggest_categorical(
+    "modelo", ["svm", "random_forest"])
+
+if tipo == "svm":
+    C = trial.suggest_float("svm_C", ...)
+else:
+    n = trial.suggest_int("rf_n", 50, 400)</code></pre>
+        <p class="fragment fade-up" style="font-size: 0.4em; color: var(--c-text-dim);">
+          Así se buscan <strong>arquitectura e hyper-parámetros a la vez</strong>.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. En el notebook 09 este espacio condicional se usa con 5 arquitecturas; TPE termina dedicando 35 de 60 trials al modelo que mejor rinde.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora las 3 Estrategias</h2>
+    <div class="widget-container">
+      <canvas id="search-strategy-canvas" width="880" height="320" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn search-strategy-btn" data-strategy="grid">Grid Search</button>
+        <button class="widget-btn fi-btn search-strategy-btn" data-strategy="random">Random Search</button>
+        <button class="widget-btn fi-btn search-strategy-btn" data-strategy="bayes">Bayesiana (TPE)</button>
+        <button class="widget-btn fi-btn" id="search-strategy-reset">Reiniciar</button>
+      </div>
+      <div id="search-strategy-info" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 1.2em; margin-top:0.35em; font-size:0.6em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Las 3 con el <strong>mismo presupuesto (36 evaluaciones)</strong>. Ejecútalas una por una: el grid cae
+      siempre en la misma retícula, random cubre mejor, y la bayesiana <strong>se concentra</strong> donde
+      ya encontró algo bueno.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/search-strategy-widget.js). El color de fondo es la métrica que se obtendría
+      en cada punto — en la vida real es justamente lo que NO conocemos. La curva bayesiana es una simulación
+      didáctica del comportamiento de TPE, no el algoritmo real. Advertir que en un problema fácil de 2
+      dimensiones las tres llegan a un resultado parecido: la ventaja bayesiana aparece cuando cada
+      evaluación es cara y hay muchas dimensiones.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Cuál Estrategia Usar?</h2>
+    <table style="font-size: 0.42em; width: 100%;">
+      <tr><th>Estrategia</th><th>Cómo elige el siguiente punto</th><th>Cuándo usarla</th><th>Limitación</th></tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-blue);">Grid Search</strong></td>
+        <td>Todas las combinaciones de una lista fija</td>
+        <td>Pocos hyper-parámetros (≤3) y quieres exhaustividad</td>
+        <td>Costo exponencial; solo prueba los valores de la grilla</td>
+      </tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-orange);">Random Search</strong></td>
+        <td>Al azar desde una distribución</td>
+        <td><strong>Punto de partida por defecto</strong>; muchos hyper-parámetros</td>
+        <td>Ciego: no aprende de los intentos previos</td>
+      </tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-green);">Bayesiana (TPE)</strong></td>
+        <td>Modela qué zonas prometen y explora ahí</td>
+        <td>Evaluaciones <strong>caras</strong> (deep learning), espacios grandes o condicionales</td>
+        <td>Overhead por trial; es secuencial, paraleliza peor</td>
+      </tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.4em;">
+      🧭 <strong>Regla práctica:</strong> empieza con <strong>random search</strong>. Si cada entrenamiento
+      tarda horas o tienes muchos hyper-parámetros, pásate a <strong>optimización bayesiana</strong>. Grid
+      search solo cuando el espacio es realmente pequeño.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio. Mencionar también los métodos de "presupuesto por etapas": HalvingGridSearchCV /
+      HalvingRandomSearchCV en sklearn, y Hyperband/ASHA — descartan candidatos malos temprano, con pocos
+      datos o pocas épocas, antes de invertir en ellos.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cuidado: Data Leakage al Preprocesar</h2>
+    <p style="font-size: 0.5em;">
+      Con cross-validation aparece un error silencioso y muy común: <strong>escalar los datos antes de
+      partirlos</strong>.
+    </p>
+    <div class="comparison">
+      <div class="side incorrect">
+        <h3>❌ Mal</h3>
+        <pre style="font-size: 0.52em; text-align:left; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python"># escala usando TODO X
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+cross_val_score(mod, X, y, cv=5)</code></pre>
+        <p style="font-size: 0.75em;">La media y la desviación se calcularon con <strong>todos</strong> los
+          datos, incluidos los de validación. El modelo ya "vio" información que no debería.</p>
+      </div>
+      <div class="side correct">
+        <h3>✓ Bien</h3>
+        <pre style="font-size: 0.52em; text-align:left; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("clf", SVC()),
+])
+
+cross_val_score(pipe, X, y, cv=5)</code></pre>
+        <p style="font-size: 0.75em;">Dentro del <code>Pipeline</code>, el scaler se ajusta
+          <strong>solo con la porción de entrenamiento de cada fold</strong>.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      Aplica a <strong>todo</strong> lo que aprende de los datos: escalado, imputación de nulos, PCA,
+      selección de features, encoders. Todo va dentro del <code>Pipeline</code>.
+    </p>
+    <aside class="notes">
+      Contenido propio. Es el bug más frecuente en proyectos de estudiantes: produce métricas de CV infladas
+      que luego no se sostienen en test ni en producción. Vale la pena insistir.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Sesgo del Ganador (<em>Winner's Curse</em>)</h2>
+    <p style="font-size: 0.5em;">
+      Si probamos 130 configuraciones y nos quedamos con <strong>el máximo</strong>, ese máximo combina
+      <strong style="color: var(--c-green);">mérito real</strong> con
+      <strong style="color: var(--c-orange);">buena suerte en los folds</strong>. El máximo de muchos
+      estimados ruidosos está <strong>sesgado hacia arriba</strong>.
+    </p>
+    <div class="fragment fade-up" style="text-align:center; margin-top: 0.3em;">
+      <p style="font-size: 0.46em; color: var(--c-yellow);"><strong>Medido en el notebook 09:</strong></p>
+      <p style="font-size: 0.44em;">
+        Re-evaluando las 8 mejores configuraciones con <strong>otras particiones de folds</strong>
+        (mismos datos, mismo modelo, solo cambian los cortes),
+        <strong style="color: var(--c-red);">las 8 bajaron</strong> — en promedio 0.005 de F1.
+      </p>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.3em;">
+      Por eso el número que se reporta es el de <strong>test</strong>: puede quedar arriba o abajo del de CV
+      (el test también tiene ruido), pero <strong>no está inflado por construcción</strong>. Y por eso, si
+      vuelves a usar el test para decidir algo, dejas de tener un estimado honesto.
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim);">
+      Corolario: entre configuraciones que difieren en la tercera cifra decimal, "la mejor" es en buena parte
+      un accidente. Quédate con la <strong>más simple, rápida o fácil de mantener</strong>.
+    </p>
+    <aside class="notes">
+      Contenido propio. Si alguien pregunta por un estimado honesto DEL PROCEDIMIENTO completo de tuning
+      (no solo del modelo final) y no alcanzan los datos para un test aparte: nested cross-validation, un
+      bucle de CV externo alrededor del tuning. Es k veces más caro pero es lo correcto en datasets pequeños.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Flujo Completo, en Orden</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.72em;">
+      <div class="step fragment fade-up">1. Apartar el <strong style="color:var(--c-green);">test-set</strong> y no tocarlo</div>
+      <div class="step fragment fade-up">2. Definir el <strong>espacio de búsqueda</strong>: arquitecturas e hyper-parámetros</div>
+      <div class="step fragment fade-up">3. Buscar con <strong>grid / random / bayesiana</strong>, evaluando cada candidato con <strong>k-fold CV</strong> sobre el conjunto de desarrollo</div>
+      <div class="step fragment fade-up">4. Elegir <strong>una sola</strong> configuración ganadora</div>
+      <div class="step fragment fade-up">5. <strong>Re-entrenarla con todo</strong> el conjunto de desarrollo</div>
+      <div class="step fragment fade-up">6. Evaluar en <strong style="color:var(--c-green);">test</strong> — una vez — y reportar ese número</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Todo el preprocesamiento, siempre dentro del <code>Pipeline</code>.
+    </p>
+    <aside class="notes">Contenido propio. Es el mismo algoritmo de selección de modelos de la slide 7/6, ya con k-fold y tuning automatizado incorporados.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Notebook de la Unidad</h2>
+    <div class="resource-grid" style="max-width: 560px; margin: 0 auto;">
+      <div class="resource-card fragment fade-up">
+        <div class="resource-icon">📓</div>
+        <h4>09 — Model Selection e Hyper-parameter Tuning</h4>
+        <p>Recorre todo lo visto: split de 3 vías, la fragilidad de un solo cv-set, k-fold para comparar 6
+          arquitecturas, las 3 estrategias de búsqueda con el mismo presupuesto, búsqueda conjunta de
+          arquitectura e hyper-parámetros con Optuna, evaluación final en test y medición del winner's curse.</p>
+        <span class="resource-tag">2025/notebooks/09_model_selection_hyperparameter_tuning.ipynb</span>
+      </div>
+    </div>
+    <aside class="notes">El notebook es autocontenido y corre en Colab de principio a fin en ~1 minuto.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <div class="section-title">
       <h2>Buenas Prácticas: el Recorrido Completo</h2>
       <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 720px;">
         Evaluación de modelos (métricas, matriz de confusión, ROC/AUC) &rarr; train/test split y diagnóstico
-        (over/underfitting) &rarr; regularización &rarr; selección de modelos con cross-validation. Con esto
+        (over/underfitting) &rarr; regularización &rarr; selección de modelos con cross-validation e
+        hyper-parameter tuning. Con esto
         ya tienes el ciclo completo para llevar un modelo de "funciona en mis datos" a
         <strong style="color: var(--c-yellow);">"funciona de verdad, y sé por qué"</strong> — listo para
         aplicarlo en tu capstone.
@@ -2886,6 +3362,8 @@ X_train, X_cv, y_train, y_cv = train_test_split(
 <script src="js/widgets/batchnorm-widget.js"></script>
 <script src="js/widgets/metric-table-widget.js"></script>
 <script src="js/widgets/feature-importance-widget.js"></script>
+<script src="js/widgets/kfold-widget.js"></script>
+<script src="js/widgets/search-strategy-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -3002,6 +3480,18 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initFeatureImportanceWidget === 'function') {
       initFeatureImportanceWidget();
       widgetsInitialized.featureImportance = true;
+    }
+  }
+  if (slide.querySelector('#kfold-canvas') && !widgetsInitialized.kfold) {
+    if (typeof initKFoldWidget === 'function') {
+      initKFoldWidget();
+      widgetsInitialized.kfold = true;
+    }
+  }
+  if (slide.querySelector('#search-strategy-canvas') && !widgetsInitialized.searchStrategy) {
+    if (typeof initSearchStrategyWidget === 'function') {
+      initSearchStrategyWidget();
+      widgetsInitialized.searchStrategy = true;
     }
   }
 });

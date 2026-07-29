@@ -422,6 +422,11 @@
 
 .comparison .side {
   flex: 1;
+  /* min-width: 0 permite que la columna se encoja cuando su contenido
+     (p.ej. un bloque de codigo con lineas largas) es mas ancho que el
+     espacio disponible. Sin esto el .comparison desborda el slide.
+     Mismo criterio que .columns .col-*. */
+  min-width: 0;
   background: rgba(13, 13, 26, 0.5);
   border-radius: 10px;
   padding: 0.8em;
