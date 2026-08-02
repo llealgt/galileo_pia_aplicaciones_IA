@@ -4307,13 +4307,15 @@ LIMIT 5;</code></pre>
       <div class="col-45">
         <p style="font-size: 0.44em;">
           Viene con TensorFlow y funciona también con <strong>PyTorch</strong>
-          (<code>torch.utils.tensorboard</code>). Es <strong>local y gratuito</strong>: lee los archivos de
-          eventos de un directorio y los grafica.
+          (<code>torch.utils.tensorboard.SummaryWriter</code>). Es <strong>local y gratuito</strong>: lee los
+          archivos de eventos de un directorio y los grafica.
         </p>
         <p style="font-size: 0.42em; color: var(--c-green);"><strong>A favor:</strong> cero configuración,
           sin cuenta, sin subir datos a ningún lado.</p>
         <p style="font-size: 0.42em; color: var(--c-red);"><strong>En contra:</strong> pensado para una
           máquina; colaborar en equipo o comparar cientos de corridas se vuelve incómodo.</p>
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">Es mucho más que curvas: tiene
+          <strong>8 pestañas</strong> y vamos a recorrer las que más se usan.</p>
       </div>
       <div class="col-45">
         <pre style="font-size: 0.38em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">import datetime, tensorflow as tf
@@ -4325,7 +4327,7 @@ logdir = f"logs/fit/{ts}_mlp_lr1e-3_bs128"
 
 tb = tf.keras.callbacks.TensorBoard(
     log_dir=logdir,
-    histogram_freq=1)
+    histogram_freq=1)   # <- activa histogramas
 
 model.fit(X, y, epochs=20,
           validation_data=(Xv, yv),
@@ -4336,44 +4338,58 @@ model.fit(X, y, epochs=20,
       </div>
     </div>
     <aside class="notes">
-      Fuente: documentacion oficial de TensorBoard (tensorflow.org/tensorboard/get_started y
-      /scalars_and_keras). Notar que el TensorBoard callback ES un callback: todo lo de la unidad anterior
-      aplica igual.
+      Fuente: documentacion oficial de TensorBoard. Notar que el TensorBoard callback ES un callback: todo
+      lo de la unidad anterior aplica igual. histogram_freq=1 es lo que habilita las pestañas Histograms y
+      Distributions.
     </aside>
   </section>
 
   <section data-transition="fade">
     <h2>TensorBoard: Comparar Corridas</h2>
     <div style="text-align:center;">
-      <img src="img/Clase_Tools_tb_scalars.png" alt="TensorBoard mostrando las curvas de accuracy y loss de 12 corridas" style="max-width: 82%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+      <img src="img/Clase_Tools_tb_scalars.png" alt="TensorBoard mostrando las curvas de accuracy y loss de 12 corridas" style="max-width: 80%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
     </div>
     <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
-      12 corridas de un MLP sobre Fashion-MNIST, cada una con su configuration string en el panel de la
-      izquierda. Se pueden <strong>filtrar con una regex</strong>, superponer y suavizar. Fíjate que cada
-      corrida aparece dos veces: <code>/train</code> y <code>/validation</code> — así se ve la brecha.
+      12 corridas de un MLP sobre Fashion-MNIST, cada una con su configuration string en el panel izquierdo.
+      Se pueden <strong>filtrar con una regex</strong>, superponer y suavizar. Cada corrida aparece dos veces:
+      <code>/train</code> y <code>/validation</code> — así se ve la brecha de un vistazo.
     </p>
+    <aside class="notes">Captura real de TensorBoard sobre logs generados para este curso (12 combinaciones de learning rate, units y dropout).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Smoothing: Ver la Señal en el Ruido</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_tb_smoothing.png" alt="Comparacion de las mismas curvas con smoothing 0 y con smoothing 0.95" style="max-width: 88%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      El slider de <strong>smoothing</strong> aplica un promedio móvil exponencial. Las mismas curvas: a la
+      izquierda crudas, a la derecha suavizadas. La línea tenue de fondo es siempre el dato real.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      ⚠️ <strong>Es una ayuda visual, no un resultado.</strong> Suavizar de más puede esconder
+      inestabilidad real (picos, divergencias) y hacer que dos corridas distintas parezcan iguales.
+      Para <em>comparar</em> usa poco smoothing; para <em>presentar una tendencia</em>, más.
+      Nunca reportes un número leído de la curva suavizada.
+    </blockquote>
     <aside class="notes">
-      Captura real de TensorBoard 2.13 corriendo sobre logs generados para este curso (12 combinaciones de
-      learning rate, units y dropout). El slider de "Smoothing" es util cuando las curvas por batch son
-      ruidosas — pero ojo, suavizar de mas puede esconder inestabilidad real.
+      Ambas capturas son de la misma corrida, cambiando solo el parametro _smoothingWeight. El caso donde
+      mas duele: un pico de divergencia que el smoothing convierte en una loma inofensiva.
     </aside>
   </section>
 
   <section data-transition="fade">
     <h2>TensorBoard: el Dashboard de HParams</h2>
     <div style="text-align:center;">
-      <img src="img/Clase_Tools_tb_hparams.png" alt="Dashboard HParams de TensorBoard con 12 experimentos y su val_accuracy" style="max-width: 80%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+      <img src="img/Clase_Tools_tb_hparams.png" alt="Dashboard HParams de TensorBoard con 12 experimentos y su val_accuracy" style="max-width: 78%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
     </div>
     <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
       Una fila por experimento, una columna por hiperparámetro y la métrica al final: es la tabla de
-      resultados del <strong>hyper-parameter tuning</strong> de la unidad 7, generada sola. También tiene
-      vista de <em>coordenadas paralelas</em> para ver qué combinaciones llevan a las zonas buenas.
+      resultados del <strong>hyper-parameter tuning</strong> de la unidad 7, generada sola. Tiene además
+      vista de <em>coordenadas paralelas</em> y de <em>scatter plot matrix</em> para ver qué combinaciones
+      llevan a las zonas buenas.
     </p>
-    <aside class="notes">
-      Captura real. El codigo para producirla esta en la siguiente slide. En estas 12 corridas la mejor
-      combinacion fue lr=1e-3 con 256 units y dropout 0.3 (0.8766) — un buen momento para conectar con
-      grid search.
-    </aside>
+    <aside class="notes">Captura real. En estas 12 corridas la mejor combinacion fue lr=1e-3 con 256 units y dropout 0.3 (0.8782).</aside>
   </section>
 
   <section data-transition="fade">
@@ -4406,37 +4422,194 @@ for lr in [1e-2, 1e-3, 1e-4]:
     </p>
     <aside class="notes">
       Basado en tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams. El detalle del group es un
-      error real que da una tabla sin metricas — vale la pena advertirlo.
+      error real: en la primera version de estas slides la tabla salio sin metricas por eso mismo.
     </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Imágenes: Predicciones vs. Ground Truth</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_tb_images.png" alt="Pestaña Images de TensorBoard con la matriz de confusion y una muestra de predicciones" style="max-width: 76%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Las métricas te dicen <em>cuánto</em> fallas; las imágenes te dicen <strong>en qué</strong> fallas.
+      Aquí registramos, en cada época, una muestra de predicciones con su ground truth y la matriz de
+      confusión. El <strong>slider de paso</strong> permite ver cómo evolucionan a lo largo del
+      entrenamiento.
+    </p>
+    <aside class="notes">
+      Captura real. Cualquier figura de matplotlib se puede registrar como imagen: basta convertirla a PNG
+      y pasarla por tf.summary.image. En deteccion de objetos se hace lo mismo dibujando las cajas sobre la
+      imagen (tf.image.draw_bounding_boxes) antes de registrarla.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Registrar Imágenes Propias</h2>
+    <pre style="font-size: 0.42em; max-width: 88%; margin: 0 auto; overflow-x:auto;"><code class="language-python">import io, matplotlib.pyplot as plt
+
+escritor = tf.summary.create_file_writer(logdir + "/imagenes")
+
+def figura_a_imagen(fig):
+    # cualquier figura de matplotlib -> tensor de imagen
+    buf = io.BytesIO(); fig.savefig(buf, format="png", dpi=110)
+    plt.close(fig); buf.seek(0)
+    return tf.expand_dims(tf.image.decode_png(buf.getvalue(), channels=4), 0)
+
+class LogImagenes(tf.keras.callbacks.Callback):        # <- otra vez, un callback
+    def on_epoch_end(self, epoch, logs=None):
+        with escritor.as_default():
+            tf.summary.image("predicciones_vs_ground_truth",
+                             figura_a_imagen(grid_predicciones(self.model)), step=epoch)
+            tf.summary.image("matriz_de_confusion",
+                             figura_a_imagen(figura_matriz(self.model)), step=epoch)</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      Para <strong>detección de objetos</strong> el patrón es el mismo: dibujas las cajas predichas y las
+      reales sobre la imagen (con <code>tf.image.draw_bounding_boxes</code> o matplotlib) y registras el
+      resultado. Así revisas visualmente los falsos positivos época por época.
+    </p>
+    <aside class="notes">Este es exactamente el codigo que genero la captura anterior.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Histogramas: Qué Pasa con los Pesos</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_tb_histograms.png" alt="Pestaña Histograms mostrando la distribucion de pesos y sesgos por capa a lo largo de las epocas" style="max-width: 74%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Cada "montaña" es la distribución de los pesos de una capa en una época; el eje de profundidad es el
+      tiempo. Sirve para diagnosticar problemas que las curvas <strong>no muestran</strong>: pesos que
+      explotan, capas que dejan de moverse (gradientes desvanecidos), o activaciones saturadas — justo lo
+      que motivaba batch normalization.
+    </p>
+    <aside class="notes">
+      Captura real. Se activa con histogram_freq=1 en el callback. La pestaña Distributions es lo mismo
+      visto como percentiles en el tiempo, mas facil de leer para detectar tendencias.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Curvas PR y Vista de Series de Tiempo</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <img src="img/Clase_Tools_tb_pr.png" alt="Pestaña PR Curves de TensorBoard" style="width: 100%; border-radius: 6px; padding: 0.15em; background: rgba(255,255,255,0.95);">
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+          <strong>PR Curves:</strong> precision-recall por clase y por época. Conecta con la unidad de
+          evaluación: aquí ves el trade-off completo, no un solo threshold.
+        </p>
+      </div>
+      <div class="col-45">
+        <img src="img/Clase_Tools_tb_timeseries.png" alt="Vista Time Series de TensorBoard con panel de ajustes" style="width: 100%; border-radius: 6px; padding: 0.15em; background: rgba(255,255,255,0.95);">
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+          <strong>Time Series:</strong> la vista moderna que unifica escalares, imágenes e histogramas, con
+          <em>pinned cards</em> para armar tu propio tablero y el smoothing en el panel de ajustes.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Ambas capturas son reales. Las curvas PR se registran con el plugin pr_curve; aqui se registraron para 3 clases (camiseta, camisa y botin — las dos primeras son justo las que el modelo confunde).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Embedding Projector: Ver lo que el Modelo Aprendió</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_tb_projector.png" alt="Embedding Projector de TensorBoard mostrando 2000 prendas agrupadas por su embedding" style="max-width: 76%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      2,000 imágenes de test proyectadas desde la <strong>capa penúltima</strong> (64 dimensiones) a 3D con
+      PCA. Cada punto es la miniatura real de la prenda: se ven los pantalones agrupados arriba, los suéteres
+      y abrigos abajo a la izquierda, y zapatos y bolsas a la derecha.
+    </p>
+    <aside class="notes">
+      Captura real, generada para este curso. Ademas de PCA hay t-SNE y UMAP, se puede buscar un punto y
+      pedir sus vecinos mas cercanos, y colorear por etiqueta. Es la forma mas directa de responder "¿que
+      esta usando el modelo para decidir?" y de encontrar clases que se confunden entre si.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Registrar Embeddings</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <pre style="font-size: 0.36em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">from tensorboard.plugins import projector
+
+# 1. sacar el vector de la capa que interesa
+extractor = tf.keras.Model(
+    modelo.input,
+    modelo.get_layer("embedding").output)
+emb = extractor.predict(X_test[:2000])
+
+# 2. etiquetas, UNA por linea y SIN cabecera
+with open("proj/metadata.tsv", "w") as f:
+    for y in y_test[:2000]:
+        f.write(CLASES[y] + "\n")
+
+# 3. guardar el tensor como checkpoint
+var = tf.Variable(emb, name="embedding")
+tf.train.Checkpoint(embedding=var).save(
+    "proj/embedding.ckpt")</code></pre>
+      </div>
+      <div class="col-45">
+        <pre style="font-size: 0.36em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python"># 4. describirle a TensorBoard que hay ahi
+cfg = projector.ProjectorConfig()
+e = cfg.embeddings.add()
+e.tensor_name = (
+    "embedding/.ATTRIBUTES/VARIABLE_VALUE")
+e.metadata_path = "metadata.tsv"
+e.sprite.image_path = "sprite.png"
+e.sprite.single_image_dim.extend([28, 28])
+projector.visualize_embeddings("proj", cfg)</code></pre>
+        <p style="font-size: 0.38em; color: var(--c-text-dim); margin-top: 0.3em;">
+          El <strong>sprite</strong> es una sola imagen con todas las miniaturas en cuadrícula; es lo que
+          hace que el projector muestre la prenda en vez de un punto.
+        </p>
+        <p style="font-size: 0.36em; color: var(--c-red);">
+          ⚠️ Si el <code>metadata.tsv</code> de una sola columna lleva cabecera, el projector la cuenta como
+          dato y falla con "número de tensores no coincide".
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Este codigo produjo la captura anterior. El error de la cabecera es real: paso al generar estas slides.</aside>
   </section>
 
   <section data-transition="fade">
     <h2>Weights &amp; Biases: el Estándar en la Nube</h2>
     <div class="columns" style="align-items: flex-start;">
       <div class="col-45">
-        <p style="font-size: 0.44em;">
-          Plataforma alojada (hay plan gratuito para uso académico y personal). Registra a la nube, así que
-          el equipo entero ve las mismas corridas en tiempo real desde cualquier máquina.
+        <p style="font-size: 0.42em;">
+          Plataforma alojada (plan gratuito para uso académico y personal). Registra a la nube, así que el
+          equipo entero ve las mismas corridas <strong>en tiempo real</strong> desde cualquier máquina.
         </p>
-        <p style="font-size: 0.42em; color: var(--c-green);"><strong>A favor:</strong> colaboración,
-          comparación de cientos de corridas, versionado de datasets y modelos, reportes compartibles,
-          métricas de sistema automáticas.</p>
-        <p style="font-size: 0.42em; color: var(--c-red);"><strong>En contra:</strong> los datos salen de
-          tu máquina (hay opción self-hosted), y es un servicio de pago a escala de empresa.</p>
+        <p style="font-size: 0.4em; color: var(--c-green);"><strong>A favor:</strong> colaboración,
+          comparación de cientos de corridas, versionado de datasets y modelos, reportes compartibles y
+          métricas de sistema (CPU/GPU) automáticas.</p>
+        <p style="font-size: 0.4em; color: var(--c-red);"><strong>En contra:</strong> los datos salen de tu
+          máquina (hay opción self-hosted) y es de pago a escala de empresa.</p>
       </div>
       <div class="col-45">
-        <p style="font-size: 0.4em; color: var(--c-text-dim);">Su propia página lo resume en 5 líneas:</p>
+        <p style="font-size: 0.38em; color: var(--c-text-dim);">Su propia página lo resume en 5 líneas:</p>
         <img src="img/Clase_Tools_wandb_api.png" alt="Ejemplo de API de Weights and Biases: init, config, log y log_artifact" style="width: 100%; border-radius: 6px;">
-        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.3em;">
-          Captura de <code>wandb.ai/site</code>. Nota: <code>log_artifact</code> versiona el modelo, no solo
-          las métricas.
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.25em;">
+          Fíjate en <code>log_artifact</code>: versiona el <strong>modelo</strong>, no solo las métricas.
         </p>
       </div>
     </div>
+    <aside class="notes">Fuente: wandb.ai/site y docs.wandb.ai. W&B fue adquirida por CoreWeave. Alternativas equivalentes: MLflow (open source), Neptune, Comet.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>W&amp;B: el Workspace</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_wb_workspace.png" alt="Workspace de Weights and Biases con 27 corridas y paneles de metricas" style="max-width: 82%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Un proyecto público real: <strong>27 corridas</strong> en la barra lateral, paneles que superponen las
+      métricas de todas, y en el menú izquierdo <strong>Runs, Sweeps, Reports y Artifacts</strong>. Los
+      paneles se agregan y organizan a mano, y la vista se comparte con un enlace.
+    </p>
     <aside class="notes">
-      Fuente: wandb.ai/site y docs.wandb.ai. W&B fue adquirida por CoreWeave, por eso el "by CoreWeave" en
-      su sitio. Mencionar que hay alternativas equivalentes: MLflow (open source, self-hosted), Neptune,
-      Comet.
+      Captura de wandb.ai/borisd13/semantic-segmentation, un proyecto publico (se ve sin cuenta). Notar los
+      nombres autogenerados tipo "laced-plant-165": por eso conviene pasar `name` con la configuration
+      string.
     </aside>
   </section>
 
@@ -4444,33 +4617,31 @@ for lr in [1e-2, 1e-3, 1e-4]:
     <h2>W&amp;B: Registrar Config y Métricas</h2>
     <div class="columns" style="align-items: flex-start;">
       <div class="col-45">
-        <p style="font-size: 0.42em; color: var(--c-orange);"><strong>Bucle manual</strong></p>
-        <pre style="font-size: 0.36em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">import wandb, datetime
+        <p style="font-size: 0.4em; color: var(--c-orange);"><strong>Bucle manual</strong></p>
+        <pre style="font-size: 0.35em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">import wandb, datetime
 
 ts = datetime.datetime.now().strftime(
     "%Y%m%d-%H%M%S")
 config = {"learning_rate": 1e-3,
           "batch_size": 128,
           "arquitectura": "resnet50",
-          "augmentation": True}
+          "seed": 42}
 
 with wandb.init(
         project="capstone-vision",
         name=f"{ts}_resnet50_lr1e-3_bs128",
-        group="baseline",
+        group="resnet50-baseline",   # <- clave
         tags=["resnet", "aug"],
         config=config) as run:
 
     for epoca in range(epocas):
-        train_loss = entrenar()
-        val_loss, val_acc = validar()
         run.log({"loss": train_loss,
                  "val_loss": val_loss,
                  "val_accuracy": val_acc})</code></pre>
       </div>
       <div class="col-45">
-        <p style="font-size: 0.42em; color: var(--c-blue);"><strong>Con Keras (es un callback)</strong></p>
-        <pre style="font-size: 0.36em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">from wandb.integration.keras import (
+        <p style="font-size: 0.4em; color: var(--c-blue);"><strong>Con Keras (es un callback)</strong></p>
+        <pre style="font-size: 0.35em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">from wandb.integration.keras import (
     WandbMetricsLogger,
     WandbModelCheckpoint)
 
@@ -4483,19 +4654,115 @@ with wandb.init(project="capstone-vision",
               epochs=20,
               callbacks=[
                   WandbMetricsLogger(),
-                  WandbModelCheckpoint(
-                      "modelos/"),
+                  WandbModelCheckpoint("modelos/"),
               ])</code></pre>
-        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+        <p style="font-size: 0.35em; color: var(--c-text-dim); margin-top: 0.2em;">
           <code>name</code> es la configuration string; <code>group</code> y <code>tags</code> permiten
-          filtrar familias de corridas en la interfaz.
+          agrupar y filtrar familias de corridas.
         </p>
       </div>
     </div>
+    <aside class="notes">Fuente: docs.wandb.ai. WandbMetricsLogger es literalmente un callback de Keras.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Group By: Promediar Varias Semillas</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.42em;">
+          Un resultado con <strong>una sola semilla no significa nada</strong>: ya lo vimos en la unidad de
+          selección de modelos. La práctica en investigación es correr la misma configuración con varias
+          semillas y reportar <strong>media ± desviación</strong>.
+        </p>
+        <p style="font-size: 0.4em;">
+          W&amp;B lo hace solo: si las corridas comparten <code>group</code>, la interfaz dibuja
+          <strong style="color: var(--c-yellow);">una línea (la media) con una banda sombreada</strong>
+          (la varianza) en vez de N líneas sueltas.
+        </p>
+        <pre style="font-size: 0.34em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">for seed in [0, 1, 2, 3, 4]:
+    wandb.init(project="capstone",
+               group="resnet50-lr1e-3",  # mismo
+               name=f"{ts}_resnet50_seed{seed}",
+               config={**cfg, "seed": seed})</code></pre>
+      </div>
+      <div class="col-45">
+        <img src="img/Clase_Tools_wb_group.png" alt="Graficas de W&B con la media de un grupo de corridas y la banda de varianza" style="width: 100%; border-radius: 6px; padding: 0.15em; background: rgba(255,255,255,0.95);">
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+          Cada línea es la <strong>media del grupo</strong> y el sombreado su dispersión. Se puede elegir
+          entre media/mín/máx para la línea, y desviación estándar, error estándar o mín-máx para la banda.
+        </p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      Si dos configuraciones tienen bandas que <strong>se traslapan</strong>, no puedes afirmar que una sea
+      mejor: la diferencia cabe dentro del ruido de la semilla. Es el mismo criterio de los boxplots de
+      cross-validation, aplicado a curvas.
+    </blockquote>
     <aside class="notes">
-      Fuente: docs.wandb.ai (quickstart, track/config e integrations/keras). Recalcar que
-      WandbMetricsLogger es literalmente un callback de Keras: la unidad anterior explica como funciona
-      por dentro.
+      Captura de un reporte publico de W&B (wandb.ai/borisd13/semantic-segmentation). Este es el uso mas
+      comun de group en papers: 3 a 10 semillas por configuracion.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>W&amp;B: Inspeccionar Predicciones</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_wb_overlay.png" alt="Interfaz de W&B mostrando mascaras de segmentacion sobre imagenes con toggles de clases" style="max-width: 74%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      En visión, W&amp;B superpone <strong>máscaras y cajas</strong> sobre la imagen, con
+      <strong>toggles por clase</strong>, control de opacidad y comparación
+      <strong style="color: var(--c-yellow);">predicción vs. ground truth</strong>. Es interactivo: puedes
+      apagar clases para aislar dónde falla el modelo.
+    </p>
+    <aside class="notes">Captura de docs.wandb.ai (Log media and objects). En el ejemplo son mascaras de segmentacion sobre escenas de calle del dataset Berkeley Deep Drive.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>W&amp;B: Cajas y Ground Truth en Código</h2>
+    <pre style="font-size: 0.4em; max-width: 90%; margin: 0 auto; overflow-x:auto;"><code class="language-python">def caja(x0, y0, x1, y1, clase, score=None):
+    d = {"position": {"minX": x0, "maxX": x1, "minY": y0, "maxY": y1},
+         "class_id": clase, "domain": "pixel"}
+    if score is not None:
+        d["scores"] = {"confianza": score}
+    return d
+
+run.log({"ejemplos": wandb.Image(imagen, boxes={
+    "predictions": {                       # un conjunto de cajas...
+        "box_data": [caja(*b, c, s) for b, c, s in zip(cajas_pred, clases_pred, scores)],
+        "class_labels": CLASES,
+    },
+    "ground_truth": {                      # ...y otro, superponibles
+        "box_data": [caja(*b, c) for b, c in zip(cajas_reales, clases_reales)],
+        "class_labels": CLASES,
+    },
+})})</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      Al registrar <code>predictions</code> y <code>ground_truth</code> como conjuntos separados, la interfaz
+      te deja <strong>alternar entre ambos</strong> y filtrar por clase o por confianza. Para segmentación
+      es lo mismo con <code>masks=</code>.
+    </p>
+    <aside class="notes">Fuente: docs.wandb.ai/ref/python/data-types/boundingboxes2d. Las coordenadas pueden ir en pixeles (domain="pixel") o en fraccion de la imagen (por defecto).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Más Hace Cada Herramienta</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th>Capacidad</th><th>TensorBoard</th><th>Weights &amp; Biases</th></tr>
+      <tr class="fragment fade-up"><td>Curvas + smoothing</td><td>✅ Scalars / Time Series</td><td>✅ con group-by y bandas de varianza</td></tr>
+      <tr class="fragment fade-up"><td>Tabla de hiperparámetros</td><td>✅ HParams + coordenadas paralelas</td><td>✅ Tabla de runs + coordenadas paralelas</td></tr>
+      <tr class="fragment fade-up"><td>Imágenes / predicciones</td><td>✅ Images (tú dibujas la figura)</td><td>✅ cajas y máscaras <strong>interactivas</strong></td></tr>
+      <tr class="fragment fade-up"><td>Distribución de pesos</td><td>✅ Histograms / Distributions</td><td>✅ con <code>watch(model)</code></td></tr>
+      <tr class="fragment fade-up"><td>Embeddings</td><td>✅ Projector (PCA, t-SNE, UMAP)</td><td>✅ Embedding Projector</td></tr>
+      <tr class="fragment fade-up"><td>Métricas de sistema (GPU)</td><td>⚠️ solo con el Profiler</td><td>✅ automáticas</td></tr>
+      <tr class="fragment fade-up"><td>Versionar modelos y datos</td><td>❌</td><td>✅ Artifacts</td></tr>
+      <tr class="fragment fade-up"><td>Búsqueda de hiperparámetros</td><td>❌ (la orquestas tú)</td><td>✅ Sweeps (grid, random, bayesiana)</td></tr>
+      <tr class="fragment fade-up"><td>Compartir e informes</td><td>❌ (o TensorBoard.dev, discontinuado)</td><td>✅ Reports con enlace público</td></tr>
+    </table>
+    <aside class="notes">
+      TensorBoard.dev, el servicio de hosting gratuito de TensorBoard, fue discontinuado a finales de 2023;
+      por eso para compartir hoy se usa W&B, MLflow o capturas. Los Sweeps de W&B implementan justamente las
+      tres estrategias de la unidad 7.
     </aside>
   </section>
 
