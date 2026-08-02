@@ -2465,6 +2465,261 @@ imp.sort_values().plot.barh()</code></pre>
   </section>
 
   <section data-transition="fade">
+    <h2>¿Qué Dice la Evidencia?</h2>
+    <p style="font-size: 0.52em;">
+      Todo lo anterior son <em>afirmaciones</em>. Veamos un experimento controlado que las pone a prueba
+      sobre <strong>MNIST</strong>, con una red de varias capas fully-connected:
+    </p>
+    <div class="columns" style="margin-top: 0.2em;">
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.48em; color: var(--c-green);"><strong>Lo que se mantiene igual</strong></p>
+        <ul style="font-size: 0.43em;">
+          <li>La misma arquitectura y los mismos datos</li>
+          <li><strong style="color: var(--c-yellow);">Los mismos pesos iniciales</strong> en ambas redes —
+            se generan <em>fuera</em> y se les pasan a las dos</li>
+          <li>El mismo número de iteraciones</li>
+        </ul>
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">
+          Ese control es lo importante: elimina que una gane por inicialización afortunada. La
+          <strong>única</strong> diferencia es la presencia de batch norm.
+        </p>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.48em; color: var(--c-orange);"><strong>Lo que se varía</strong></p>
+        <ul style="font-size: 0.43em;">
+          <li><strong>Activación:</strong> ReLU y sigmoid</li>
+          <li><strong>Learning rate:</strong> 0.01, 1 y 2</li>
+          <li><strong>Inicialización:</strong> razonable vs. deliberadamente mala (σ = 5)</li>
+          <li><strong>Presupuesto:</strong> 50,000 vs. 2,000 iteraciones</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      Fuente: notebook Batch_Normalization_Lesson.ipynb (github.com/llealgt/Batch_Normalization), basado en
+      el material de Udacity. Los números de las siguientes slides son los que produce ese notebook, medidos
+      sobre el test set completo de MNIST. Recalcar el diseño experimental: compartir los pesos iniciales es
+      lo que hace la comparación justa.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora los Resultados</h2>
+    <div class="widget-container">
+      <canvas id="bn-exp-canvas" width="860" height="300" style="width:100%; max-width:860px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn bn-exp-btn" data-vista="buenos">Pesos razonables</button>
+        <button class="widget-btn fi-btn bn-exp-btn" data-vista="malos">Pesos malos (σ=5)</button>
+        <button class="widget-btn fi-btn bn-exp-btn" data-vista="cortas">Solo 2,000 iteraciones</button>
+      </div>
+      <div id="bn-exp-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.35em; font-size:0.6em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Fíjate en la <strong style="color: var(--c-red);">línea del azar (10%)</strong>: en MNIST hay 10 clases,
+      así que una red pegada a ese valor <strong>no aprendió nada</strong> — está adivinando siempre lo mismo.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/batchnorm-experiments-widget.js) con los datos reales del notebook.
+      Guion: (1) "Pesos razonables" — ver que con ReLU y lr alto la red sin BN está en el azar mientras la
+      de BN saca 98%; (2) "Pesos malos" — sin BN casi todo está en el azar; (3) "2,000 iteraciones" — mismo
+      presupuesto, la de BN llega mucho más lejos.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Hallazgo 1: Converge Mucho Más Rápido</h2>
+    <div class="comparison">
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Sin batch norm</h3>
+        <p style="font-size: 2.0em; color: var(--c-blue); margin: 0.1em 0;"><strong>81.7%</strong></p>
+        <p style="font-size: 0.8em;">Necesita ~1,750 iteraciones solo para pasar el 80%.</p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Con batch norm</h3>
+        <p style="font-size: 2.0em; color: var(--c-orange); margin: 0.1em 0;"><strong>95.0%</strong></p>
+        <p style="font-size: 0.8em;">Pasa el 80% alrededor de la iteración <strong>200</strong>, y supera 90% cerca de la 500.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.4em;">
+      Mismo modelo, mismos pesos iniciales, mismas <strong>2,000 iteraciones</strong> (ReLU, lr = 0.01).
+      Es una diferencia de <strong style="color: var(--c-yellow);">13 puntos</strong> de accuracy que viene
+      solo de normalizar las activaciones.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      ⏱️ <strong>Pero cada iteración es más lenta:</strong> el notebook mide ~1,100 batches/segundo sin BN
+      contra ~500 con BN. BN <strong>no</strong> acelera el paso individual — lo que hace es necesitar
+      muchísimos menos pasos, y por eso el entrenamiento total sale más rápido.
+    </blockquote>
+    <aside class="notes">Datos del notebook: ReLU, lr=0.01, 2000 iteraciones. Es el hallazgo principal y el propósito original de la técnica.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Hallazgo 2: Permite Learning Rates Altos</h2>
+    <p style="font-size: 0.5em;">
+      Aquí es donde la diferencia deja de ser gradual y se vuelve <strong>categórica</strong>. Con ReLU y
+      pesos razonables, subiendo el learning rate:
+    </p>
+    <table style="font-size: 0.46em; width: 100%; max-width: 700px; margin: 0.3em auto;">
+      <tr><th>Learning rate</th><th>Sin batch norm</th><th>Con batch norm</th></tr>
+      <tr class="fragment fade-up"><td>0.01</td><td>97.2%</td><td>98.0%</td></tr>
+      <tr class="fragment fade-up"><td>1</td><td><strong style="color:var(--c-red);">19.6%</strong></td><td>98.3%</td></tr>
+      <tr class="fragment fade-up"><td>2</td><td><strong style="color:var(--c-red);">10.1%</strong></td><td>98.2%</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.45em; text-align:center; margin-top: 0.3em;">
+      Con lr = 2, la red sin BN queda en <strong style="color: var(--c-red);">10.1%</strong> — exactamente el
+      nivel del azar. Demasiadas ReLUs "murieron" por los pasos gigantes del gradiente y la red dejó de
+      aprender. La red con BN, en cambio, saca <strong style="color: var(--c-green);">98.2%</strong>.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Esto es lo que quiere decir "BN permite learning rates más altos": no es que mejore un poco, es que
+      <strong>habilita configuraciones que sin BN simplemente no entrenan</strong> — y un learning rate alto
+      es a su vez otra forma de entrenar más rápido.
+    </blockquote>
+    <aside class="notes">Datos del notebook. Notar que sigmoid tolera mejor los lr altos que ReLU (97.6% con lr=2 sin BN), justo porque satura en vez de morir.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Hallazgos 3 y 4: Inicialización y Activaciones</h2>
+    <div class="columns">
+      <div class="col-45">
+        <p style="font-size: 0.48em; color: var(--c-orange);"><strong>3. Rescata malas inicializaciones</strong></p>
+        <p style="font-size: 0.43em;">
+          Con pesos iniciales deliberadamente terribles (σ = 5 en vez de valores cercanos a cero), ReLU y
+          lr = 0.01:
+        </p>
+        <table style="font-size: 0.42em; width: 100%;">
+          <tr><td>Sin BN</td><td><strong style="color:var(--c-red);">9.8%</strong> (azar)</td></tr>
+          <tr><td>Con BN</td><td><strong style="color:var(--c-green);">81.3%</strong></td></tr>
+        </table>
+        <p style="font-size: 0.4em; color: var(--c-text-dim); margin-top: 0.3em;">
+          La red sin BN <strong>nunca despega</strong>. La de BN aprende razonablemente pese a partir de un
+          lugar pésimo: normalizar en cada capa borra buena parte del daño de la inicialización.
+        </p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.48em; color: var(--c-teal);"><strong>4. Rehabilita activaciones difíciles</strong></p>
+        <p style="font-size: 0.43em;">
+          Sigmoid en redes profundas satura y casi no propaga gradiente. Con lr = 0.01 y pesos razonables:
+        </p>
+        <table style="font-size: 0.42em; width: 100%;">
+          <tr><td>Sin BN</td><td><strong style="color:var(--c-orange);">81.1%</strong></td></tr>
+          <tr><td>Con BN</td><td><strong style="color:var(--c-green);">97.4%</strong></td></tr>
+        </table>
+        <p style="font-size: 0.4em; color: var(--c-text-dim); margin-top: 0.3em;">
+          Sin BN necesita más de 45,000 iteraciones solo para pasar el 80%; con BN llega al 90% en unas
+          1,000. Como BN <strong>controla el rango de valores que entra a cada activación</strong>, la
+          sigmoid vuelve a ser utilizable.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Datos del notebook. Estos dos hallazgos explican por qué BN "simplifica construir redes profundas":
+      quita presión sobre dos de las decisiones más delicadas (inicialización y elección de activación).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Prueba Más Contundente: Train vs. Inferencia</h2>
+    <p style="font-size: 0.47em;">
+      BN se comporta distinto al entrenar y al predecir. El notebook lo demuestra con la <strong>misma red ya
+      entrenada</strong> (95% de accuracy), prediciendo 200 imágenes <strong>una por una</strong>:
+    </p>
+    <div class="comparison">
+      <div class="side incorrect">
+        <h3>Usando estadísticas del batch</h3>
+        <p style="font-size: 1.8em; color: var(--c-red); margin: 0.05em 0;"><strong>5%</strong></p>
+        <p style="font-size: 0.78em;">La red <strong>predice siempre la misma clase</strong>.</p>
+      </div>
+      <div class="side correct">
+        <h3>Usando estadísticas de población</h3>
+        <p style="font-size: 1.8em; color: var(--c-green); margin: 0.05em 0;"><strong>97.5%</strong></p>
+        <p style="font-size: 0.78em;">194 aciertos de 200. El comportamiento correcto.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.43em; margin-top: 0.3em;">
+      <strong>¿Por qué el colapso?</strong> Si el "batch" tiene <em>un solo</em> ejemplo, ese ejemplo
+      <strong>es</strong> la media y su varianza es 0: al normalizar, todo se vuelve
+      <strong style="color: var(--c-red);">cero</strong> en cada capa, y la red produce siempre la misma
+      salida sin importar la entrada.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.2em;">
+      🐛 Por eso existen <code>model.eval()</code> y <code>training=False</code>: hacen que BN use el
+      <strong>promedio móvil</strong> acumulado al entrenar. Olvidarlo no degrada un poco las métricas —
+      <strong>puede destruirlas por completo</strong>.
+    </blockquote>
+    <aside class="notes">
+      Este es el mejor argumento para que los estudiantes no olviden model.eval(). El 5% no es "un poco peor
+      que 97.5%": es peor que el azar, porque la red colapsa a una constante. Conecta directamente con el
+      widget de BatchNorm (modo Entrenamiento vs. Inferencia) y con el bug clásico de la slide de Dropout.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conclusiones: BN No Es Magia</h2>
+    <div class="columns">
+      <div class="col-45">
+        <p style="font-size: 0.48em; color: var(--c-green);"><strong>Lo que sí hace</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Converge en <strong>muchas menos iteraciones</strong></li>
+          <li>Habilita <strong>learning rates altos</strong></li>
+          <li>Vuelve la inicialización <strong>menos crítica</strong></li>
+          <li>Rehabilita activaciones como sigmoid</li>
+          <li>Facilita construir redes <strong>más profundas</strong></li>
+          <li>Aporta algo de regularización (efecto colateral)</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.48em; color: var(--c-red);"><strong>Lo que hay que tener claro</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Cada iteración es <strong>~2× más lenta</strong> (1,100 → 500 batches/s)</li>
+          <li>Es una <strong>optimización del entrenamiento</strong>, no una forma de hacer mejor al modelo</li>
+          <li>Los resultados <strong>varían entre corridas</strong>: la misma configuración (pesos malos,
+            ReLU, lr=2) dio 90.7% en una corrida y 84.0% en otra</li>
+          <li><strong>No sustituye</strong> un buen diseño: sigue usando inicializaciones sensatas y
+            learning rates razonables</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🧠 <strong>La forma correcta de pensarlo:</strong> BN no te da un modelo mejor, te da
+      <strong>iteraciones más baratas en tiempo</strong>. Y como puedes probar más diseños y entrenar redes
+      más profundas, <em>terminas</em> con un modelo mejor. El beneficio es indirecto.
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      En <strong>ConvNets</strong> se normaliza por <em>feature map</em> (no por neurona); en
+      <strong>RNNs</strong> se normaliza por paso de tiempo.
+    </p>
+    <aside class="notes">
+      La variabilidad entre corridas está medida en el propio notebook: repite configuraciones idénticas y
+      obtiene resultados distintos (incluso casos donde BN no ayudó en absoluto). Es un buen recordatorio de
+      que un solo experimento no demuestra nada por sí mismo — conecta con lo que veremos en selección de
+      modelos y cross-validation.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Notebook de Referencia</h2>
+    <div class="resource-grid" style="max-width: 560px; margin: 0 auto;">
+      <a class="resource-card fragment fade-up" href="https://github.com/llealgt/Batch_Normalization/blob/master/Batch_Normalization_Lesson.ipynb" target="_blank" rel="noopener">
+        <div class="resource-icon">📓</div>
+        <h4>Batch Normalization — Lesson</h4>
+        <p>De dónde salen todos los números de esta sección: implementación en TensorFlow (de alto y bajo
+          nivel), las 18 comparaciones con y sin batch norm, y la explicación detallada de las ecuaciones y
+          del porqué de la diferencia entre entrenamiento e inferencia.</p>
+        <span class="resource-tag">github.com/llealgt/Batch_Normalization</span>
+      </a>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Paper original: Ioffe &amp; Szegedy (2015),
+      <em>Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift</em>
+      — <code>arxiv.org/abs/1502.03167</code>
+    </p>
+    <aside class="notes">
+      El notebook usa TensorFlow 1.x (tf.layers, sesiones), así que el código no corre tal cual hoy; el valor
+      está en los experimentos, las gráficas de accuracy durante el entrenamiento y las explicaciones.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Dropout vs. BatchNorm vs. L1/L2</h2>
     <table style="font-size: 0.52em;">
       <tr><th>Técnica</th><th>¿Por qué existe?</th><th>¿Regulariza?</th><th>Train vs. Test</th></tr>
@@ -3364,6 +3619,7 @@ cross_val_score(pipe, X, y, cv=5)</code></pre>
 <script src="js/widgets/feature-importance-widget.js"></script>
 <script src="js/widgets/kfold-widget.js"></script>
 <script src="js/widgets/search-strategy-widget.js"></script>
+<script src="js/widgets/batchnorm-experiments-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -3492,6 +3748,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSearchStrategyWidget === 'function') {
       initSearchStrategyWidget();
       widgetsInitialized.searchStrategy = true;
+    }
+  }
+  if (slide.querySelector('#bn-exp-canvas') && !widgetsInitialized.bnExperiments) {
+    if (typeof initBatchNormExperimentsWidget === 'function') {
+      initBatchNormExperimentsWidget();
+      widgetsInitialized.bnExperiments = true;
     }
   }
 });
