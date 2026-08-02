@@ -4489,6 +4489,41 @@ class LogImagenes(tf.keras.callbacks.Callback):        # <- otra vez, un callbac
   </section>
 
   <section data-transition="fade">
+    <h2>Graphs: el Modelo como Grafo</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <img src="img/Clase_Tools_tb_graphs_ui.png" alt="Pestaña Graphs de TensorBoard mostrando el grafo conceptual de un modelo Sequential" style="width: 100%; border-radius: 6px; padding: 0.15em; background: rgba(255,255,255,0.95);">
+        <p style="font-size: 0.35em; color: var(--c-text-dim); margin-top: 0.2em;">
+          <strong>Grafo conceptual:</strong> el modelo tal como lo escribiste — las capas de tu
+          <code>Sequential</code>.
+        </p>
+      </div>
+      <div class="col-45">
+        <img src="img/Clase_Tools_tb_graphs_op.png" alt="Grafo a nivel de operaciones con nodos de capas, loss, metrics y nodos auxiliares" style="width: 100%; border-radius: 6px; padding: 0.15em; background: rgba(255,255,255,0.95);">
+        <p style="font-size: 0.35em; color: var(--c-text-dim); margin-top: 0.2em;">
+          <strong>Grafo de operaciones:</strong> lo que TensorFlow realmente ejecuta — incluye el loss, las
+          métricas y los nodos del entrenamiento.
+        </p>
+        <p style="font-size: 0.38em; margin-top: 0.3em;">
+          Sirve para <strong>verificar que la arquitectura es la que crees</strong>: capas conectadas donde
+          no deberían, una capa que quedó suelta, o ver en qué se convirtió tu
+          <code>tf.function</code> al compilarse.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      Se activa con <code>write_graph=True</code> en el callback (viene activado por defecto). En modelos
+      grandes es más útil el <strong>conceptual</strong>: el de operaciones tiene cientos de nodos.
+    </p>
+    <aside class="notes">
+      Capturas de la documentacion oficial de TensorBoard (repo tensorflow/tensorboard, docs/images).
+      Nota practica: en TensorFlow 2.13 esta pestaña falla con "Malformed GraphDef" para modelos Keras —
+      es un bug conocido de esa version, no un problema del codigo. En versiones recientes funciona; si te
+      aparece ese error, no pierdas tiempo depurando tu modelo.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Curvas PR y Vista de Series de Tiempo</h2>
     <div class="columns" style="align-items: flex-start;">
       <div class="col-45">
@@ -4754,6 +4789,7 @@ run.log({"ejemplos": wandb.Image(imagen, boxes={
       <tr class="fragment fade-up"><td>Imágenes / predicciones</td><td>✅ Images (tú dibujas la figura)</td><td>✅ cajas y máscaras <strong>interactivas</strong></td></tr>
       <tr class="fragment fade-up"><td>Distribución de pesos</td><td>✅ Histograms / Distributions</td><td>✅ con <code>watch(model)</code></td></tr>
       <tr class="fragment fade-up"><td>Embeddings</td><td>✅ Projector (PCA, t-SNE, UMAP)</td><td>✅ Embedding Projector</td></tr>
+      <tr class="fragment fade-up"><td>Grafo del modelo</td><td>✅ Graphs (conceptual y de operaciones)</td><td>⚠️ solo resumen de la arquitectura</td></tr>
       <tr class="fragment fade-up"><td>Métricas de sistema (GPU)</td><td>⚠️ solo con el Profiler</td><td>✅ automáticas</td></tr>
       <tr class="fragment fade-up"><td>Versionar modelos y datos</td><td>❌</td><td>✅ Artifacts</td></tr>
       <tr class="fragment fade-up"><td>Búsqueda de hiperparámetros</td><td>❌ (la orquestas tú)</td><td>✅ Sweeps (grid, random, bayesiana)</td></tr>
