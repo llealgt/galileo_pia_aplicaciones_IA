@@ -2527,93 +2527,111 @@ imp.sort_values().plot.barh()</code></pre>
 
   <section data-transition="fade">
     <h2>Hallazgo 1: Converge Mucho Más Rápido</h2>
-    <div class="comparison">
-      <div class="side">
-        <h3 style="color: var(--c-blue);">Sin batch norm</h3>
-        <p style="font-size: 2.0em; color: var(--c-blue); margin: 0.1em 0;"><strong>81.7%</strong></p>
-        <p style="font-size: 0.8em;">Necesita ~1,750 iteraciones solo para pasar el 80%.</p>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin: 0 0 0.2em 0;">
+          <strong>50,000 iteraciones</strong> — con tiempo de sobra, ambas llegan
+        </p>
+        <img src="img/Clase_BN_relu_lr001_50k.png" alt="Accuracy durante el entrenamiento, ReLU lr=0.01, 50000 iteraciones" style="width: 100%; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.25em; box-sizing: border-box;">
+        <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em;">
+          97.2% vs 98.0%. La de BN ya está arriba del 90% casi de inmediato; la otra tarda ~3,000 iteraciones.
+        </p>
       </div>
-      <div class="side">
-        <h3 style="color: var(--c-orange);">Con batch norm</h3>
-        <p style="font-size: 2.0em; color: var(--c-orange); margin: 0.1em 0;"><strong>95.0%</strong></p>
-        <p style="font-size: 0.8em;">Pasa el 80% alrededor de la iteración <strong>200</strong>, y supera 90% cerca de la 500.</p>
+      <div class="col-45">
+        <p style="font-size: 0.42em; text-align:center; color: var(--c-yellow); margin: 0 0 0.2em 0;">
+          <strong>2,000 iteraciones</strong> — con presupuesto ajustado, no
+        </p>
+        <img src="img/Clase_BN_relu_lr001_2k.png" alt="Accuracy durante el entrenamiento, ReLU lr=0.01, 2000 iteraciones" style="width: 100%; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.25em; box-sizing: border-box;">
+        <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em;">
+          <strong style="color:var(--c-blue);">81.7%</strong> vs
+          <strong style="color:var(--c-orange);">95.0%</strong>. Supera el 80% en la iteración ~200; la otra necesita ~1,750.
+        </p>
       </div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.4em;">
-      Mismo modelo, mismos pesos iniciales, mismas <strong>2,000 iteraciones</strong> (ReLU, lr = 0.01).
-      Es una diferencia de <strong style="color: var(--c-yellow);">13 puntos</strong> de accuracy que viene
-      solo de normalizar las activaciones.
-    </p>
-    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
-      ⏱️ <strong>Pero cada iteración es más lenta:</strong> el notebook mide ~1,100 batches/segundo sin BN
-      contra ~500 con BN. BN <strong>no</strong> acelera el paso individual — lo que hace es necesitar
-      muchísimos menos pasos, y por eso el entrenamiento total sale más rápido.
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      ⏱️ <strong>Pero cada iteración es más lenta:</strong> ~1,100 batches/segundo sin BN contra ~500 con BN.
+      BN no acelera el paso individual — necesita muchísimos menos pasos, y por eso el entrenamiento total
+      sale más rápido.
     </blockquote>
-    <aside class="notes">Datos del notebook: ReLU, lr=0.01, 2000 iteraciones. Es el hallazgo principal y el propósito original de la técnica.</aside>
+    <aside class="notes">
+      Gráficas del notebook de referencia (ReLU, lr=0.01). Azul = sin batch norm, naranja = con batch norm.
+      El par de gráficas es el argumento completo: no es que BN llegue más alto, es que llega antes.
+    </aside>
   </section>
 
   <section data-transition="fade">
     <h2>Hallazgo 2: Permite Learning Rates Altos</h2>
-    <p style="font-size: 0.5em;">
-      Aquí es donde la diferencia deja de ser gradual y se vuelve <strong>categórica</strong>. Con ReLU y
-      pesos razonables, subiendo el learning rate:
+    <p style="font-size: 0.44em; margin-bottom: 0.2em;">
+      Con ReLU y pesos razonables, subiendo el learning rate la diferencia deja de ser gradual y se vuelve
+      <strong style="color: var(--c-yellow);">categórica</strong>:
     </p>
-    <table style="font-size: 0.46em; width: 100%; max-width: 700px; margin: 0.3em auto;">
-      <tr><th>Learning rate</th><th>Sin batch norm</th><th>Con batch norm</th></tr>
-      <tr class="fragment fade-up"><td>0.01</td><td>97.2%</td><td>98.0%</td></tr>
-      <tr class="fragment fade-up"><td>1</td><td><strong style="color:var(--c-red);">19.6%</strong></td><td>98.3%</td></tr>
-      <tr class="fragment fade-up"><td>2</td><td><strong style="color:var(--c-red);">10.1%</strong></td><td>98.2%</td></tr>
-    </table>
-    <p class="fragment fade-up" style="font-size: 0.45em; text-align:center; margin-top: 0.3em;">
-      Con lr = 2, la red sin BN queda en <strong style="color: var(--c-red);">10.1%</strong> — exactamente el
-      nivel del azar. Demasiadas ReLUs "murieron" por los pasos gigantes del gradiente y la red dejó de
-      aprender. La red con BN, en cambio, saca <strong style="color: var(--c-green);">98.2%</strong>.
-    </p>
-    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
-      Esto es lo que quiere decir "BN permite learning rates más altos": no es que mejore un poco, es que
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin: 0 0 0.2em 0;">
+          <strong>learning rate = 1</strong>
+        </p>
+        <img src="img/Clase_BN_relu_lr1_crash.png" alt="ReLU con learning rate 1: la red sin batch norm colapsa" style="width: 100%; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.25em; box-sizing: border-box;">
+        <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em;">
+          Sin BN arranca, llega a ~58%… y <strong style="color:var(--c-red);">se desploma</strong> a 20%:
+          demasiadas ReLUs murieron. Con BN: <strong style="color:var(--c-green);">98.3%</strong>.
+        </p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin: 0 0 0.2em 0;">
+          <strong>learning rate = 2</strong>
+        </p>
+        <img src="img/Clase_BN_relu_lr2.png" alt="ReLU con learning rate 2: la red sin batch norm nunca aprende" style="width: 100%; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.25em; box-sizing: border-box;">
+        <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em;">
+          Sin BN se queda <strong style="color:var(--c-red);">plana en 10%</strong> — el nivel del azar, nunca
+          aprende. Con BN: <strong style="color:var(--c-green);">98.2%</strong>.
+        </p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      Eso es lo que significa "BN permite learning rates más altos": no es que mejore un poco, es que
       <strong>habilita configuraciones que sin BN simplemente no entrenan</strong> — y un learning rate alto
       es a su vez otra forma de entrenar más rápido.
     </blockquote>
-    <aside class="notes">Datos del notebook. Notar que sigmoid tolera mejor los lr altos que ReLU (97.6% con lr=2 sin BN), justo porque satura en vez de morir.</aside>
+    <aside class="notes">
+      Gráficas del notebook. Con lr=0.01 ambas sacan ~97-98%; el contraste aparece solo al subir el learning
+      rate. Notar que sigmoid tolera mejor los lr altos que ReLU (97.6% con lr=2 sin BN), justo porque satura
+      en vez de morir.
+    </aside>
   </section>
 
   <section data-transition="fade">
     <h2>Hallazgos 3 y 4: Inicialización y Activaciones</h2>
-    <div class="columns">
+    <div class="columns" style="align-items: flex-start;">
       <div class="col-45">
-        <p style="font-size: 0.48em; color: var(--c-orange);"><strong>3. Rescata malas inicializaciones</strong></p>
-        <p style="font-size: 0.43em;">
-          Con pesos iniciales deliberadamente terribles (σ = 5 en vez de valores cercanos a cero), ReLU y
-          lr = 0.01:
+        <p style="font-size: 0.42em; text-align:center; color: var(--c-orange); margin: 0 0 0.2em 0;">
+          <strong>3. Rescata malas inicializaciones</strong>
         </p>
-        <table style="font-size: 0.42em; width: 100%;">
-          <tr><td>Sin BN</td><td><strong style="color:var(--c-red);">9.8%</strong> (azar)</td></tr>
-          <tr><td>Con BN</td><td><strong style="color:var(--c-green);">81.3%</strong></td></tr>
-        </table>
-        <p style="font-size: 0.4em; color: var(--c-text-dim); margin-top: 0.3em;">
-          La red sin BN <strong>nunca despega</strong>. La de BN aprende razonablemente pese a partir de un
-          lugar pésimo: normalizar en cada capa borra buena parte del daño de la inicialización.
+        <img src="img/Clase_BN_malos_relu_lr001.png" alt="Pesos iniciales malos: sin batch norm la red nunca despega" style="width: 100%; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.25em; box-sizing: border-box;">
+        <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em;">
+          Pesos iniciales terribles (σ=5), ReLU, lr=0.01. Sin BN la línea está
+          <strong style="color:var(--c-red);">plana en 9.8%</strong>: nunca despega. Con BN sube hasta
+          <strong style="color:var(--c-green);">81.3%</strong>.
         </p>
       </div>
       <div class="col-45">
-        <p style="font-size: 0.48em; color: var(--c-teal);"><strong>4. Rehabilita activaciones difíciles</strong></p>
-        <p style="font-size: 0.43em;">
-          Sigmoid en redes profundas satura y casi no propaga gradiente. Con lr = 0.01 y pesos razonables:
+        <p style="font-size: 0.42em; text-align:center; color: var(--c-teal); margin: 0 0 0.2em 0;">
+          <strong>4. Rehabilita activaciones difíciles</strong>
         </p>
-        <table style="font-size: 0.42em; width: 100%;">
-          <tr><td>Sin BN</td><td><strong style="color:var(--c-orange);">81.1%</strong></td></tr>
-          <tr><td>Con BN</td><td><strong style="color:var(--c-green);">97.4%</strong></td></tr>
-        </table>
-        <p style="font-size: 0.4em; color: var(--c-text-dim); margin-top: 0.3em;">
-          Sin BN necesita más de 45,000 iteraciones solo para pasar el 80%; con BN llega al 90% en unas
-          1,000. Como BN <strong>controla el rango de valores que entra a cada activación</strong>, la
-          sigmoid vuelve a ser utilizable.
+        <img src="img/Clase_BN_sigmoid_lr001.png" alt="Sigmoid con lr 0.01: sin batch norm tarda decenas de miles de iteraciones" style="width: 100%; border-radius: 6px; background: rgba(255,255,255,0.95); padding: 0.25em; box-sizing: border-box;">
+        <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em;">
+          Sigmoid, lr=0.01. Sin BN se queda pegada en 10% hasta la iteración ~20,000 y termina en
+          <strong style="color:var(--c-orange);">81.1%</strong>. Con BN llega al 90% en ~1,000 y termina en
+          <strong style="color:var(--c-green);">97.4%</strong>.
         </p>
       </div>
     </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Como BN <strong>controla el rango de valores que entra a cada activación</strong>, quita presión sobre
+      dos de las decisiones más delicadas al construir una red: la inicialización y la activación.
+    </p>
     <aside class="notes">
-      Datos del notebook. Estos dos hallazgos explican por qué BN "simplifica construir redes profundas":
-      quita presión sobre dos de las decisiones más delicadas (inicialización y elección de activación).
+      Gráficas del notebook. Estos dos hallazgos explican por qué se dice que BN "simplifica construir redes
+      profundas". La sigmoid saturaba y casi no propagaba gradiente; normalizada, vuelve a ser utilizable.
     </aside>
   </section>
 
