@@ -3362,6 +3362,67 @@ rand.fit(X_dev, y_dev)</code></pre>
   </section>
 
   <section data-transition="fade">
+    <h2>Grid Search se Puede Quedar "Atascado"</h2>
+    <p style="font-size: 0.46em;">
+      Hay una consecuencia del <strong>orden fijo</strong> del grid que no es obvia. Volvamos a la grilla
+      real de la slide anterior: con <code>gamma</code> grande el SVM memoriza y su F1 se desploma, y con
+      <code>C</code> muy chico no aprende nada. <strong style="color: var(--c-red);">19 de las 36
+      celdas (53%) son zona muerta.</strong>
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.46em; margin-top: 0.2em;">
+      Como el grid recorre fila por fila y la primera fila entera (<code>C = 0.01</code>) es inservible,
+      las <strong style="color: var(--c-red);">8 primeras evaluaciones no dan absolutamente nada</strong> —
+      el 22% del presupuesto gastado antes de ver la primera señal, en la evaluación 9.
+    </p>
+    <div class="comparison fragment fade-up" style="margin-top: 0.3em;">
+      <div class="side incorrect">
+        <h3>Grid: orden fijo</h3>
+        <p style="font-size: 0.8em;">Si la zona muerta cae al inicio del recorrido, te quedas
+          <strong>atascado ahí</strong>, sin poder saber si el problema es el espacio o tu modelo.</p>
+        <p style="font-size: 0.75em; color: var(--c-text-dim);">Y si se te acaba el tiempo a la mitad, puede
+          que solo hayas visto basura.</p>
+      </div>
+      <div class="side correct">
+        <h3>Random: disperso</h3>
+        <p style="font-size: 0.8em;">Cada muestra cae en cualquier parte, así que las malas se reparten en
+          vez de agruparse.</p>
+        <p style="font-size: 0.75em; color: var(--c-text-dim);">Con estos mismos datos, la probabilidad de
+          arrancar con 8 evaluaciones muertas seguidas es de <strong style="color:var(--c-green);">0.25%</strong>.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Los valores son los del grid search del notebook 09 (SVM sobre breast cancer), los mismos del heatmap
+      de la slide anterior. Numeros calculados sobre esa grilla con umbral F1 &lt; 0.5 como "inservible":
+      19/36 celdas muertas; grid en orden row-major arranca con 8 muertas seguidas; en orden aleatorio la
+      racha inicial promedio es de 1.06 evaluaciones y en el 86% de los casos hay algo util dentro de las
+      3 primeras.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora: Quedarse Atascado</h2>
+    <div class="widget-container">
+      <canvas id="grid-stuck-canvas" width="880" height="300" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn grid-stuck-btn" data-modo="grid">Grid (en orden)</button>
+        <button class="widget-btn fi-btn grid-stuck-btn" data-modo="random">Random (otro orden cada clic)</button>
+        <button class="widget-btn fi-btn" id="grid-stuck-reset">Reiniciar</button>
+      </div>
+      <div id="grid-stuck-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.35em; font-size:0.6em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      Mira la <strong>barra de tiempo</strong> de la derecha: con grid las rojas salen todas juntas al
+      principio; con random quedan repartidas. Presiona <strong>Random</strong> varias veces — cada clic usa
+      otro orden, y casi nunca aparece un bloque rojo largo al inicio.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/grid-stuck-widget.js) con los valores reales del notebook 09. Guion:
+      correr "Grid" y dejar que se vea el bloque rojo inicial; luego "Random" tres o cuatro veces para que
+      el grupo note que la racha inicial casi siempre es de 0, 1 o 2 evaluaciones.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Estrategia 3: Optimización Bayesiana</h2>
     <p style="font-size: 0.5em;">
       Grid y random son <strong>ciegos</strong>: el intento nº 36 no aprende nada de los 35 anteriores.
@@ -4666,6 +4727,7 @@ with wandb.init(project="capstone-vision",
 <script src="js/widgets/callback-lifecycle-widget.js"></script>
 <script src="js/widgets/early-stopping-widget.js"></script>
 <script src="js/widgets/run-name-widget.js"></script>
+<script src="js/widgets/grid-stuck-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -4818,6 +4880,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initRunNameWidget === 'function') {
       initRunNameWidget();
       widgetsInitialized.runName = true;
+    }
+  }
+  if (slide.querySelector('#grid-stuck-canvas') && !widgetsInitialized.gridStuck) {
+    if (typeof initGridStuckWidget === 'function') {
+      initGridStuckWidget();
+      widgetsInitialized.gridStuck = true;
     }
   }
 });
