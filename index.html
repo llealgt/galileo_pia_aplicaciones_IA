@@ -65,6 +65,7 @@
         <a class="toc-item" onclick="Reveal.slide(6, 0)"><span class="toc-num">6</span>Regularización</a>
         <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos, CV e Hyper-parameter Tuning</a>
         <a class="toc-item" onclick="Reveal.slide(8, 0)"><span class="toc-num">8</span>Callbacks</a>
+        <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -4056,6 +4057,585 @@ LIMIT 5;</code></pre>
   </section>
 </section>
 
+<!-- ============================================================
+     SECCION 9 — Herramientas de ML en la Industria
+     ============================================================ -->
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Herramientas de ML en la Industria</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 760px;">
+        <strong style="color: var(--c-yellow);">Experiment tracking</strong>, lectura de
+        <strong style="color: var(--c-yellow);">learning curves</strong> y
+        <strong style="color: var(--c-yellow);">monitoreo en producción</strong>: las herramientas que usan
+        los equipos reales para no perder el hilo de lo que entrenan y para enterarse cuando un modelo se
+        degrada.
+      </p>
+    </div>
+    <aside class="notes">
+      Unidad propia. Sigue naturalmente a callbacks: en la unidad anterior construimos un callback de
+      registro con backend de archivo y de base de datos; estas herramientas son exactamente eso, ya
+      resuelto y con interfaz web.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema: los Experimentos se Pierden</h2>
+    <p style="font-size: 0.5em;">
+      En un proyecto real vas a entrenar decenas o cientos de modelos. Sin una disciplina de registro, a las
+      dos semanas la conversación es siempre la misma:
+    </p>
+    <div class="comparison" style="margin-top: 0.3em;">
+      <div class="side incorrect">
+        <h3>Lo que pasa</h3>
+        <ul style="font-size: 0.72em; text-align: left;">
+          <li>"El que salió con 94% ¿cuál era?"</li>
+          <li>"¿Este modelo usó augmentation?"</li>
+          <li>"¿Por qué ya no reproduzco aquel resultado?"</li>
+          <li><code>final_v2_REAL_bueno.h5</code></li>
+        </ul>
+      </div>
+      <div class="side correct">
+        <h3>Lo que necesitas</h3>
+        <ul style="font-size: 0.72em; text-align: left;">
+          <li>Cada corrida registrada automáticamente</li>
+          <li>Config + métricas + artefactos juntos</li>
+          <li>Comparar corridas lado a lado</li>
+          <li>Poder <strong>reproducir</strong> cualquiera</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.4em;">
+      En la unidad anterior ya construimos la pieza clave: un <strong>callback de registro</strong> con su
+      backend. Estas herramientas son <strong style="color: var(--c-yellow);">exactamente eso</strong>, ya
+      resuelto, con almacenamiento e interfaz web incluidos.
+    </p>
+    <aside class="notes">Contenido propio. Conectar explicitamente con el callback RegistroEntrenamiento de los notebooks 10 y 11.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Qué Registra un Experiment Tracker?</h2>
+    <table style="font-size: 0.42em; width: 100%;">
+      <tr><th>Qué</th><th>Ejemplos</th><th>Para qué sirve</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-yellow);">Configuración</strong></td>
+        <td>learning rate, batch size, arquitectura, semilla</td><td>Saber qué produjo cada resultado</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">Métricas</strong></td>
+        <td>loss, accuracy, F1 — por época o por batch</td><td>Las curvas de aprendizaje</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">Artefactos</strong></td>
+        <td>pesos del modelo, dataset, predicciones</td><td>Recuperar y versionar el modelo</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">Métricas de sistema</strong></td>
+        <td>uso de CPU/GPU, memoria, temperatura</td><td>Detectar cuellos de botella y costo</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-purple);">Entorno</strong></td>
+        <td>commit de git, versiones de librerías, comando</td><td><strong>Reproducibilidad</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-teal);">Medios</strong></td>
+        <td>imágenes, matrices de confusión, audio</td><td>Inspección cualitativa</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      La regla: si tuvieras que <strong>reproducir la corrida dentro de seis meses</strong>, ¿te alcanza con
+      lo registrado? Si la respuesta es no, falta algo — y casi siempre lo que falta es la
+      <strong>configuración</strong>, no las métricas.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio. Las metricas de sistema (GPU) son de lo que mas se subestima: sirven para darse
+      cuenta de que la GPU esta al 15% porque el cuello de botella es el data loader.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La "Configuration String"</h2>
+    <p style="font-size: 0.5em;">
+      La convención más antigua y más barata de todas: <strong>meter la semántica en el nombre</strong> de
+      la corrida. Un identificador que, leído solo, ya te dice qué era.
+    </p>
+    <div style="text-align:center; margin: 0.4em 0;">
+      <code style="font-size: 0.62em; color: var(--c-yellow);">20260802-153045_resnet50_lr1e-3_bs128_aug1</code>
+    </div>
+    <table style="font-size: 0.42em; width: 100%; max-width: 780px; margin: 0 auto;">
+      <tr><th>Parte</th><th>Qué aporta</th></tr>
+      <tr class="fragment fade-up"><td><code style="color:var(--c-teal);">20260802-153045</code></td>
+        <td><strong>Timestamp</strong> en formato <code>YYYYMMDD-HHMMSS</code>: único, y ordena
+          cronológicamente con solo ordenar alfabéticamente</td></tr>
+      <tr class="fragment fade-up"><td><code style="color:var(--c-blue);">resnet50</code></td>
+        <td>La <strong>arquitectura</strong></td></tr>
+      <tr class="fragment fade-up"><td><code style="color:var(--c-yellow);">lr1e-3</code> <code style="color:var(--c-orange);">bs128</code></td>
+        <td>Los <strong>hiperparámetros</strong> que estás variando en este experimento</td></tr>
+      <tr class="fragment fade-up"><td><code style="color:var(--c-pink);">aug1</code></td>
+        <td>Flags de decisiones binarias (con/sin data augmentation)</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Es el patrón que usa la propia documentación de TensorFlow:
+      <code>logdir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")</code>
+    </p>
+    <aside class="notes">
+      Contenido propio. El formato YYYYMMDD-HHMMSS es deliberado: es el unico que ordena cronologicamente
+      al ordenar como texto. Insistir en incluir SOLO los hiperparametros que se estan variando, no los 30.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Configuration String</h2>
+    <div class="widget-container">
+      <canvas id="run-name-canvas" width="880" height="290" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.3em; margin-top:0.35em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn run-name-btn" data-campo="arq" data-valor="mlp">mlp</button>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="arq" data-valor="cnn">cnn</button>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="arq" data-valor="resnet50">resnet50</button>
+        <span style="color:var(--c-text-dim); font-size:0.5em;">|</span>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="lr" data-valor="1e-2">lr 1e-2</button>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="lr" data-valor="1e-3">1e-3</button>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="lr" data-valor="1e-4">1e-4</button>
+        <span style="color:var(--c-text-dim); font-size:0.5em;">|</span>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="bs" data-valor="32">bs 32</button>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="bs" data-valor="128">128</button>
+        <span style="color:var(--c-text-dim); font-size:0.5em;">|</span>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="aug" data-valor="0">sin aug</button>
+        <button class="widget-btn fi-btn run-name-btn" data-campo="aug" data-valor="1">con aug</button>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.3em;">
+        <button class="widget-btn fi-btn run-name-conv-btn" data-conv="true">Con convención</button>
+        <button class="widget-btn fi-btn run-name-conv-btn" data-conv="false">Sin convención</button>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      Cambia los hiperparámetros y mira cómo se compone el nombre. Luego presiona
+      <strong>Sin convención</strong> para ver el escenario alternativo — el que todos hemos vivido.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/run-name-widget.js). El boton "Sin convencion" suele arrancar risas de
+      reconocimiento: final_v2, final_REAL. Ese es el momento de fijar la idea.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Nombrar Bien: Reglas Prácticas</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-green);"><strong>Sí</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Timestamp <code>YYYYMMDD-HHMMSS</code> al inicio: ordena solo</li>
+          <li>Solo los hiperparámetros que estás <strong>variando</strong></li>
+          <li>Separadores consistentes (<code>_</code> entre campos, nada raro dentro)</li>
+          <li>Notación compacta y estable: <code>lr1e-3</code>, no <code>lr0.001</code> a veces y
+            <code>lr1e-3</code> otras</li>
+          <li>Agregar el <strong>hash corto del commit</strong> si el código cambia entre corridas:
+            <code>_g7a3f1c</code></li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-red);"><strong>No</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Espacios, acentos o <code>/</code> en el nombre (rompen rutas y filtros)</li>
+          <li>Meter los 30 hiperparámetros: ilegible</li>
+          <li>Nombres puramente descriptivos (<code>experimento_bueno</code>)</li>
+          <li>Depender <strong>solo</strong> del nombre: el nombre es el índice, la config completa va
+            igual en el tracker</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      💡 <strong>El nombre no sustituye al registro.</strong> Es un índice legible para humanos: te deja
+      ordenar, filtrar y hablar de las corridas. La configuración completa (semilla, versiones, dataset)
+      se registra aparte — que es justo lo que hacen las herramientas que siguen.
+    </blockquote>
+    <aside class="notes">Contenido propio. El hash del commit es la pieza que mas se olvida y la que mas duele al intentar reproducir.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>TensorBoard: el Estándar Local</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em;">
+          Viene con TensorFlow y funciona también con <strong>PyTorch</strong>
+          (<code>torch.utils.tensorboard</code>). Es <strong>local y gratuito</strong>: lee los archivos de
+          eventos de un directorio y los grafica.
+        </p>
+        <p style="font-size: 0.42em; color: var(--c-green);"><strong>A favor:</strong> cero configuración,
+          sin cuenta, sin subir datos a ningún lado.</p>
+        <p style="font-size: 0.42em; color: var(--c-red);"><strong>En contra:</strong> pensado para una
+          máquina; colaborar en equipo o comparar cientos de corridas se vuelve incómodo.</p>
+      </div>
+      <div class="col-45">
+        <pre style="font-size: 0.38em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">import datetime, tensorflow as tf
+
+# la configuration string
+ts = datetime.datetime.now().strftime(
+    "%Y%m%d-%H%M%S")
+logdir = f"logs/fit/{ts}_mlp_lr1e-3_bs128"
+
+tb = tf.keras.callbacks.TensorBoard(
+    log_dir=logdir,
+    histogram_freq=1)
+
+model.fit(X, y, epochs=20,
+          validation_data=(Xv, yv),
+          callbacks=[tb])</code></pre>
+        <p style="font-size: 0.36em; color: var(--c-text-dim);">Y para verlo:
+          <code>tensorboard --logdir logs/fit</code> — o <code>%tensorboard --logdir logs/fit</code>
+          dentro de Colab.</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Fuente: documentacion oficial de TensorBoard (tensorflow.org/tensorboard/get_started y
+      /scalars_and_keras). Notar que el TensorBoard callback ES un callback: todo lo de la unidad anterior
+      aplica igual.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>TensorBoard: Comparar Corridas</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_tb_scalars.png" alt="TensorBoard mostrando las curvas de accuracy y loss de 12 corridas" style="max-width: 82%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      12 corridas de un MLP sobre Fashion-MNIST, cada una con su configuration string en el panel de la
+      izquierda. Se pueden <strong>filtrar con una regex</strong>, superponer y suavizar. Fíjate que cada
+      corrida aparece dos veces: <code>/train</code> y <code>/validation</code> — así se ve la brecha.
+    </p>
+    <aside class="notes">
+      Captura real de TensorBoard 2.13 corriendo sobre logs generados para este curso (12 combinaciones de
+      learning rate, units y dropout). El slider de "Smoothing" es util cuando las curvas por batch son
+      ruidosas — pero ojo, suavizar de mas puede esconder inestabilidad real.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>TensorBoard: el Dashboard de HParams</h2>
+    <div style="text-align:center;">
+      <img src="img/Clase_Tools_tb_hparams.png" alt="Dashboard HParams de TensorBoard con 12 experimentos y su val_accuracy" style="max-width: 80%; border-radius: 8px; padding: 0.2em; background: rgba(255,255,255,0.95);">
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      Una fila por experimento, una columna por hiperparámetro y la métrica al final: es la tabla de
+      resultados del <strong>hyper-parameter tuning</strong> de la unidad 7, generada sola. También tiene
+      vista de <em>coordenadas paralelas</em> para ver qué combinaciones llevan a las zonas buenas.
+    </p>
+    <aside class="notes">
+      Captura real. El codigo para producirla esta en la siguiente slide. En estas 12 corridas la mejor
+      combinacion fue lr=1e-3 con 256 units y dropout 0.3 (0.8766) — un buen momento para conectar con
+      grid search.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Registrar Hiperparámetros en TensorBoard</h2>
+    <pre style="font-size: 0.42em; max-width: 88%; margin: 0 auto; overflow-x:auto;"><code class="language-python">from tensorboard.plugins.hparams import api as hp
+
+HP_LR = hp.HParam("learning_rate", hp.Discrete([1e-2, 1e-3, 1e-4]))
+HP_UNITS = hp.HParam("units", hp.Discrete([64, 256]))
+
+# se declara una vez que hiperparametros y que metrica se van a comparar
+with tf.summary.create_file_writer("logs/hparam_tuning").as_default():
+    hp.hparams_config(
+        hparams=[HP_LR, HP_UNITS],
+        metrics=[hp.Metric("epoch_accuracy", group="validation",
+                           display_name="val_accuracy")])
+
+for lr in [1e-2, 1e-3, 1e-4]:
+    for units in [64, 256]:
+        ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = f"logs/fit/{ts}_mlp_lr{lr:g}_u{units}"
+        model = construir_modelo(lr, units)
+        model.fit(X, y, validation_data=(Xv, yv), epochs=12, callbacks=[
+            tf.keras.callbacks.TensorBoard(log_dir=logdir),
+            hp.KerasCallback(logdir, {HP_LR: lr, HP_UNITS: units}),   # <- los hparams
+        ])</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      ⚠️ El <code>group="validation"</code> es el detalle que se atora: el callback de Keras escribe la
+      métrica como <code>epoch_accuracy</code> dentro del subdirectorio <code>validation</code>. Si el
+      nombre no coincide, la columna sale <strong>vacía</strong>.
+    </p>
+    <aside class="notes">
+      Basado en tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams. El detalle del group es un
+      error real que da una tabla sin metricas — vale la pena advertirlo.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Weights &amp; Biases: el Estándar en la Nube</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em;">
+          Plataforma alojada (hay plan gratuito para uso académico y personal). Registra a la nube, así que
+          el equipo entero ve las mismas corridas en tiempo real desde cualquier máquina.
+        </p>
+        <p style="font-size: 0.42em; color: var(--c-green);"><strong>A favor:</strong> colaboración,
+          comparación de cientos de corridas, versionado de datasets y modelos, reportes compartibles,
+          métricas de sistema automáticas.</p>
+        <p style="font-size: 0.42em; color: var(--c-red);"><strong>En contra:</strong> los datos salen de
+          tu máquina (hay opción self-hosted), y es un servicio de pago a escala de empresa.</p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">Su propia página lo resume en 5 líneas:</p>
+        <img src="img/Clase_Tools_wandb_api.png" alt="Ejemplo de API de Weights and Biases: init, config, log y log_artifact" style="width: 100%; border-radius: 6px;">
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.3em;">
+          Captura de <code>wandb.ai/site</code>. Nota: <code>log_artifact</code> versiona el modelo, no solo
+          las métricas.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Fuente: wandb.ai/site y docs.wandb.ai. W&B fue adquirida por CoreWeave, por eso el "by CoreWeave" en
+      su sitio. Mencionar que hay alternativas equivalentes: MLflow (open source, self-hosted), Neptune,
+      Comet.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>W&amp;B: Registrar Config y Métricas</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.42em; color: var(--c-orange);"><strong>Bucle manual</strong></p>
+        <pre style="font-size: 0.36em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">import wandb, datetime
+
+ts = datetime.datetime.now().strftime(
+    "%Y%m%d-%H%M%S")
+config = {"learning_rate": 1e-3,
+          "batch_size": 128,
+          "arquitectura": "resnet50",
+          "augmentation": True}
+
+with wandb.init(
+        project="capstone-vision",
+        name=f"{ts}_resnet50_lr1e-3_bs128",
+        group="baseline",
+        tags=["resnet", "aug"],
+        config=config) as run:
+
+    for epoca in range(epocas):
+        train_loss = entrenar()
+        val_loss, val_acc = validar()
+        run.log({"loss": train_loss,
+                 "val_loss": val_loss,
+                 "val_accuracy": val_acc})</code></pre>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.42em; color: var(--c-blue);"><strong>Con Keras (es un callback)</strong></p>
+        <pre style="font-size: 0.36em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">from wandb.integration.keras import (
+    WandbMetricsLogger,
+    WandbModelCheckpoint)
+
+with wandb.init(project="capstone-vision",
+                name=f"{ts}_resnet50_lr1e-3",
+                config=config) as run:
+
+    model.fit(X, y,
+              validation_data=(Xv, yv),
+              epochs=20,
+              callbacks=[
+                  WandbMetricsLogger(),
+                  WandbModelCheckpoint(
+                      "modelos/"),
+              ])</code></pre>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+          <code>name</code> es la configuration string; <code>group</code> y <code>tags</code> permiten
+          filtrar familias de corridas en la interfaz.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Fuente: docs.wandb.ai (quickstart, track/config e integrations/keras). Recalcar que
+      WandbMetricsLogger es literalmente un callback de Keras: la unidad anterior explica como funciona
+      por dentro.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Cuál Uso?</h2>
+    <table style="font-size: 0.4em; width: 100%;">
+      <tr><th></th><th>TensorBoard</th><th>Weights &amp; Biases</th><th>MLflow</th></tr>
+      <tr class="fragment fade-up"><td><strong>Dónde vive</strong></td><td>Local, tus archivos</td><td>Nube (o self-hosted)</td><td>Self-hosted / local</td></tr>
+      <tr class="fragment fade-up"><td><strong>Costo</strong></td><td>Gratis</td><td>Gratis personal, pago empresa</td><td>Open source</td></tr>
+      <tr class="fragment fade-up"><td><strong>Colaboración</strong></td><td>Limitada</td><td><strong style="color:var(--c-green);">Su punto fuerte</strong></td><td>Media</td></tr>
+      <tr class="fragment fade-up"><td><strong>Comparar corridas</strong></td><td>Decenas</td><td>Cientos</td><td>Cientos</td></tr>
+      <tr class="fragment fade-up"><td><strong>Versionar modelos/datos</strong></td><td>No</td><td>Sí (artifacts)</td><td>Sí (model registry)</td></tr>
+      <tr class="fragment fade-up"><td><strong>Métricas de sistema</strong></td><td>Con profiler</td><td>Automáticas</td><td>No</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      🧭 <strong>Para el capstone:</strong> empieza con <strong>TensorBoard</strong> — cero fricción y te
+      cubre. Si trabajan varios sobre el mismo problema, o vas a lanzar decenas de corridas y necesitas
+      compararlas, pásate a <strong>W&amp;B</strong>. Lo que <em>no</em> es opción es no registrar nada.
+    </blockquote>
+    <aside class="notes">Contenido propio. MLflow se incluye porque es lo mas comun en entornos corporativos con restricciones de datos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Learning Curves: Leerlas de Verdad</h2>
+    <p style="font-size: 0.48em;">
+      Estas herramientas grafican solas, pero la gráfica no sirve de nada si no se sabe leer. Cuidado con
+      un término que significa <strong>dos cosas distintas</strong>:
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Métrica vs. época</h3>
+        <p style="font-size: 0.78em;">Lo que grafican TensorBoard y W&amp;B durante el entrenamiento.</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">Responde: <em>¿está aprendiendo?, ¿ya
+          convergió?, ¿está sobreajustando?</em></p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Métrica vs. tamaño del dataset</h3>
+        <p style="font-size: 0.78em;">La curva de aprendizaje clásica, que se calcula aparte.</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">Responde: <em>¿me ayudaría conseguir más
+          datos?</em></p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Las dos se vieron en la unidad de <strong>train/test split y diagnóstico</strong> — ahí están los
+      widgets para explorarlas. Aquí lo nuevo es que ahora las obtienes <strong>automáticamente y para
+      todas tus corridas a la vez</strong>.
+    </p>
+    <aside class="notes">
+      Contenido propio. Referencias: slides 5/13 (metrica vs iteraciones) y 5/14 (metrica vs tamano del
+      dataset). Vale la pena regresar un momento a esos widgets si el grupo no los recuerda.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Diagnóstico Rápido de una Curva</h2>
+    <table style="font-size: 0.4em; width: 100%;">
+      <tr><th>Lo que ves</th><th>Qué significa</th><th>Qué hacer</th></tr>
+      <tr class="fragment fade-up"><td>Train y val bajan juntas y se estancan alto</td>
+        <td><strong style="color:var(--c-orange);">Underfitting</strong></td>
+        <td>Modelo más grande, entrenar más, menos regularización</td></tr>
+      <tr class="fragment fade-up"><td>Train sigue bajando, val <strong>sube</strong></td>
+        <td><strong style="color:var(--c-red);">Overfitting</strong></td>
+        <td>Regularización, augmentation, early stopping, más datos</td></tr>
+      <tr class="fragment fade-up"><td>Val muy ruidosa, salta de época a época</td>
+        <td>Learning rate alto o batch/val set chico</td>
+        <td>Bajar el lr, agrandar el set de validación</td></tr>
+      <tr class="fragment fade-up"><td>El loss se dispara o se vuelve <code>NaN</code></td>
+        <td>Learning rate demasiado alto, gradientes explotando</td>
+        <td>Bajar lr, gradient clipping, revisar normalización</td></tr>
+      <tr class="fragment fade-up"><td>Plana desde el inicio, cerca del azar</td>
+        <td>No está aprendiendo</td>
+        <td>Revisar etiquetas, lr, inicialización (ver batch norm)</td></tr>
+      <tr class="fragment fade-up"><td>Val <strong>mejor</strong> que train</td>
+        <td>Normal con dropout activo; si es grande, sospecha de leakage</td>
+        <td>Verificar el split</td></tr>
+    </table>
+    <aside class="notes">
+      Contenido propio, destila las unidades anteriores. El ultimo caso (val mejor que train) confunde
+      mucho: con dropout el train loss se mide con la red "mutilada" y el val con la completa.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Monitoreo: el Modelo se Degrada Solo</h2>
+    <p style="font-size: 0.5em;">
+      Entrenar y desplegar no es el final. Un modelo en producción <strong>empeora con el tiempo aunque
+      nadie lo toque</strong>, porque el mundo del que salieron los datos cambia.
+    </p>
+    <div class="comparison" style="margin-top: 0.3em;">
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Data drift</h3>
+        <p style="font-size: 0.8em;">Cambia la <strong>distribución de las entradas</strong>.</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">
+          Tu clasificador de fotos entrenado con cámaras de 2020 recibe fotos de teléfonos nuevos; llega un
+          segmento de clientes que antes no existía.
+        </p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Concept drift</h3>
+        <p style="font-size: 0.8em;">Cambia la <strong>relación entre entrada y salida</strong>.</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">
+          Lo que definía "transacción fraudulenta" cambió porque los defraudadores se adaptaron. Las mismas
+          entradas ahora significan otra cosa.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      El primero se detecta <strong>sin etiquetas</strong> (comparando distribuciones); el segundo
+      normalmente <strong>necesita saber el resultado real</strong>, que suele llegar tarde — o nunca.
+    </p>
+    <aside class="notes">
+      Contenido propio, basado en el material de Evidently AI sobre data drift y concept drift. La
+      distincion formal: data drift es un cambio en P(X); concept drift, en P(Y|X).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Monitorear en Producción</h2>
+    <table style="font-size: 0.4em; width: 100%;">
+      <tr><th>Capa</th><th>Qué se vigila</th><th>Señal de alarma</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">Modelo</strong></td>
+        <td>Accuracy, F1, error — cuando llegan las etiquetas reales</td>
+        <td>Caída sostenida respecto a la línea base</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-yellow);">Predicciones</strong></td>
+        <td>Distribución de las salidas y de la confianza</td>
+        <td>De pronto predice una clase mucho más que antes</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">Datos de entrada</strong></td>
+        <td>Distribución por feature, nulos, rangos, categorías nuevas</td>
+        <td>Drift estadístico, un feature que llega siempre vacío</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">Sistema</strong></td>
+        <td>Latencia, throughput, errores, uso de memoria y CPU/GPU</td>
+        <td>p99 de latencia disparado, tasa de errores</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-purple);">Negocio</strong></td>
+        <td>Conversión, ingresos, quejas, intervención manual</td>
+        <td>La métrica que de verdad importa se mueve</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      ⚠️ <strong>La trampa clásica:</strong> las etiquetas reales llegan tarde (¿fue fraude? se sabe semanas
+      después). Por eso se vigilan <strong>proxies</strong> — drift de entrada y de predicciones — que
+      avisan <em>antes</em> de poder medir el error.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio. Herramientas: Evidently AI (open source, reportes de drift y calidad de datos),
+      NannyML, Alibi Detect; y plataformas como Arize o Fiddler. Para latencia y errores lo normal es
+      Prometheus + Grafana, no una herramienta de ML.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Ciclo Completo</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.72em;">
+      <div class="step fragment fade-up">1. <strong>Experimentar</strong> — cada corrida con su
+        configuration string, registrada con config, métricas y artefactos</div>
+      <div class="step fragment fade-up">2. <strong>Comparar</strong> — leer las curvas, diagnosticar, elegir
+        con cross-validation y evaluar una vez en test</div>
+      <div class="step fragment fade-up">3. <strong>Desplegar</strong> — guardando qué corrida exacta fue a
+        producción (por eso el nombre y el commit importan)</div>
+      <div class="step fragment fade-up">4. <strong>Monitorear</strong> — drift de datos y predicciones,
+        métricas de sistema y de negocio</div>
+      <div class="step fragment fade-up">5. <strong>Reentrenar</strong> — cuando el monitoreo lo pide… y
+        volver al paso 1</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Es un <strong>ciclo</strong>, no una línea. Y el registro disciplinado del paso 1 es lo que hace
+      posible el paso 5: sin él, reentrenar es empezar de cero.
+    </p>
+    <aside class="notes">Contenido propio. Es el cierre de la unidad y conecta con el capstone: lo que se pide es justamente este ciclo, no un notebook suelto.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Para Profundizar</h2>
+    <div class="resource-grid" style="max-width: 900px; margin: 0 auto; grid-template-columns: 1fr 1fr; font-size: 0.82em;">
+      <a class="resource-card fragment fade-up" href="https://www.tensorflow.org/tensorboard/get_started" target="_blank" rel="noopener">
+        <div class="resource-icon">📊</div>
+        <h4>TensorBoard — Get Started</h4>
+        <p>El callback, el directorio con timestamp y cómo abrirlo dentro de Colab.</p>
+        <span class="resource-tag">tensorflow.org/tensorboard</span>
+      </a>
+      <a class="resource-card fragment fade-up" href="https://www.tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams" target="_blank" rel="noopener">
+        <div class="resource-icon">🎛️</div>
+        <h4>HParams Dashboard</h4>
+        <p>Declarar hiperparámetros y métricas para obtener la tabla comparativa.</p>
+        <span class="resource-tag">tensorflow.org/tensorboard/hyperparameter_tuning_with_hparams</span>
+      </a>
+      <a class="resource-card fragment fade-up" href="https://docs.wandb.ai/quickstart/" target="_blank" rel="noopener">
+        <div class="resource-icon">🪄</div>
+        <h4>W&amp;B Quickstart</h4>
+        <p><code>wandb.init</code>, <code>config</code>, <code>run.log</code> y las integraciones.</p>
+        <span class="resource-tag">docs.wandb.ai/quickstart</span>
+      </a>
+      <a class="resource-card fragment fade-up" href="https://www.evidentlyai.com/ml-in-production/data-drift" target="_blank" rel="noopener">
+        <div class="resource-icon">📉</div>
+        <h4>Data Drift y Concept Drift</h4>
+        <p>Qué son, cómo se detectan y las pruebas estadísticas que se usan.</p>
+        <span class="resource-tag">evidentlyai.com/ml-in-production</span>
+      </a>
+    </div>
+    <aside class="notes">Todos los enlaces son clickables. Las capturas de TensorBoard de esta unidad se generaron con estos mismos pasos.</aside>
+  </section>
+</section>
+
 </div>
 </div>
 
@@ -4085,6 +4665,7 @@ LIMIT 5;</code></pre>
 <script src="js/widgets/batchnorm-experiments-widget.js"></script>
 <script src="js/widgets/callback-lifecycle-widget.js"></script>
 <script src="js/widgets/early-stopping-widget.js"></script>
+<script src="js/widgets/run-name-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -4231,6 +4812,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initEarlyStoppingWidget === 'function') {
       initEarlyStoppingWidget();
       widgetsInitialized.earlyStopping = true;
+    }
+  }
+  if (slide.querySelector('#run-name-canvas') && !widgetsInitialized.runName) {
+    if (typeof initRunNameWidget === 'function') {
+      initRunNameWidget();
+      widgetsInitialized.runName = true;
     }
   }
 });
