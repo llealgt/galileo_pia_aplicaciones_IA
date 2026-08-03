@@ -6069,30 +6069,119 @@ docs = retriever.invoke(
   </section>
 
   <section data-transition="fade">
+    <h2>Entrenar = Aprendizaje Supervisado Ordinario</h2>
+    <p style="font-size: 0.46em;">
+      No hace falta que nadie etiquete nada: <strong>el propio texto es la etiqueta</strong>. De cada
+      documento se extraen millones de pares
+      <strong style="color: var(--c-yellow);">(x, y)</strong> = (secuencia de tokens, token siguiente).
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em 0.7em; margin-top: 0.3em;">
+      <p style="font-size: 0.4em; color: var(--c-text-dim); margin: 0 0 0.25em 0;">
+        Texto crudo: <span style="font-family:'Fira Code',monospace; color:var(--c-text);">"el sol está muy alto"</span>
+      </p>
+      <table style="font-size: 0.4em; width: 100%;">
+        <tr><th style="width:60%;">x — la secuencia</th><th>y — el token a predecir</th></tr>
+        <tr><td><code>el</code></td><td><code style="color:var(--c-orange);">sol</code></td></tr>
+        <tr><td><code>el sol</code></td><td><code style="color:var(--c-orange);">está</code></td></tr>
+        <tr><td><code>el sol está</code></td><td><code style="color:var(--c-orange);">muy</code></td></tr>
+        <tr><td><code>el sol está muy</code></td><td><code style="color:var(--c-orange);">alto</code></td></tr>
+      </table>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Y entonces el entrenamiento es <strong>exactamente</strong> el de un clasificador: se predice una
+      distribución sobre las 50,257 clases, se compara con la <em>y</em> verdadera, y se ajustan los
+      parámetros. La misma cross-entropy de la unidad de evaluación.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.2em;">
+      A esto se le llama <strong>auto-supervisado</strong>: la supervisión sale del propio dato. Por eso se
+      puede entrenar con todo internet sin pagar un solo etiquetador.
+    </blockquote>
+    <aside class="notes">
+      Es el encuadre pedido: pares (x, y) explicitos. Conviene recalcar que cada documento produce tantos
+      pares como tokens tiene, por eso un corpus de billones de tokens da billones de ejemplos.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>De Dónde Sale la Duda del Modelo</h2>
+    <div class="widget-container">
+      <canvas id="training-pairs-canvas" width="880" height="400" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn" id="training-pairs-next">Siguiente ejemplo</button>
+        <button class="widget-btn fi-btn" id="training-pairs-all">Ver todos</button>
+        <button class="widget-btn fi-btn" id="training-pairs-reset">Reiniciar</button>
+      </div>
+      <div id="training-pairs-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.3em; font-size:0.6em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      En el corpus, esa misma pregunta aparece en enciclopedias, foros, novelas y exámenes — y
+      <strong>cada uno la continúa distinto</strong>. Misma <strong style="color:var(--c-yellow);">x</strong>,
+      distintas <strong style="color:var(--c-orange);">y</strong>.
+    </p>
+    <aside class="notes">
+      Widget propio. Es la explicacion de POR QUE el modelo reparte probabilidad: no es indecision, es que
+      el corpus mismo es ambiguo. Los textos son ilustrativos del tipo de fuente; las probabilidades reales
+      del modelo se ven en el widget de generacion.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Del Corpus a la Distribución</h2>
+    <p style="font-size: 0.46em;">
+      Ese conteo del corpus es, en esencia, lo que el modelo termina reproduciendo. Compara:
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Lo que hay en los datos</h3>
+        <p style="font-size: 0.75em; text-align:left;">Tras esa pregunta, en el corpus siguen:
+          otra pregunta, un año, "Nació…", un guion de diálogo…</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim); text-align:left;">Ninguna continuación es
+          "la" correcta: todas ocurren de verdad.</p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Lo que predice el modelo</h3>
+        <p style="font-size: 0.75em; text-align:left;">Una <strong>distribución</strong> que reparte
+          probabilidad entre esas mismas opciones.</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim); text-align:left;">Medido de verdad:
+          <code>⏎</code> 68.7%, <code>¿</code> 14.7%, <code>—</code> 3.4%, <code>En</code> 0.5%.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🔑 El modelo <strong>no duda</strong> porque le falte información: reparte probabilidad porque
+      <strong>así estaba repartido en los datos</strong>. Está reproduciendo fielmente la estadística de su
+      corpus — y esa estadística incluye continuaciones que no responden la pregunta.
+    </blockquote>
+    <aside class="notes">
+      Cierra el circulo entre los pares (x,y) del widget anterior y la distribucion real que ya vieron.
+      Las probabilidades son las medidas con DeepESP/gpt2-spanish.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Explora la Generación Token por Token</h2>
     <div class="widget-container">
-      <canvas id="token-gen-canvas" width="880" height="360" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <canvas id="token-gen-canvas" width="880" height="370" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
       <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.35em; flex-wrap:wrap;">
         <button class="widget-btn fi-btn tg-prompt-btn" data-prompt="sol">"el sol está…"</button>
         <button class="widget-btn fi-btn tg-prompt-btn" data-prompt="einstein">"¿Cuándo nació Einstein?"</button>
         <div class="widget-label" style="font-size:0.75em;">T <span class="widget-value" id="token-gen-temp-value">1.00</span>
           <input type="range" id="token-gen-temp" class="widget-slider" min="0" max="2" step="0.05" value="1" style="width:90px; margin-left:0.3em;">
         </div>
-        <div class="widget-label" style="font-size:0.75em;">top-k <span class="widget-value" id="token-gen-topk-value">4</span>
-          <input type="range" id="token-gen-topk" class="widget-slider" min="1" max="4" step="1" value="4" style="width:70px; margin-left:0.3em;">
+        <div class="widget-label" style="font-size:0.75em;">top-k <span class="widget-value" id="token-gen-topk-value">6</span>
+          <input type="range" id="token-gen-topk" class="widget-slider" min="1" max="6" step="1" value="6" style="width:70px; margin-left:0.3em;">
         </div>
         <button class="widget-btn fi-btn" id="token-gen-next">Siguiente token</button>
         <button class="widget-btn fi-btn" id="token-gen-all">Generar todo</button>
         <button class="widget-btn fi-btn" id="token-gen-reset">Otra corrida</button>
       </div>
-      <div id="token-gen-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.3em; font-size:0.55em;"></div>
+      <div id="token-gen-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.2em; font-size:0.5em;"></div>
     </div>
     <p class="fragment fade-up" style="font-size: 0.36em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
-      Distribuciones <strong>reales</strong> de un GPT-2 en español. Presiona <strong>Otra corrida</strong>
-      varias veces con el mismo prompt: el resultado <strong>cambia</strong>.
+      Continuaciones <strong>reales</strong> de un GPT-2 en español (18 tokens). Presiona <strong>Otra corrida</strong>
+      varias veces: con el mismo prompt y la misma configuración, el texto <strong>cambia</strong>.
     </p>
     <aside class="notes">
-      Widget propio con datos reales (js/widgets/llm-tree-data.js), precalculados con DeepESP/gpt2-spanish.
+      Widget propio con datos reales (js/widgets/llm-trie-data.js): 180 continuaciones de 18 tokens por prompt, muestreadas de DeepESP/gpt2-spanish a temperaturas 0.9, 1.1 y 1.3, guardadas como trie.
       Guion: (1) "Siguiente token" paso a paso viendo la ruleta del muestreo; (2) bajar T a 0.1 y notar que
       siempre sale lo mismo; (3) subirla a 2 y ver que se aplana; (4) "Otra corrida" varias veces.
     </aside>
@@ -6442,8 +6531,9 @@ docs = retriever.invoke(
 <script src="js/widgets/embeddings-data.js"></script>
 <script src="js/widgets/embedding-space-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
-<script src="js/widgets/llm-tree-data.js"></script>
+<script src="js/widgets/llm-trie-data.js"></script>
 <script src="js/widgets/token-generation-widget.js"></script>
+<script src="js/widgets/training-pairs-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -6620,6 +6710,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initTokenGenerationWidget === 'function') {
       initTokenGenerationWidget();
       widgetsInitialized.tokenGen = true;
+    }
+  }
+  if (slide.querySelector('#training-pairs-canvas') && !widgetsInitialized.trainingPairs) {
+    if (typeof initTrainingPairsWidget === 'function') {
+      initTrainingPairsWidget();
+      widgetsInitialized.trainingPairs = true;
     }
   }
 });
