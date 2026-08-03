@@ -70,6 +70,7 @@
         <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Large Language Models</a>
         <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>RAG: Retrieval Augmented Generation</a>
         <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>Recuperación de Información: los Fundamentos</a>
+        <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación en Producción</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -8144,6 +8145,1274 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
 
 </section>
 
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.45em;">Recuperación en Producción</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">Lo que Hace Falta para que Escale</h3>
+    <p style="font-size: 0.44em; color: var(--c-text-dim); margin-top: 0.7em;">
+      Ya sabemos <strong>qué</strong> técnicas usa un retriever y <strong>cómo se miden</strong>.
+      Falta lo que separa un prototipo de un sistema real: buscar entre millones de vectores,
+      partir los documentos, arreglar la consulta del usuario y reordenar los resultados.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Information Retrieval in Production"). Es el modulo 3 del curso de RAG. Todo lo de esta unidad son cosas que NO hacen falta con 100 documentos y son obligatorias con 10 millones.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Cuatro Temas</h2>
+    <div class="taxonomy" style="font-size: 0.9em;">
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-blue);">
+        <strong style="color: var(--c-blue);">ANN y bases vectoriales</strong> —
+        cómo se busca entre mil millones de vectores sin comparar contra todos.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-green);">
+        <strong style="color: var(--c-green);">Chunking</strong> —
+        en qué pedazos se parte un documento antes de indexarlo. La decisión
+        <strong>más subestimada</strong> de todo el pipeline.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-orange);">
+        <strong style="color: var(--c-orange);">Query parsing</strong> —
+        arreglar la consulta del usuario <em>antes</em> de buscar.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-purple);">
+        <strong style="color: var(--c-purple);">Reranking</strong> —
+        una segunda pasada, más cara y más precisa, sobre los pocos candidatos que sobrevivieron.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em; color: var(--c-text-dim);">
+      Los cuatro se pueden agregar a un RAG que ya funciona, <strong>uno por uno</strong>,
+      midiendo con las métricas de la unidad anterior si cada uno mejoró algo.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("What You'll Learn"). Conviene enmarcarlo asi: son mejoras incrementales sobre el RAG minimo del modulo 1, y cada una se justifica midiendo.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Punto de Partida: kNN Exacto</h2>
+    <p style="font-size: 0.44em;">
+      La búsqueda semántica, tal como la implementamos en la unidad de embeddings:
+    </p>
+    <div class="roadmap" style="font-size: 0.42em; margin-top: 0.25em;">
+      <div class="step">Vectorizar todos los documentos <span style="color: var(--c-text-dim);">(una sola vez)</span></div>
+      <div class="step">Vectorizar el prompt</div>
+      <div class="step">Calcular la distancia contra <strong>todos</strong> los vectores</div>
+      <div class="step">Ordenar y devolver los <strong>k</strong> más cercanos</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em;">
+      Es <strong>exacto</strong>: por definición devuelve los vecinos correctos.
+      Y es perfectamente razonable… hasta cierto tamaño.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      El costo crece <strong>linealmente</strong>: 1,000 documentos son 1,000 distancias por búsqueda.
+      <strong>Mil millones de documentos son mil millones de distancias — en cada consulta.</strong>
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Basic Vector Retrieval - KNN", "Scaling Challenges"). Ya se vio kNN en el slide 10/16; aqui lo importante es el costo, que es lo que motiva todo el bloque.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>ANN: Aceptar Equivocarse a Veces</h2>
+    <div class="comparison" style="font-size: 0.42em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">kNN exacto</h4>
+        <ul style="margin:0.2em 0;">
+          <li>Garantiza el vecino <strong>correcto</strong></li>
+          <li>Costo <strong>lineal</strong> en el número de documentos</li>
+          <li>No necesita construir nada</li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">ANN aproximado</h4>
+        <ul style="margin:0.2em 0;">
+          <li><strong>No</strong> garantiza el vecino correcto</li>
+          <li>Costo <strong>casi logarítmico</strong></li>
+          <li>Se apoya en una <strong>estructura extra</strong> que hay que construir antes</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.43em; text-align:center; margin-top: 0.4em;">
+      El trato es explícito: <strong>se cambia exactitud por velocidad</strong>.
+      Y resulta que traer el segundo vecino más cercano en vez del primero
+      casi nunca cambia la respuesta del LLM.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; color: var(--c-text-dim);">
+      HNSW, IVF, PQ y LSH son familias de ANN. Vimos el catálogo en la unidad de embeddings;
+      ahora vamos <strong>por dentro</strong> del que más se usa.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Approximate Nearest Neighbors"). El catalogo comparativo esta en el slide 10/17; esta unidad explica el mecanismo, que es lo que ahi no se cubrio.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Navigable Small World: un Mapa de Vecinos</h2>
+    <p style="font-size: 0.43em;">
+      La idea: si no puedes revisar todos los documentos, al menos ten un
+      <strong>mapa</strong> que te diga a dónde moverte.
+    </p>
+    <div class="roadmap" style="font-size: 0.41em; margin-top: 0.25em;">
+      <div class="step fragment fade-up"><strong>Construcción</strong> (una vez, cara):
+        un nodo por documento, conectado a sus <strong>M vecinos más cercanos</strong>.
+        El resultado es un <em>grafo de proximidad</em>.</div>
+      <div class="step fragment fade-up"><strong>Búsqueda</strong> (cada consulta, barata):
+        arrancar en un nodo cualquiera y saltar, una y otra vez,
+        <strong>al vecino que esté más cerca</strong> de la consulta.</div>
+      <div class="step fragment fade-up"><strong>Parada</strong>:
+        cuando <strong>ningún vecino mejora</strong>, se llegó.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em;">
+      Nunca se calcularon distancias contra toda la base: solo contra los nodos del camino
+      y sus vecinos. Es una <strong>búsqueda voraz</strong> sobre un grafo.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Navigable Small World", "Query Entry Point", "Search Algorithm"). El nombre "small world" viene de los grafos de mundo pequeno: pocos saltos conectan cualquier par de nodos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Búsqueda en el Grafo</h2>
+    <div class="widget-container">
+      <canvas id="hnsw-canvas" width="880" height="330" style="width:100%; max-width:880px; display:block; margin:0 auto; cursor:crosshair;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.45em; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn hnsw-modo-btn" data-modo="knn">kNN exacto</button>
+        <button class="widget-btn fi-btn hnsw-modo-btn" data-modo="nsw">NSW (1 capa)</button>
+        <button class="widget-btn fi-btn hnsw-modo-btn" data-modo="hnsw">HNSW (3 capas)</button>
+        <button class="widget-btn fi-btn" id="hnsw-animar">Animar recorrido</button>
+        <label class="widget-label" style="font-size:0.7em; cursor:pointer;">
+          <input type="checkbox" id="hnsw-grafo" checked style="margin-right:0.3em;">ver grafo
+        </label>
+      </div>
+      <div id="hnsw-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.52em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio: el grafo y la busqueda voraz son REALES, y el contador de distancias tambien.
+      Guion: (1) en kNN ver que se traza una linea a CADA documento — 120 de 120;
+      (2) pasar a NSW y ver que bastan ~30; (3) hacer clic en varios puntos y notar que a veces
+      NSW NO encuentra el vecino real (se queda en un minimo local); (4) pasar a HNSW y ver las
+      capas. Medido sobre 500 consultas: NSW acierta el 44%, HNSW el 82%, con menos distancias.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Por Qué NSW se Equivoca</h2>
+    <div class="columns" style="font-size: 0.42em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          La búsqueda voraz elige, en cada paso, <strong>lo mejor en ese momento</strong>.
+          Nunca retrocede y nunca ve el mapa completo.
+        </p>
+        <p style="margin:0.35em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          Si cae en una zona donde <strong>ningún vecino inmediato</strong> está más cerca de la
+          consulta, se detiene ahí — aunque el verdadero vecino esté en otro grupo, un poco más allá.
+          Es un <strong>mínimo local</strong>.
+        </p>
+        <p style="margin:0.35em 0;">
+          Es exactamente lo que se ve al hacer clic en el widget cerca del borde entre dos grupos.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-yellow);">Medido</strong>
+          sobre 500 consultas aleatorias en el grafo del widget:</p>
+        <table style="width:100%; font-size:0.95em; margin-top:0.2em;">
+          <tr><th></th><th>Acierta</th><th>Distancias</th></tr>
+          <tr><td>kNN</td><td style="color: var(--c-green);">100%</td><td style="color: var(--c-red);">120</td></tr>
+          <tr><td>NSW</td><td style="color: var(--c-red);">44%</td><td>34</td></tr>
+          <tr><td><strong>HNSW</strong></td><td style="color: var(--c-yellow);">82%</td><td style="color: var(--c-green);">29</td></tr>
+        </table>
+        <p style="margin-top:0.3em; color: var(--c-text-dim);">
+          HNSW casi duplica el acierto <strong>y además</strong> calcula menos distancias.
+          Ese salto es lo que explica el siguiente slide.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("May not find closest possible vectors, algorithm doesn't pick optimal overall path, just best path in each moment"). Los porcentajes de la tabla son medidos con el codigo del widget sobre 500 consultas, no citados del original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>HNSW: Capas para Saltar Lejos Primero</h2>
+    <p style="font-size: 0.42em;">
+      El problema de NSW es que arranca en un nodo cualquiera y avanza <strong>a pasos cortos</strong>.
+      HNSW agrega capas con cada vez <strong>menos nodos</strong>, para cruzar el espacio rápido.
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+        <strong>Capa 3</strong> — se queda con ~10 vectores al azar. Grafo ralo, saltos enormes.
+        <span style="color: var(--c-text-dim);">Aterrizar en la región correcta cuesta 2 o 3 saltos.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(255,134,47,0.08); border-left: 3px solid var(--c-orange);">
+        <strong>Capa 2</strong> — ~100 vectores. Se entra por el mejor nodo de la capa 3 y se afina.
+      </div>
+      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+        <strong>Capa 1</strong> — los 1,000 vectores completos. Se entra por el mejor de la capa 2
+        y se hace la búsqueda fina, ya <strong>cerca</strong> del objetivo.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Cada capa reduce los candidatos por un factor constante. Eso convierte la búsqueda
+      de <strong style="color: var(--c-red);">lineal</strong> en aproximadamente
+      <strong style="color: var(--c-green);">logarítmica</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Hierarchical Improvement", los tres slides de capas y "Hierarchical Navigable Small World"). La analogia util: es como viajar en avion, luego en bus y luego caminando, en vez de caminar todo el trayecto.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cuánto se Ahorra de Verdad</h2>
+    <p style="font-size: 0.42em;">
+      Corriendo el algoritmo del widget con corpus cada vez más grandes,
+      contando <strong>distancias reales</strong> por búsqueda:
+    </p>
+    <table style="font-size: 0.4em; width: 84%; margin: 0.3em auto;">
+      <tr><th>Documentos</th><th>kNN</th><th>HNSW</th><th>Ahorro</th><th>Acierto</th></tr>
+      <tr class="fragment fade-up"><td>50</td><td>50</td><td>23</td><td>2.2×</td><td style="color: var(--c-green);">92%</td></tr>
+      <tr class="fragment fade-up"><td>120</td><td>120</td><td>29</td><td>4.2×</td><td style="color: var(--c-green);">79%</td></tr>
+      <tr class="fragment fade-up"><td>300</td><td>300</td><td>33</td><td>9.2×</td><td style="color: var(--c-green);">81%</td></tr>
+      <tr class="fragment fade-up"><td>600</td><td>600</td><td>53</td><td>11.3×</td><td style="color: var(--c-orange);">62%</td></tr>
+      <tr class="fragment fade-up"><td>1,200</td><td>1,200</td><td>54</td><td style="color: var(--c-yellow);"><strong>22.1×</strong></td><td style="color: var(--c-red);">54%</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      <strong style="color: var(--c-green);">Lo bueno:</strong> el ahorro <strong>crece</strong> con el tamaño —
+      24× más documentos y apenas 2.3× más trabajo. Eso es el comportamiento logarítmico.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.15em; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Lo honesto:</strong> el acierto <strong>cae</strong>, porque dejamos fijos los parámetros
+      del índice (M = 4 vecinos). En producción, más documentos exigen <strong>subir M y ef</strong>,
+      lo que cuesta memoria y tiempo de construcción. La velocidad de ANN <strong>no es gratis</strong>.
+    </p>
+    <aside class="notes">Datos propios, medidos con el mismo codigo del widget (300 consultas por tamano). No estan en el original: se agregaron porque el modulo afirma que HNSW es logaritmico sin mostrar numeros, y porque el deterioro del recall al no ajustar M es el error mas comun al llevar ANN a produccion.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>ANN: Lo que Hay que Llevarse</h2>
+    <div style="font-size: 0.43em;">
+      <div class="fragment fade-up" style="margin:0.3em 0;">
+        ● ANN es <strong>mucho más rápido</strong> que kNN, y la ventaja crece con el tamaño.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0;">
+        ● Encuentra documentos <strong>cercanos</strong>, pero <strong>no garantiza</strong> los mejores.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0;">
+        ● Depende de un grafo que es <strong>caro de construir</strong>… pero se construye
+        <strong>una sola vez</strong> y se reutiliza en cada búsqueda.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+        ● Corolario práctico: insertar documentos <strong>no es gratis</strong>. Un índice HNSW se
+        actualiza bien, pero borrar y reconstruir a cada rato sí duele. Con datos que cambian mucho,
+        hay que planear la reindexación.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Approximate Nearest Neighbors - Takeaways"). El corolario sobre inserciones y borrados es propio: es el tema que aparece apenas el capstone tiene datos que se actualizan.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Base de Datos Vectorial</h2>
+    <p style="font-size: 0.43em;">
+      Nada de lo anterior se implementa a mano. Una base vectorial es, exactamente,
+      <strong>un motor que construye índices HNSW y calcula distancias rápido</strong>.
+    </p>
+    <table style="font-size: 0.38em; width: 100%; margin-top: 0.25em;">
+      <tr><th></th><th>Base relacional</th><th>Base vectorial</th></tr>
+      <tr class="fragment fade-up"><td><strong>Búsqueda vectorial</strong></td>
+        <td style="color: var(--c-red);">recorre todo: es un kNN ineficiente</td>
+        <td style="color: var(--c-green);">índices ANN nativos</td></tr>
+      <tr class="fragment fade-up"><td><strong>Escala</strong></td>
+        <td>se degrada rápido con millones de vectores</td>
+        <td style="color: var(--c-green);">miles de millones</td></tr>
+      <tr class="fragment fade-up"><td><strong>Búsqueda híbrida</strong></td>
+        <td>hay que armarla a mano</td>
+        <td style="color: var(--c-green);">BM25 + vectorial + fusión integradas</td></tr>
+      <tr class="fragment fade-up"><td><strong>Lo que sí hace bien</strong></td>
+        <td style="color: var(--c-green);">transacciones, joins, consistencia</td>
+        <td>no es su terreno</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      El panorama de opciones (Chroma, pgvector, Qdrant, Weaviate, Pinecone…) está en la
+      <strong>unidad de Embeddings</strong>. Aquí usaremos <strong>Weaviate</strong>,
+      que es la del curso original.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Vector Database", "Outperform Relational Databases"). Matiz importante: pgvector SI tiene indices HNSW, asi que la fila de "base relacional" describe una relacional sin extension vectorial. Vale aclararlo si alguien pregunta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Las Operaciones de Siempre</h2>
+    <div class="roadmap" style="font-size: 0.42em;">
+      <div class="step fragment fade-up"><strong>1.</strong> Conectarse y crear la <strong>colección</strong> (el equivalente a una tabla)</div>
+      <div class="step fragment fade-up"><strong>2.</strong> Cargar los documentos, normalmente <strong>por lotes</strong></div>
+      <div class="step fragment fade-up"><strong>3.</strong> Generar los <strong>vectores dispersos</strong> para la búsqueda por palabras clave</div>
+      <div class="step fragment fade-up"><strong>4.</strong> Generar los <strong>vectores densos</strong> para la búsqueda semántica</div>
+      <div class="step fragment fade-up"><strong>5.</strong> Construir el <strong>índice HNSW</strong></div>
+      <div class="step fragment fade-up"><strong>6.</strong> Buscar</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Los pasos 3, 4 y 5 los hace la base <strong>sola</strong> al insertar, si se configuró bien.
+      Es la razón principal para usar una en vez de <code>numpy</code>.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Typical Vector Database Operations"). Notar que el orden importa: el indice HNSW se construye sobre los vectores, asi que primero se vectoriza.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Crear la Colección</h2>
+    <pre style="font-size: 0.31em; max-width: 94%; margin: 0 auto; overflow-x:auto;"><code class="language-python">import weaviate
+from weaviate.classes.config import Configure, Property, DataType
+
+cliente = weaviate.connect_to_local()      # o connect_to_weaviate_cloud(...)
+
+cliente.collections.create(
+    name="Articulos",
+
+    # Quien convierte el texto en vectores. La coleccion lo recuerda: al
+    # insertar y al buscar se usa el MISMO modelo, que es justo la regla
+    # de oro de la unidad de embeddings.
+    vector_config=Configure.Vectors.text2vec_transformers(),
+
+    # El indice ANN. distance=COSINE debe coincidir con como se
+    # entreno el modelo de embeddings.
+    vector_index_config=Configure.VectorIndex.hnsw(
+        distance_metric=weaviate.classes.config.VectorDistances.COSINE,
+        ef_construction=128,   # calidad del grafo al construirlo (mas = mejor y mas lento)
+        max_connections=32,    # el "M" de HNSW: vecinos por nodo
+    ),
+
+    # Las propiedades son la metadata sobre la que luego se filtra.
+    properties=[
+        Property(name="texto",  data_type=DataType.TEXT),
+        Property(name="titulo", data_type=DataType.TEXT),
+        Property(name="fecha",  data_type=DataType.DATE),
+        Property(name="fuente", data_type=DataType.TEXT),
+    ],
+)</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.37em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      <code>ef_construction</code> y <code>max_connections</code> son los parámetros que en el widget
+      dejamos fijos en M = 4. Subirlos mejora el acierto y cuesta memoria.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Connect to Database and Create a Collection"). La API de Weaviate v4 cambio respecto a v3; este codigo es v4. Conectar el ef_construction/max_connections con el widget cierra el circulo entre la teoria y la configuracion real.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cargar Documentos por Lotes</h2>
+    <pre style="font-size: 0.32em; max-width: 94%; margin: 0 auto; overflow-x:auto;"><code class="language-python">articulos = cliente.collections.get("Articulos")
+
+# Por lotes, no uno por uno: cada insercion individual paga una vuelta de
+# red y una llamada al modelo de embeddings. Con lotes se amortizan las dos.
+with articulos.batch.dynamic() as lote:
+    for doc in documentos:
+        lote.add_object(properties={
+            "texto":  doc["texto"],
+            "titulo": doc["titulo"],
+            "fecha":  doc["fecha"],
+            "fuente": doc["fuente"],
+        })
+        # Cortar temprano si algo va sistematicamente mal, en vez de
+        # descubrirlo despues de insertar un millon de objetos.
+        if lote.number_errors > 10:
+            print("demasiados errores, abortando la carga")
+            break
+
+# Los fallos NO lanzan excepcion: hay que revisarlos a proposito.
+fallos = articulos.batch.failed_objects
+if fallos:
+    print(f"{len(fallos)} objetos fallaron. Primero: {fallos[0]}")</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.25em;">
+      El detalle que muerde: <strong>la carga por lotes no lanza excepciones</strong>.
+      Si no revisas <code>failed_objects</code>, te quedas con una base incompleta
+      y no te enteras hasta que el retriever no encuentra algo.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Adding objects to a collection", con sus tres anotaciones: batch adding, detecting errors, handling failures). El aviso sobre failed_objects es el que mas dolores de cabeza ahorra en el capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Las Cuatro Búsquedas</h2>
+    <pre style="font-size: 0.3em; max-width: 96%; margin: 0 auto; overflow-x:auto;"><code class="language-python">from weaviate.classes.query import MetadataQuery, Filter
+
+# 1. SEMANTICA: el texto se vectoriza y se busca por cercania (HNSW)
+r = articulos.query.near_text(
+    query="¿por que subieron los hoteles?", limit=5,
+    return_metadata=MetadataQuery(distance=True))      # pedir la distancia
+for o in r.objects:
+    print(f"{o.metadata.distance:.3f}  {o.properties['titulo']}")
+
+# 2. PALABRAS CLAVE: BM25, el de la unidad anterior, ya implementado
+r = articulos.query.bm25(query="ocupacion hotelera", limit=5)
+
+# 3. HIBRIDA: alpha es el beta de RRF con otro nombre.
+#    alpha=1 -> solo vectorial;  alpha=0 -> solo BM25
+r = articulos.query.hybrid(query="ocupacion hotelera",
+                           alpha=0.25,     # 25% vectorial, 75% palabras clave
+                           limit=5)
+
+# 4. FILTRADA: la metadata recorta ANTES o DESPUES del ANN, segun el motor
+r = articulos.query.near_text(
+    query="¿por que subieron los hoteles?", limit=5,
+    filters=Filter.by_property("fuente").equal("reporte")
+            &amp; Filter.by_property("fecha").greater_than(hace_un_mes))</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.37em; text-align:center; margin-top: 0.2em;">
+      Las tres técnicas de la unidad anterior, en tres llamadas.
+      <strong>Todo lo que estudiamos ya está adentro</strong> — pero ahora sabes qué hace cada parámetro.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Vector Search in Action", "Keyword Search in Action", "Hybrid Search in Action", "Filtered Search in Action"). El ejemplo original usa alpha=0.25; vale la pena senalar que el alpha de Weaviate pesa lo VECTORIAL, igual que nuestro beta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Chunking: el Problema</h2>
+    <p style="font-size: 0.44em;">
+      Supongamos una base de conocimiento de <strong>1,000 libros</strong>.
+      Si vectorizamos cada libro entero, tenemos 1,000 vectores.
+    </p>
+    <div style="text-align:center; margin: 0.35em 0;">
+      <div class="flow-row" style="justify-content:center; font-size: 0.4em;">
+        <div class="flow-node" style="border-color: var(--c-blue); padding:0.5em 1.2em;">📕 Un libro completo<br><span style="color: var(--c-text-dim);">300 páginas</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-red);">[0.1, 0.4, 0.3, …]<br><span style="color: var(--c-text-dim);">384 números</span></div>
+      </div>
+    </div>
+    <div style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.2em 0;">● El vector es un <strong>promedio</strong> de todo el libro: no representa bien ningún capítulo.</div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">● Una pregunta sobre un tema específico <strong>no se parece</strong> a ese promedio.</div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">● Y si lo recuperas… <strong>metes 300 páginas al prompt</strong>. La ventana de contexto se acaba con un solo resultado.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Tres razones para partir: <strong>límites de tokens</strong>, <strong>mejor relevancia</strong>
+      y <strong>mandarle al LLM solo lo que importa</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Why Chunk Documents?", "Indexing without chunking", "The problems with this approach"). La palabra clave es "averaged representation": un embedding de 300 paginas no distingue nada.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿De Qué Tamaño?</h2>
+    <div class="comparison" style="font-size: 0.39em;">
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">Demasiado grande</h4>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">nivel capítulo</p>
+        <ul style="margin:0.2em 0;">
+          <li>Muchos temas en un solo vector</li>
+          <li>Vuelve el problema del promedio</li>
+          <li>Llena la ventana de contexto</li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">Demasiado pequeño</h4>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">nivel palabra</p>
+        <ul style="margin:0.2em 0;">
+          <li>Pierde el contexto de alrededor</li>
+          <li>"Se duplicaron" — ¿qué cosa?</li>
+          <li>Baja la relevancia de la búsqueda</li>
+        </ul>
+      </div>
+      <div class="side correct">
+        <h4 style="color: var(--c-green); margin-top:0;">Adecuado</h4>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">párrafo o similar</p>
+        <ul style="margin:0.2em 0;">
+          <li>Una idea por chunk</li>
+          <li>Suficiente contexto para entenderse solo</li>
+          <li>Cabe varias veces en el prompt</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      La escala natural: <strong>libro → capítulo → página → párrafo → oración</strong>.
+      Casi siempre el punto dulce está entre <strong>párrafo y página</strong>
+      (unos 200–800 caracteres).
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Chunking your content", "Balancing Chunk Size"). El rango de 200-800 caracteres es una referencia practica anadida; lo importante es que el estudiante lo trate como hiperparametro y lo mida.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Las Cuatro Estrategias</h2>
+    <table style="font-size: 0.37em; width: 100%;">
+      <tr><th>Estrategia</th><th>Cómo corta</th><th>A favor</th><th>En contra</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-blue);">Tamaño fijo</strong></td>
+        <td>cada N caracteres, sin mirar el texto</td>
+        <td>trivial, predecible</td>
+        <td style="color: var(--c-red);">parte palabras y oraciones a la mitad</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-green);">Con traslape</strong></td>
+        <td>igual, pero repitiendo el final del anterior</td>
+        <td>ninguna frase queda sin contexto de un lado</td>
+        <td>almacena texto repetido</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-orange);">Recursivo</strong></td>
+        <td>en separadores: párrafo → oración → palabra</td>
+        <td>respeta la estructura; <strong>buen valor por omisión</strong></td>
+        <td>chunks de tamaño desigual</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-purple);">Semántico</strong></td>
+        <td>donde <strong>cambia el tema</strong>, medido con embeddings</td>
+        <td>sigue el hilo del autor</td>
+        <td style="color: var(--c-red);">caro: hay que vectorizar para poder partir</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em;">
+      El traslape típico es del <strong>10 al 20%</strong>: 25 caracteres de traslape
+      en chunks de 250.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Fixed Size Chunking", "Overlapping Chunking", "Recursive Character Splitting", "Semantic Chunking"). El ejemplo del original usa 250 caracteres con 25 de traslape, que es exactamente 10%.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Chunking</h2>
+    <div class="widget-container">
+      <canvas id="chunking-canvas" width="880" height="290" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn chunk-modo-btn" data-modo="fijo">fijo</button>
+        <button class="widget-btn fi-btn chunk-modo-btn" data-modo="traslape">traslape</button>
+        <button class="widget-btn fi-btn chunk-modo-btn" data-modo="recursivo">recursivo</button>
+        <button class="widget-btn fi-btn chunk-modo-btn" data-modo="semantico">semántico</button>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.22em; flex-wrap:wrap;">
+        <div class="widget-label" id="chunk-p-tam" style="font-size:0.68em;">tamaño <span class="widget-value" id="chunk-tam-value">200</span>
+          <input type="range" id="chunk-tam" class="widget-slider" min="80" max="400" step="20" value="200" style="width:96px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" id="chunk-p-trasl" style="font-size:0.68em;">traslape <span class="widget-value" id="chunk-trasl-value">10%</span>
+          <input type="range" id="chunk-trasl" class="widget-slider" min="0" max="50" step="5" value="10" style="width:96px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" id="chunk-p-umbral" style="font-size:0.68em;">umbral <span class="widget-value" id="chunk-umbral-value">0.90</span>
+          <input type="range" id="chunk-umbral" class="widget-slider" min="40" max="98" step="2" value="90" style="width:96px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div id="chunking-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. Las distancias de la grafica son REALES (coseno entre oraciones consecutivas con
+      paraphrase-multilingual-MiniLM-L12-v2). Guion: (1) en "fijo" ver el contador de oraciones cortadas
+      por la mitad; (2) subir el traslape y ver que "texto almacenado" pasa del 100%;
+      (3) en "recursivo" ver que ninguna oracion se parte; (4) en "semantico" bajar el umbral desde 0.98:
+      el PRIMER corte que aparece es el de la oracion 6 a la 7, justo donde el texto cambia de los
+      conciertos al clima. Bajarlo mas fragmenta de mas.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Partir Según el Formato</h2>
+    <p style="font-size: 0.42em;">
+      El chunking recursivo usa una <strong>lista de separadores</strong>, del más grande al más chico.
+      La lista correcta depende de qué es el documento.
+    </p>
+    <div class="columns" style="font-size: 0.36em; margin-top: 0.25em;">
+      <div class="col">
+        <pre style="margin:0; font-size:0.92em;"><code class="language-python">from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter, Language)
+
+# Texto normal: parrafo, luego oracion, luego palabra
+texto = RecursiveCharacterTextSplitter(
+    separators=["\n\n", "\n", ". ", " ", ""],
+    chunk_size=500, chunk_overlap=50)
+
+# Codigo: cortar en definiciones, nunca a media funcion
+codigo = RecursiveCharacterTextSplitter\
+    .from_language(Language.PYTHON,
+                   chunk_size=800, chunk_overlap=0)
+
+# Markdown: respetar los encabezados
+md = RecursiveCharacterTextSplitter\
+    .from_language(Language.MARKDOWN, chunk_size=600)</code></pre>
+      </div>
+      <div class="col">
+        <table style="width:100%; font-size:1.02em;">
+          <tr><th>Formato</th><th>Cortar en…</th></tr>
+          <tr><td>Texto plano</td><td><code>\n\n</code>, <code>\n</code>, <code>. </code></td></tr>
+          <tr><td>HTML</td><td><code>&lt;h1&gt;</code>, <code>&lt;h2&gt;</code>, <code>&lt;p&gt;</code></td></tr>
+          <tr><td>Markdown</td><td><code>#</code>, <code>##</code>, listas</td></tr>
+          <tr><td>Python</td><td><code>class</code>, <code>def</code></td></tr>
+          <tr><td>PDF</td><td>página, luego párrafo</td></tr>
+          <tr><td>Tablas</td><td>fila (¡repitiendo la cabecera!)</td></tr>
+        </table>
+        <p style="margin-top:0.3em; color: var(--c-text-dim);">
+          Partir código a media función produce chunks que <strong>no compilan ni se entienden</strong>:
+          es la diferencia entre un asistente de código útil y uno inservible.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Splitting on Different Characters", con los ejemplos de HTML y Python). Las filas de PDF y tablas son propias. El truco de repetir la cabecera en cada fila de una tabla es de los que mas mejoran un RAG sobre documentos con tablas.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Chunk no Viaja Solo: Metadata</h2>
+    <p style="font-size: 0.43em;">
+      Cada chunk <strong>hereda</strong> la metadata de su documento y agrega la suya propia.
+      Sin eso, el retriever devuelve un párrafo huérfano imposible de citar.
+    </p>
+    <pre style="font-size: 0.32em; max-width: 88%; margin: 0.2em auto; overflow-x:auto;"><code class="language-python">chunk = {
+    "texto": "La ocupación hotelera del centro llegó al 97%...",
+
+    # heredado del documento fuente
+    "titulo":   "Reporte de turismo de Vancouver",
+    "fuente":   "boletin_turismo_2024.pdf",
+    "fecha":    "2024-11-28",
+    "permisos": ["publico"],
+
+    # propio del chunk: es lo que permite citar y reconstruir
+    "indice":   7,           # es el chunk numero 7
+    "pagina":   3,
+    "anterior": "chunk_006", # para traer el vecino si hace falta contexto
+    "siguiente":"chunk_008",
+}</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.39em; text-align:center; margin-top: 0.25em;">
+      Con <code>anterior</code> y <code>siguiente</code> puedes recuperar un chunk pequeño
+      (buena precisión) y <strong>expandirlo</strong> con sus vecinos antes de mandarlo al LLM
+      (buen contexto). Se le llama <em>sentence-window retrieval</em>.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Metadata Preservation"). El truco de sentence-window retrieval es propio y resuelve el dilema del tamano: indexar chico para buscar bien, entregar grande para responder bien.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Chunking Semántico</h2>
+    <p style="font-size: 0.42em;">
+      En vez de cortar cada N caracteres, cortar <strong>donde cambia el tema</strong>.
+      El algoritmo es sorprendentemente simple:
+    </p>
+    <div class="roadmap" style="font-size: 0.4em; margin-top: 0.25em;">
+      <div class="step fragment fade-up"><strong>1.</strong> Recorrer el documento <strong>oración por oración</strong></div>
+      <div class="step fragment fade-up"><strong>2.</strong> Vectorizar la oración actual y la siguiente, y medir la <strong>distancia coseno</strong></div>
+      <div class="step fragment fade-up"><strong>3.</strong> Si la distancia está <strong>por debajo</strong> del umbral, siguen hablando de lo mismo: se agrega al chunk</div>
+      <div class="step fragment fade-up"><strong>4.</strong> Si <strong>supera</strong> el umbral, cambió el tema: se cierra el chunk y empieza otro</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+      <strong>Medido en el widget:</strong> la distancia más alta del documento (0.958) cae
+      exactamente entre <em>"La ocupación hotelera llegó al 97%"</em> y
+      <em>"Por otro lado, el clima en Vancouver…"</em> — el cambio de tema real.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      La referencia clásica: Greg Kamradt, <em>5 Levels of Text Splitting</em> (2023).
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Semantic Chunking" y sus cuatro pasos, con la cita a Kamradt 2023). Kamradt propone tambien embeber cada oracion junto a sus vecinas para suavizar el ruido; se probo sobre este documento y con solo 10 oraciones suaviza DE MAS y mueve el maximo al lugar equivocado, por eso el widget usa la oracion suelta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Chunking Semántico: ¿Vale la Pena?</h2>
+    <div class="comparison" style="font-size: 0.41em;">
+      <div class="side correct">
+        <h4 style="color: var(--c-green); margin-top:0;">A favor</h4>
+        <ul style="margin:0.2em 0;">
+          <li class="fragment fade-up">Sigue el <strong>hilo del autor</strong>, no una regla arbitraria</li>
+          <li class="fragment fade-up">Fronteras más inteligentes: una idea completa por chunk</li>
+          <li class="fragment fade-up">Mejor recall <strong>y</strong> mejor precisión</li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">En contra</h4>
+        <ul style="margin:0.2em 0;">
+          <li class="fragment fade-up"><strong>Caro</strong>: hay que vectorizar para poder decidir dónde cortar</li>
+          <li class="fragment fade-up">Vectorizaciones repetidas sobre todo el corpus</li>
+          <li class="fragment fade-up">Un <strong>umbral más</strong> que ajustar… y el umbral bueno depende del documento</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Se paga <strong>una sola vez</strong>, al indexar. Si tu corpus es estático,
+      el costo es despreciable frente al beneficio. Si cambia todos los días, piénsalo dos veces.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Pros and Cons" del chunking semantico). El matiz de corpus estatico vs cambiante es propio y es el criterio practico que de verdad decide.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Chunking con LLM</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          El siguiente escalón: pedirle a un <strong>LLM</strong> que parta el documento,
+          con instrucciones sobre qué mantener junto.
+        </p>
+        <div class="flow-row" style="margin:0.3em 0; font-size:0.95em;">
+          <div class="flow-node">Documento</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-purple);">LLM</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-green);">Chunks<br>por concepto</div>
+        </div>
+        <p style="margin:0.3em 0; color: var(--c-text-dim);">
+          Funciona bien, y con los precios actuales de los modelos pequeños
+          <strong>es cada vez más viable</strong>.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.78em;"><code class="language-text">Divide el siguiente documento en chunks.
+
+Reglas:
+- Cada chunk debe tratar UN concepto.
+- No partas una idea a la mitad.
+- Corta cuando empiece un tema nuevo.
+- Conserva las tablas completas.
+- Máximo 800 caracteres por chunk.
+
+Devuelve JSON: [{"titulo":..., "texto":...}]
+
+--- DOCUMENTO ---
+{documento}</code></pre>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Language Based Chunking"). El prompt es propio. Advertencia practica: hay que verificar que el LLM no reescriba el texto — debe COPIARLO literal, si no se pierde fidelidad y las citas dejan de ser citas.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Chunking con Contexto</h2>
+    <p style="font-size: 0.42em;">
+      No cambia <em>dónde</em> se corta: cambia <strong>qué se guarda</strong>.
+      A cada chunk se le antepone una frase que dice de qué va, generada por un LLM
+      que <strong>sí vio el documento completo</strong>.
+    </p>
+    <div style="font-size: 0.36em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="display:flex; gap:0.6em; margin:0.2em 0; align-items:stretch;">
+        <div style="flex:1; padding:0.3em 0.5em; background: rgba(168,162,144,0.06); border-left: 3px solid var(--c-text-dim);">
+          "Tras seis meses de desarrollo, finalmente lanzamos nuestra primera app…"
+        </div>
+        <div style="flex:0 0 auto; align-self:center; color: var(--c-yellow);">→</div>
+        <div style="flex:1; padding:0.3em 0.5em; background: rgba(255,255,0,0.07); border-left: 3px solid var(--c-yellow);">
+          <strong style="color: var(--c-yellow);">contexto: anuncio del lanzamiento de la app.</strong>
+          Tras seis meses de desarrollo…
+        </div>
+      </div>
+      <div class="fragment fade-up" style="display:flex; gap:0.6em; margin:0.2em 0; align-items:stretch;">
+        <div style="flex:1; padding:0.3em 0.5em; background: rgba(168,162,144,0.06); border-left: 3px solid var(--c-text-dim);">
+          "Gracias a Daniel Townsend, Sarah Johnson, Mike Chen…"
+        </div>
+        <div style="flex:0 0 auto; align-self:center; color: var(--c-yellow);">→</div>
+        <div style="flex:1; padding:0.3em 0.5em; background: rgba(255,255,0,0.07); border-left: 3px solid var(--c-yellow);">
+          <strong style="color: var(--c-yellow);">contexto: lista de colaboradores del proyecto.</strong>
+          Gracias a Daniel Townsend…
+        </div>
+      </div>
+    </div>
+    <div class="columns" style="font-size: 0.39em; margin-top: 0.35em;">
+      <div class="col fragment fade-up">
+        <strong style="color: var(--c-green);">Beneficio</strong> — el chunk se entiende solo.
+        Mejora la <strong>búsqueda</strong> y también la <strong>generación</strong>,
+        y <strong>no cuesta nada en tiempo de consulta</strong>.
+      </div>
+      <div class="col fragment fade-up">
+        <strong style="color: var(--c-red);">Costo</strong> — un preprocesamiento caro:
+        una llamada al LLM <strong>por cada chunk</strong>, con el documento entero como contexto.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Context-Aware Chunking", los dos slides). Es lo que Anthropic publico como "contextual retrieval" en 2024. El punto clave para el capstone: el costo es de indexacion, no de consulta, asi que no afecta la latencia que siente el usuario.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Cuál Uso?</h2>
+    <div class="roadmap" style="font-size: 0.41em;">
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-blue);">Empieza con recursivo + traslape.</strong>
+        Son el valor por omisión razonable y resuelven el 80% de los casos.
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-purple);">Semántico o con LLM</strong> si midiendo ves que
+        el recursivo parte mal tus documentos. Más complejo: <strong>experimenta antes de adoptarlo</strong>.
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-yellow);">Con contexto</strong> mejora <em>cualquiera</em> de las
+        anteriores. Es la <strong>primera mejora</strong> que vale la pena explorar.
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-green);">Y sobre todo: mide.</strong>
+        El tamaño de chunk es un hiperparámetro como cualquier otro. Prueba 200, 400 y 800
+        y compara el recall@5 de la unidad anterior.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Choosing a Chunking Approach"). El ultimo punto conecta con la unidad de model selection: chunk_size es un hiperparametro y merece una busqueda en rejilla como cualquier otro.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Prompt que Llega no Sirve para Buscar</h2>
+    <div style="text-align:center; margin: 0.3em 0;">
+      <p style="font-size: 0.46em; font-family: 'Fira Code', monospace; color: var(--c-yellow); padding: 0.4em; background: rgba(255,255,0,0.06); display:inline-block;">
+        "Oye, ¿me cuentas de eso del clima que hablamos?"
+      </p>
+    </div>
+    <div style="font-size: 0.41em; margin-top: 0.2em;">
+      <div class="fragment fade-up" style="margin:0.2em 0;">● <strong>Ambiguo</strong>: ¿"eso del clima" es qué exactamente?</div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">● <strong>Conversacional</strong>: la mitad de las palabras no aportan nada a la búsqueda</div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">● <strong>Sin los términos del dominio</strong>: los documentos dicen "precipitación" y "temperatura media"</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.43em; text-align:center; margin-top: 0.4em;">
+      La idea de <strong style="color: var(--c-orange);">query parsing</strong>:
+      no le des al retriever el prompt crudo. <strong>Arréglalo primero.</strong>
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Query parsing", el slide del prompt "Hey, can you tell me about that climate thing we talked about?"). Es la contraparte del chunking: uno arregla el lado de los documentos, el otro el lado de la consulta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Query Rewriting</h2>
+    <div class="columns" style="font-size: 0.37em;">
+      <div class="col">
+        <div class="flow-row" style="margin:0.2em 0; font-size:1.05em;">
+          <div class="flow-node">Prompt<br>desordenado</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-purple);">LLM<br>reescritor</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-green);">Prompt<br>optimizado</div>
+        </div>
+        <p style="margin:0.3em 0;">Un LLM barato reescribe la consulta <strong>antes</strong> de que llegue al retriever.</p>
+        <p style="margin:0.3em 0; color: var(--c-text-dim);">
+          El prompt del reescritor es <strong>específico del dominio</strong>: se itera sobre él como
+          sobre cualquier otro componente.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.86em;"><code class="language-text">El siguiente prompt fue enviado por un
+usuario para consultar una base de
+documentos médicos que relacionan
+síntomas con diagnósticos. Reescríbelo
+para optimizarlo para la búsqueda:
+
+- Aclara las frases ambiguas
+- Usa terminología médica donde aplique
+- Agrega sinónimos que aumenten las
+  probabilidades de encontrar documentos
+- Elimina lo innecesario o distractor
+
+{prompt del usuario}</code></pre>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Query Rewriting", con el prompt del reescritor traducido literalmente del original). Notar las cuatro instrucciones: aclarar, terminologia, sinonimos, limpiar. Son cuatro problemas distintos y cada uno se puede evaluar por separado.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Reescritura: un Ejemplo Real</h2>
+    <div style="font-size: 0.38em;">
+      <div style="padding: 0.4em 0.6em; background: rgba(252,98,85,0.07); border-left: 3px solid var(--c-red); margin-bottom: 0.3em;">
+        <strong style="color: var(--c-red);">Prompt original del paciente</strong><br>
+        <span style="color: var(--c-text-dim);">
+          "Estaba paseando a mi perra, una labrador negra preciosa que se llama Poppy, cuando salió
+          corriendo y me dio un tirón fuertísimo de la correa mientras yo la sujetaba.
+          Tres días después sigo con el hombro dormido y los dedos como con hormigueo. ¿Qué me pasa?"
+        </span>
+      </div>
+      <div style="text-align:center; color: var(--c-yellow); font-size:1.3em;">↓</div>
+      <div class="fragment fade-up" style="padding: 0.4em 0.6em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green); margin-top: 0.3em;">
+        <strong style="color: var(--c-green);">Prompt reescrito</strong><br>
+        <span>
+          "Tracción súbita y forzada sobre el hombro, con entumecimiento persistente del hombro y
+          parestesia en los dedos durante tres días. ¿Cuáles son las causas o diagnósticos posibles,
+          como neuropatía o atrapamiento nervioso?"
+        </span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.35em;">
+      Desapareció la perra, apareció <strong>"parestesia"</strong>.
+      Los documentos médicos no dicen "hormigueo": ahora sí se van a encontrar.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Patient's Original Prompt" / "Optimized Prompt"), traducido. Es el mejor ejemplo del modulo porque muestra las cuatro instrucciones actuando a la vez. Pregunta util para el grupo: ¿que se PERDIO al reescribir? (que fue un tiron, no un golpe — a veces el detalle borrado importaba).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>NER: Sacar Entidades para Filtrar</h2>
+    <p style="font-size: 0.42em;">
+      <strong>Named Entity Recognition</strong> identifica y clasifica los elementos concretos
+      de la consulta: personas, lugares, fechas, organizaciones, obras.
+    </p>
+    <div style="font-size: 0.37em; margin-top: 0.25em;">
+      <div style="padding: 0.35em 0.55em; background: rgba(168,162,144,0.06); border-left: 3px solid var(--c-text-dim);">
+        "Leí <strong>El Gran Gatsby</strong> de <strong>F. Scott Fitzgerald</strong> el
+        <strong>verano pasado</strong> mientras visitaba <strong>Nueva York</strong>.
+        ¿Hay libros parecidos ambientados en los <strong>años veinte</strong> que me puedan gustar?"
+      </div>
+      <div class="fragment fade-up" style="margin-top:0.3em; display:flex; gap:0.4em; flex-wrap:wrap; justify-content:center;">
+        <span class="badge" style="font-size:0.95em; border-color: var(--c-blue);">El Gran Gatsby → <strong style="color:var(--c-blue);">OBRA</strong></span>
+        <span class="badge" style="font-size:0.95em; border-color: var(--c-green);">F. Scott Fitzgerald → <strong style="color:var(--c-green);">PERSONA</strong></span>
+        <span class="badge" style="font-size:0.95em; border-color: var(--c-orange);">Nueva York → <strong style="color:var(--c-orange);">LUGAR</strong></span>
+        <span class="badge" style="font-size:0.95em; border-color: var(--c-purple);">años veinte → <strong style="color:var(--c-purple);">FECHA</strong></span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      ¿Para qué sirve? Esas entidades se convierten en <strong>filtros de metadata</strong>:
+      <code>genero = novela</code>, <code>ambientacion = 1920-1929</code>. Es el puente entre
+      lo que el usuario escribió y el filtrado rígido de la unidad anterior — la versión automática
+      del <strong>self-query</strong> que vimos con LangChain.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      Herramienta habitual: <strong>GLiNER</strong>, que reconoce entidades de tipos
+      que uno define, sin reentrenar.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Named Entity Recognition", con el ejemplo de El Gran Gatsby y la mencion a GLiNER). La conexion con self-query (slide 10/23) es propia y conviene hacerla explicita: es el mismo problema resuelto con otra herramienta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>HyDE: Buscar con una Respuesta Inventada</h2>
+    <p style="font-size: 0.42em;">
+      <strong>Hypothetical Document Embeddings.</strong> La observación de partida:
+      una <strong>pregunta</strong> y un <strong>documento</strong> no se parecen mucho,
+      aunque el documento sea la respuesta correcta.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.36em; margin: 0.3em 0; flex-wrap:wrap;">
+      <div class="flow-node" style="border-color: var(--c-yellow);">"me duele el hombro<br>y tengo hormigueo"</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-purple);">LLM escribe una<br>respuesta <strong>hipotética</strong></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-blue);">se vectoriza <strong>esa</strong><br>respuesta inventada</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">se busca con<br>ese vector</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em;">
+      El retriever deja de comparar <strong>pregunta contra documento</strong> y pasa a comparar
+      <strong style="color: var(--c-green);">documento contra documento</strong>: uno real y uno
+      hipotético "perfecto". Y dos documentos sobre el mismo tema <strong>sí</strong> se parecen.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      Lo notable: <strong>no importa si la respuesta inventada es falsa</strong>. No se le muestra a nadie;
+      solo se usa su vector. El costo es una llamada extra al LLM <strong>en cada consulta</strong>:
+      latencia que el usuario sí siente.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Hypothetical Document Embeddings (HyDE)", los dos slides). Paper original: Gao et al. (2022), "Precise Zero-Shot Dense Retrieval without Relevance Labels". Que la alucinacion no importe es lo que mas sorprende al grupo y es correcto: solo se usa la geometria del vector.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Query Parsing: el Costo</h2>
+    <table style="font-size: 0.39em; width: 100%;">
+      <tr><th>Técnica</th><th>Qué arregla</th><th>Cuándo se paga</th><th>¿Vale la pena?</th></tr>
+      <tr class="fragment fade-up"><td><strong>Reescritura</strong></td>
+        <td>ambigüedad, jerga, ruido</td>
+        <td style="color: var(--c-orange);">en cada consulta</td>
+        <td style="color: var(--c-green);">casi siempre: la mejora es grande</td></tr>
+      <tr class="fragment fade-up"><td><strong>NER</strong></td>
+        <td>convierte texto en filtros</td>
+        <td>en cada consulta, pero es <strong>barato</strong></td>
+        <td style="color: var(--c-green);">sí, si tu metadata es rica</td></tr>
+      <tr class="fragment fade-up"><td><strong>HyDE</strong></td>
+        <td>la asimetría pregunta ↔ documento</td>
+        <td style="color: var(--c-red);">una generación completa por consulta</td>
+        <td>depende: mide antes de adoptarlo</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.4em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Todas se pagan <strong>en tiempo de consulta</strong>, no al indexar.
+      A diferencia del chunking, aquí cada mejora <strong>se la come el usuario en latencia</strong>.
+      Es el compromiso central de este bloque.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Query Rewriting: benefits are substantial, easily justify costs" y la nota de latencia de HyDE). La tabla es propia: organiza las tres tecnicas por donde se paga el costo, que es lo que decide en produccion.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Bi-Encoder: lo que Hemos Usado</h2>
+    <div class="columns" style="font-size: 0.41em;">
+      <div class="col">
+        <div class="flow-row" style="justify-content:center; margin:0.2em 0; font-size:0.92em;">
+          <div class="flow-node" style="border-color: var(--c-yellow);">Prompt</div>
+          <div class="flow-node" style="border-color: var(--c-blue);">Documentos</div>
+        </div>
+        <div style="text-align:center; color: var(--c-text-dim); font-size:0.9em;">↓ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓</div>
+        <div class="flow-row" style="justify-content:center; margin:0.15em 0; font-size:0.92em;">
+          <div class="flow-node" style="border-color: var(--c-purple);">el MISMO modelo, por separado</div>
+        </div>
+        <div style="text-align:center; color: var(--c-text-dim); font-size:0.9em;">↓</div>
+        <p style="text-align:center; margin:0.15em 0; font-family: 'Fira Code', monospace; font-size:0.9em;">
+          [0,5,0,4,…] &nbsp; vs &nbsp; [1,6,3,1,…]
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-green);">La ventaja que lo hace viable:</strong></p>
+        <p style="margin:0.2em 0;">
+          Los vectores de los documentos se calculan <strong>de antemano</strong>, una sola vez.
+          Cuando llega una consulta solo hay que vectorizar <strong>el prompt</strong> y buscar
+          con ANN.
+        </p>
+        <p style="margin:0.3em 0; padding:0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong>La limitación:</strong> el documento se vectorizó <strong>sin saber</strong>
+          cuál sería la pregunta. Su vector es un resumen genérico, no una respuesta a
+          <em>esta</em> consulta.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Bi-Encoder"). Es lo que se uso en toda la unidad de embeddings y en la seccion anterior; nombrarlo "bi-encoder" recien ahora es util porque el contraste con el cross-encoder es lo que le da sentido al nombre.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cross-Encoder: Mirarlos Juntos</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col-40">
+        <div style="text-align:center;">
+          <div class="flow-node" style="border-color: var(--c-yellow); display:inline-block; font-size:0.92em;">Prompt &nbsp;+&nbsp; Documento</div>
+          <div style="color: var(--c-text-dim);">↓ concatenados</div>
+          <div class="flow-node" style="border-color: var(--c-purple); display:inline-block; font-size:0.92em;">Cross-Encoder</div>
+          <div style="color: var(--c-text-dim);">↓</div>
+          <div class="flow-node" style="border-color: var(--c-green); display:inline-block; font-size:0.92em;">Relevancia<br>0.00 – 1.00</div>
+        </div>
+      </div>
+      <div class="col-55">
+        <p style="margin:0.1em 0;">
+          El modelo ve <strong>los dos textos a la vez</strong> y puede relacionar cada palabra
+          de la pregunta con cada palabra del documento.
+        </p>
+        <p style="margin:0.25em 0;">
+          No produce un vector: produce <strong>directamente un puntaje</strong> de relevancia.
+        </p>
+        <table style="width:100%; font-size:0.9em; margin-top:0.2em;">
+          <tr><th>Documento</th><th>Puntaje</th></tr>
+          <tr><td>Los 10 mejores restaurantes de Manhattan…</td><td style="color: var(--c-green);">70%</td></tr>
+          <tr><td>El metro de Nueva York tiene 472 estaciones…</td><td style="color: var(--c-red);">12%</td></tr>
+          <tr><td>La escena gastronómica de Brooklyn…</td><td style="color: var(--c-green);">85%</td></tr>
+        </table>
+        <p style="margin-top:0.2em; color: var(--c-text-dim);">
+          Consulta: <em>"buenos lugares para comer en Nueva York"</em>
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(252,98,85,0.08);">
+      <strong style="color: var(--c-red);">El problema es fatal para la búsqueda:</strong>
+      no hay nada que precalcular. Con un millón de documentos hay que correr el modelo
+      <strong>un millón de veces por consulta</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Cross-Encoder" y el ejemplo de los restaurantes con 70%, 12% y 85%). El "no se puede precalcular" es la razon de que exista el reranking: es la unica forma de usar un cross-encoder sin morir.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>ColBERT: un Vector por Token</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          El punto medio: <strong>precalcular como el bi-encoder</strong>, pero conservando
+          <strong>la riqueza del cross-encoder</strong>.
+        </p>
+        <p style="margin:0.25em 0;">
+          En vez de un vector por documento, <strong>un vector por token</strong>.
+          Se calculan de antemano, igual que antes.
+        </p>
+        <p style="margin:0.25em 0;">
+          Al buscar, cada token de la consulta <strong>busca su mejor pareja</strong>
+          entre los tokens del documento, y se suman esos máximos.
+        </p>
+        <p style="margin:0.25em 0; color: var(--c-text-dim);">
+          Se llama <strong>MaxSim</strong>, y a la técnica en general
+          <em>late interaction</em>: la interacción entre los dos textos ocurre
+          <strong>tarde</strong>, al comparar, no dentro del modelo.
+        </p>
+      </div>
+      <div class="col">
+        <div style="text-align:center; font-family: 'Fira Code', monospace; font-size:0.82em; line-height:1.5;">
+          <span style="color: var(--c-yellow);">consulta</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: var(--c-blue);">documento</span><br>
+          <span style="color: var(--c-yellow);">[1,4,5,2]</span> &nbsp;&nbsp;&nbsp; <span style="color: var(--c-blue);">[1,6,3,1]</span><br>
+          <span style="color: var(--c-yellow);">[6,7,3,1]</span> &nbsp;&nbsp;&nbsp; <span style="color: var(--c-blue);">[4,2,2,7]</span><br>
+          <span style="color: var(--c-yellow);">[9,9,3,1]</span> &nbsp;&nbsp;&nbsp; <span style="color: var(--c-blue);">[8,4,5,2]</span><br>
+          <span style="color: var(--c-text-dim);">un vector</span> &nbsp;&nbsp; <span style="color: var(--c-text-dim);">un vector</span><br>
+          <span style="color: var(--c-text-dim);">por token</span> &nbsp;&nbsp; <span style="color: var(--c-text-dim);">por token</span>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("ColBERT (Contextualized Late Interaction Over BERT)"). El paper es Khattab y Zaharia (2020). El nombre completo dice todo: interaccion tardia sobre BERT.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>MaxSim, con Números Reales</h2>
+    <div class="widget-container">
+      <canvas id="colbert-canvas" width="880" height="270" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn" id="colbert-next">Siguiente token</button>
+        <button class="widget-btn fi-btn" id="colbert-all">Todos</button>
+        <button class="widget-btn fi-btn" id="colbert-reset">Reiniciar</button>
+      </div>
+      <div id="colbert-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio con una matriz REAL de similitud token-a-token. Aviso honesto: son embeddings de token
+      de paraphrase-multilingual-MiniLM-L12-v2, NO un ColBERT entrenado para late interaction; el mecanismo
+      es el mismo y los numeros son medidos, pero un ColBERT de verdad entrena esos vectores para la tarea.
+      Lo que hay que senalar: "comer" encuentra "comida" con 0.858 sin compartir raiz, y "Nueva"/"York" se
+      emparejan casi perfecto (0.962 y 0.965). Tambien vale notar el ruido: las palabras funcionales como
+      "en" se emparejan con cualquier cosa, que es una limitacion real del metodo.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Tres, Comparados</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th></th><th>Calidad</th><th>Velocidad</th><th>Almacenamiento</th><th>Se usa para…</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-blue);">Bi-encoder</strong></td>
+        <td>razonable</td><td style="color: var(--c-green);">excelente</td><td style="color: var(--c-green);">1 vector/doc</td>
+        <td>la búsqueda semántica por omisión</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-red);">Cross-encoder</strong></td>
+        <td style="color: var(--c-green);">la mejor</td><td style="color: var(--c-red);">pésima</td><td style="color: var(--c-green);">ninguno</td>
+        <td><strong>reordenar</strong> unos pocos candidatos</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-purple);">ColBERT</strong></td>
+        <td style="color: var(--c-green);">casi la del cross</td><td>buena</td><td style="color: var(--c-red);">1 vector/<strong>token</strong></td>
+        <td>cuando la calidad importa y hay disco</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.35em;">
+      El costo de ColBERT es concreto: un documento de 200 tokens ocupa
+      <strong>200 veces más</strong> que con un bi-encoder. Por eso su adopción fue lenta —
+      aunque las bases vectoriales lo soportan cada vez más (Vespa, Qdrant, Weaviate).
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.25em;">
+      La conclusión práctica es el siguiente bloque: <strong>bi-encoder para buscar,
+      cross-encoder para reordenar</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("ColBERT Pros and Cons", "Key Takeaways"). El calculo de 200x es propio y hace tangible el "requires significant vector storage" del original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Reranking: Dos Etapas</h2>
+    <p style="font-size: 0.43em;">
+      Si el cross-encoder es demasiado lento para buscar pero es el mejor puntuando…
+      úsalo <strong>solo donde importa</strong>.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.36em; margin: 0.35em 0; flex-wrap:wrap;">
+      <div class="flow-node" style="border-color: var(--c-text-dim);">1M de<br>documentos</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-blue);"><strong>Etapa 1</strong><br>híbrida + ANN<br><span style="color: var(--c-text-dim);">rápida, imprecisa</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-yellow);">20–50<br>candidatos</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-orange);"><strong>Etapa 2</strong><br>cross-encoder<br><span style="color: var(--c-text-dim);">cara, precisa</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">los 3–5<br>mejores</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      El truco aritmético: correr el cross-encoder <strong>50 veces</strong> es perfectamente
+      viable. Correrlo <strong>un millón de veces</strong> no lo es. Se paga la calidad
+      solo donde puede cambiar el resultado.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      Al final se le entregan al LLM los mismos 3–5 documentos de siempre.
+      Pero son <strong>mejores</strong> 3–5.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Purpose of Reranking", "Overview", "Cross-Encoder re-rankers"). La idea general —filtro barato y luego juez caro— aparece en muchos sistemas: es el mismo patron de una entrevista de trabajo con filtro de CV y luego entrevista tecnica.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Reranking</h2>
+    <div class="widget-container">
+      <canvas id="rerank-canvas" width="880" height="320" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.45em; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn rerank-etapa-btn" data-etapa="1">solo etapa 1</button>
+        <button class="widget-btn fi-btn rerank-etapa-btn" data-etapa="2">con reranking</button>
+        <div class="widget-label" style="font-size:0.7em;">candidatos <span class="widget-value" id="rerank-cand-value">10</span>
+          <input type="range" id="rerank-cand" class="widget-slider" min="2" max="10" step="1" value="10" style="width:96px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" style="font-size:0.7em;">al LLM <span class="widget-value" id="rerank-final-value">4</span>
+          <input type="range" id="rerank-final" class="widget-slider" min="1" max="8" step="1" value="4" style="width:96px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div id="rerank-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio, sobre el MISMO corpus de Vancouver de la unidad de RAG. Los puntajes son reales:
+      cosenos del bi-encoder multilingue y logits de BAAI/bge-reranker-v2-m3. Guion:
+      (1) recordar que en la unidad de RAG el documento del concierto quedo ULTIMO con 0.247;
+      (2) activar el reranking y ver que sube al puesto 4 — los cuatro utiles quedan en 1,2,3,4 y el AP@4
+      pasa de 0.688 a 1.000; (3) bajar "candidatos" a 5 y ver que el documento del concierto YA NO ENTRA:
+      el reranker solo puede reordenar lo que la primera etapa le paso.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Límite del Reranking</h2>
+    <div class="columns" style="font-size: 0.41em;">
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.35em 0.55em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Lo que sí arregla</strong><br>
+          El <strong>orden</strong> de los candidatos. En nuestro corpus, los cuatro documentos útiles
+          pasaron de las posiciones 1, 2, 4 y <strong>10</strong> a ocupar 1, 2, 3 y 4.
+          El AP@4 subió de <strong>0.688</strong> a <strong>1.000</strong>.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.35em 0.55em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong style="color: var(--c-red);">Lo que no puede arreglar</strong><br>
+          Lo que <strong>nunca llegó</strong>. Si la primera etapa devuelve 20 candidatos y el
+          documento clave era el 21, el reranker jamás lo verá.
+          <strong>Reordena; no rescata.</strong>
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      De ahí la regla práctica: la primera etapa se optimiza para <strong>recall</strong>
+      (traer todo lo relevante, aunque venga con ruido) y la segunda para
+      <strong>precisión</strong> (poner arriba lo bueno). Son dos objetivos distintos
+      para dos etapas distintas.
+    </p>
+    <aside class="notes">Contenido propio, con los numeros medidos del widget. Es la conclusion mas util de todo el bloque: mucha gente sube el reranker esperando que arregle un recall malo, y no puede. Si el recall de la etapa 1 es bajo, hay que arreglar la etapa 1 (chunking, hibrida, embeddings), no agregar un reranker.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Reranking con LLM</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          La alternativa al cross-encoder: pedirle directamente a un <strong>LLM</strong>
+          que puntúe la relevancia de cada candidato.
+        </p>
+        <div class="flow-row" style="margin:0.3em 0; font-size:0.92em;">
+          <div class="flow-node">Consulta<br>+ documento</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-purple);">LLM</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-green);">0.95</div>
+        </div>
+        <p style="margin:0.25em 0; color: var(--c-text-dim);">
+          Es <strong>potente pero caro</strong>. Igual que el cross-encoder, demasiado lento para
+          buscar: solo sirve <strong>después</strong> de un filtrado inicial.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.8em;"><code class="language-text">Evalúa qué tan bien este documento
+responde la consulta.
+
+Consulta: {consulta}
+Documento: {documento}
+
+Responde SOLO con un número del 0 al 10.
+No expliques.</code></pre>
+        <p style="margin-top:0.3em; font-size:1.02em;">
+          Variante más barata y estable: pedir que <strong>ordene</strong> una lista de candidatos
+          de una sola vez, en lugar de puntuar uno por uno.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.39em; text-align:center; margin-top: 0.25em;">
+      Hoy existen rerankers como servicio (<strong>Cohere Rerank</strong>, <strong>Jina</strong>)
+      y modelos abiertos (<strong>bge-reranker</strong>, el que usa el widget).
+      Rara vez hace falta entrenar uno.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("LLM Based Scoring"). El prompt y la variante de ordenar la lista completa son propios. Ojo con puntuar de 0 a 10: los LLMs tienden a dar 7 y 8 a todo, por eso ordenar suele funcionar mejor que puntuar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Pipeline Completo</h2>
+    <div style="font-size: 0.35em;">
+      <div class="flow-row" style="justify-content:center; margin:0.25em 0;">
+        <div class="flow-node" style="border-color: var(--c-orange);">Prompt del usuario</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-orange);">Query parsing<br><span style="color: var(--c-text-dim);">reescritura · NER · HyDE</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-blue);">Búsqueda híbrida<br><span style="color: var(--c-text-dim);">BM25 + ANN + filtros</span></div>
+      </div>
+      <div style="text-align:center; color: var(--c-yellow); font-size:1.4em;">↓</div>
+      <div class="flow-row" style="justify-content:center; margin:0.25em 0;">
+        <div class="flow-node" style="border-color: var(--c-yellow);">RRF<br><span style="color: var(--c-text-dim);">fusión</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-purple);">Reranking<br><span style="color: var(--c-text-dim);">cross-encoder</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);">Prompt aumentado</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);">LLM</div>
+      </div>
+      <div class="fragment fade-up" style="text-align:center; margin-top:0.5em; font-size:1.15em; color: var(--c-text-dim);">
+        Y por debajo, hecho <strong>una sola vez al indexar</strong>:
+        <strong style="color: var(--c-green);">chunking</strong> ·
+        <strong style="color: var(--c-green);">embeddings</strong> ·
+        <strong style="color: var(--c-green);">índice HNSW</strong>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Nadie construye esto de golpe. Se empieza por el RAG mínimo de la primera unidad
+      y se agrega <strong>una pieza a la vez</strong>, midiendo si mejoró.
+    </p>
+    <aside class="notes">Contenido propio: junta las tres unidades de RAG en un solo diagrama. Es buen momento para que cada equipo diga en que punto de este pipeline esta su capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="font-size: 0.39em;">
+      <div class="step fragment fade-up"><strong style="color: var(--c-blue);">ANN</strong> —
+        grafos de proximidad navegables por capas (HNSW). Cambian exactitud por velocidad;
+        el ahorro <strong>crece</strong> con el tamaño del corpus, y el recall depende de
+        parámetros (M, ef) que hay que subir al crecer.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-teal);">Bases vectoriales</strong> —
+        motores que construyen esos índices y traen BM25, híbrida y filtros integrados.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-green);">Chunking</strong> —
+        recursivo con traslape como valor por omisión; semántico o con LLM si midiendo conviene;
+        con contexto mejora cualquiera. Guarda siempre la <strong>metadata</strong>.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-orange);">Query parsing</strong> —
+        reescritura, NER y HyDE arreglan la consulta antes de buscar, a costa de
+        <strong>latencia en cada consulta</strong>.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-purple);">Reranking</strong> —
+        bi-encoder para buscar, cross-encoder para reordenar. Mejora el orden;
+        <strong>no rescata lo que nunca llegó</strong>.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.39em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      En los siguientes módulos: el <strong>LLM generador</strong> dentro del RAG y la evaluación
+      del sistema <strong>completo</strong>, no solo del retriever.
+    </p>
+    <aside class="notes">Fuente: RAG_M3 ("Conclusion"). Cierra el mapa de los cuatro temas que se abrio al inicio de la unidad.</aside>
+  </section>
+
+</section>
+
 </div>
 </div>
 
@@ -8189,6 +9458,11 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
 <script src="js/widgets/contrastive-widget.js"></script>
 <script src="js/widgets/rrf-widget.js"></script>
 <script src="js/widgets/retrieval-metrics-widget.js"></script>
+<script src="js/widgets/prod-data.js"></script>
+<script src="js/widgets/hnsw-widget.js"></script>
+<script src="js/widgets/chunking-widget.js"></script>
+<script src="js/widgets/colbert-widget.js"></script>
+<script src="js/widgets/rerank-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -8407,6 +9681,30 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initRetrievalMetricsWidget === 'function') {
       initRetrievalMetricsWidget();
       widgetsInitialized.retrievalMetrics = true;
+    }
+  }
+  if (slide.querySelector('#hnsw-canvas') && !widgetsInitialized.hnsw) {
+    if (typeof initHnswWidget === 'function') {
+      initHnswWidget();
+      widgetsInitialized.hnsw = true;
+    }
+  }
+  if (slide.querySelector('#chunking-canvas') && !widgetsInitialized.chunking) {
+    if (typeof initChunkingWidget === 'function') {
+      initChunkingWidget();
+      widgetsInitialized.chunking = true;
+    }
+  }
+  if (slide.querySelector('#colbert-canvas') && !widgetsInitialized.colbert) {
+    if (typeof initColbertWidget === 'function') {
+      initColbertWidget();
+      widgetsInitialized.colbert = true;
+    }
+  }
+  if (slide.querySelector('#rerank-canvas') && !widgetsInitialized.rerank) {
+    if (typeof initRerankWidget === 'function') {
+      initRerankWidget();
+      widgetsInitialized.rerank = true;
     }
   }
 });
