@@ -5022,17 +5022,17 @@ run.log({"ejemplos": wandb.Image(imagen, boxes={
 
   <section data-transition="fade">
     <h2>El Problema: los Modelos Comen Números</h2>
-    <p style="font-size: 0.48em;">
-      Un modelo no procesa "perro", procesa vectores. La forma ingenua es
-      <strong>one-hot</strong>: una dimensión por palabra del vocabulario.
+    <p style="font-size: 0.44em;">
+      Un modelo no procesa "perro", procesa vectores. La forma ingenua es <strong>one-hot</strong>: una
+      dimensión por palabra del vocabulario.
     </p>
     <div class="comparison" style="margin-top: 0.25em;">
       <div class="side incorrect">
         <h3>One-hot</h3>
-        <pre style="font-size: 0.52em; text-align:left;"><code>perro = [0,0,1,0,...,0]
+        <pre style="font-size: 0.46em; text-align:left;"><code>perro = [0,0,1,0,...,0]
 gato  = [0,1,0,0,...,0]
 avion = [1,0,0,0,...,0]</code></pre>
-        <ul style="font-size: 0.7em; text-align:left;">
+        <ul style="font-size: 0.64em; text-align:left;">
           <li>Vectores de <strong>50,000+</strong> dimensiones</li>
           <li>Todo par de palabras está a la <strong>misma distancia</strong></li>
           <li>"perro" y "gato" son tan distintos como "perro" y "avión"</li>
@@ -5040,20 +5040,24 @@ avion = [1,0,0,0,...,0]</code></pre>
       </div>
       <div class="side correct">
         <h3>Embedding</h3>
-        <pre style="font-size: 0.52em; text-align:left;"><code>perro = [0.21, -0.7, ..., 0.4]
+        <pre style="font-size: 0.46em; text-align:left;"><code>perro = [0.21, -0.7, ..., 0.4]
 gato  = [0.19, -0.6, ..., 0.3]
 avion = [-0.8,  0.1, ..., -0.5]</code></pre>
-        <ul style="font-size: 0.7em; text-align:left;">
+        <ul style="font-size: 0.64em; text-align:left;">
           <li><strong>Denso</strong>: cientos de dimensiones, no miles</li>
           <li>La <strong>distancia significa algo</strong>: perro está cerca de gato</li>
-          <li>Se <strong>aprende</strong> de los datos, no se diseña a mano</li>
         </ul>
       </div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.35em;">
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.25em;">
       Un <strong style="color: var(--c-yellow);">embedding</strong> es una representación densa donde la
-      <strong>geometría codifica el significado</strong>: cosas parecidas quedan cerca.
+      <strong>geometría codifica el significado</strong>.
     </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.37em; margin-top: 0.1em;">
+      💬 <strong>Hipótesis distribucional</strong> (Firth, 1957): <em>"conocerás una palabra por la compañía
+      que mantiene"</em>. Palabras que aparecen en los mismos contextos significan cosas parecidas — y eso
+      es lo que el modelo aprende.
+    </blockquote>
     <aside class="notes">Contenido propio. La comparacion one-hot vs denso es la intuicion fundacional; conviene insistir en que la propiedad clave es que la DISTANCIA tiene sentido.</aside>
   </section>
 
@@ -5208,6 +5212,42 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
   </section>
 
   <section data-transition="fade">
+    <h2>De Palabras a Oraciones</h2>
+    <p style="font-size: 0.46em;">
+      Casi nunca quieres el vector de una palabra suelta: quieres el de una <strong>frase, un párrafo o un
+      documento</strong>. Hay tres generaciones de respuestas a eso:
+    </p>
+    <table style="font-size: 0.38em; width: 100%; max-width: 880px; margin: 0.2em auto;">
+      <tr><th>Método</th><th>Cómo</th><th>Problema</th></tr>
+      <tr class="fragment fade-up"><td><strong>Promedio de vectores</strong></td>
+        <td>Media de los embeddings de cada palabra</td>
+        <td>Pierde el orden: "el perro muerde al hombre" = "el hombre muerde al perro"</td></tr>
+      <tr class="fragment fade-up"><td><strong>Promedio ponderado por TF-IDF</strong></td>
+        <td>Pesa más las palabras informativas</td>
+        <td>Mejora, pero sigue ignorando la sintaxis y el contexto</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">Modelos entrenados para ello</strong></td>
+        <td>Un transformer produce <em>un</em> vector para todo el texto</td>
+        <td>Es lo que se usa hoy</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      ⚠️ <strong>Por qué no basta con BERT "a secas":</strong> comparar dos oraciones con BERT clásico exige
+      pasarlas <em>juntas</em> por el modelo. Para 10,000 documentos son ~50 millones de comparaciones.
+      <strong>Sentence-BERT</strong> (Reimers &amp; Gurevych, 2019) lo resolvió con una arquitectura
+      <em>siamesa</em>: cada texto se codifica <strong>una sola vez</strong> y luego solo se comparan
+      vectores. Eso es lo que hace viable la búsqueda semántica.
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      Otros hitos: <strong>Universal Sentence Encoder</strong> (Cer et al., 2018) y <strong>SimCSE</strong>
+      (Gao et al., 2021), que entrena con aprendizaje contrastivo usando dropout como única "aumentación".
+    </p>
+    <aside class="notes">
+      Papers: Sentence-BERT (arXiv 1908.10084), Universal Sentence Encoder (arXiv 1803.11175), SimCSE
+      (arXiv 2104.08821). El dato de las 50 millones de comparaciones esta en el propio paper de SBERT: BERT
+      tardaba ~65 horas en una tarea que SBERT resuelve en ~5 segundos.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Tipos de Embeddings</h2>
     <table style="font-size: 0.39em; width: 100%;">
       <tr><th>Tipo</th><th>Qué representa</th><th>Ejemplos</th><th>Uso típico</th></tr>
@@ -5231,6 +5271,93 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
       entrenó.
     </p>
     <aside class="notes">Contenido propio. Recalcar que un embedding solo es comparable con otro del MISMO modelo: no se pueden mezclar espacios.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Embeddings de Imágenes</h2>
+    <p style="font-size: 0.45em;">
+      El truco clásico: tomar una red entrenada para clasificar y <strong>quitarle la última capa</strong>.
+      Lo que queda antes del clasificador ya es un vector que describe la imagen.
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.15em;">
+      <div class="col-45">
+        <table style="font-size: 0.36em; width: 100%;">
+          <tr><th>Modelo</th><th>Qué aporta</th></tr>
+          <tr><td><strong>ResNet</strong></td><td>CNN con conexiones residuales; el extractor de features clásico</td></tr>
+          <tr><td><strong>ViT</strong></td><td>Transformer sobre parches de la imagen (<em>An Image is Worth 16x16 Words</em>)</td></tr>
+          <tr><td><strong>CLIP</strong></td><td>Comparte espacio con el texto</td></tr>
+          <tr><td><strong>DINOv2</strong></td><td>Auto-supervisado, muy fuerte sin etiquetas</td></tr>
+          <tr><td><strong>FaceNet</strong></td><td>Especializado en <strong>rostros</strong>: la distancia mide si son la misma persona</td></tr>
+        </table>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.25em;">
+          Usos: búsqueda visual inversa, detección de duplicados, reconocimiento facial, agrupar catálogos.
+        </p>
+      </div>
+      <div class="col-45">
+        <pre style="font-size: 0.34em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">import torch, torch.nn as nn
+from torchvision.models import resnet50
+
+modelo = resnet50(weights="DEFAULT")
+modelo.eval()
+
+# quitar la capa de clasificacion:
+# lo que queda es el embedding (2048 dim)
+extractor = nn.Sequential(
+    *list(modelo.children())[:-1])
+
+with torch.no_grad():
+    v = extractor(lote_imagenes)     # (N,2048,1,1)
+    v = v.flatten(1)
+    v = nn.functional.normalize(v, dim=1)</code></pre>
+        <p style="font-size: 0.34em; color: var(--c-text-dim); margin-top: 0.2em;">
+          A partir de aquí todo es idéntico al texto: coseno, kNN, base vectorial.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">
+      Papers: ViT (arXiv 2010.11929), SimCLR (arXiv 2002.05709), FaceNet (arXiv 1503.03832), DINOv2
+      (arXiv 2304.07193). FaceNet es un buen ejemplo de embedding entrenado con triplet loss: acerca fotos
+      de la misma persona y aleja las de personas distintas.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Embeddings de Video</h2>
+    <p style="font-size: 0.45em;">
+      Un video no es solo una pila de imágenes: lo que lo define es <strong>cómo cambian</strong> a lo largo
+      del tiempo. "Abrir una puerta" y "cerrar una puerta" tienen los mismos frames en distinto orden.
+    </p>
+    <table style="font-size: 0.38em; width: 100%; max-width: 880px; margin: 0.2em auto;">
+      <tr><th>Enfoque</th><th>Idea</th><th>Compromiso</th></tr>
+      <tr class="fragment fade-up"><td><strong>Por frames</strong></td>
+        <td>Embeber cada frame y promediar o agregar</td>
+        <td>Simple y barato, pero <strong>pierde el orden temporal</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong>CNN 3D</strong></td>
+        <td>Convoluciones sobre alto, ancho <em>y</em> tiempo</td>
+        <td>Captura movimiento; costoso de entrenar</td></tr>
+      <tr class="fragment fade-up"><td><strong>Two-stream</strong></td>
+        <td>Una rama para RGB y otra para <em>optical flow</em></td>
+        <td>Separa apariencia de movimiento; más complejo</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">Transformers de video</strong></td>
+        <td>Atención sobre espacio y tiempo</td>
+        <td>El estado del arte actual; exige mucho cómputo</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      Modelos de referencia: <strong>I3D</strong> (Carreira &amp; Zisserman, 2017),
+      <strong>TimeSformer</strong> (Bertasius et al., 2021) y <strong>VideoMAE</strong>. En
+      <code>torchvision</code> tienes <code>r3d_18</code> lista para usar con el mismo truco de quitarle la
+      cabeza de clasificación.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      💡 Para muchos casos reales (buscar "¿en qué minuto aparece X?") basta con el enfoque
+      <strong>por frames</strong>: embeber un frame por segundo con CLIP y buscar sobre esos vectores. No
+      todo problema de video necesita un modelo de video.
+    </blockquote>
+    <aside class="notes">
+      Papers: I3D (arXiv 1705.07750), TimeSformer (arXiv 2102.05095), VideoMAE (arXiv 2203.12602). El
+      consejo del cierre es el mas util en la practica: la mayoria de los capstones de video se resuelven
+      con CLIP por frames.
+    </aside>
   </section>
 
   <section data-transition="fade">
@@ -5260,10 +5387,18 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
         </ul>
       </div>
     </div>
-    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
-      Después vinieron <strong>SigLIP</strong> (2023, cambia la pérdida contrastiva por una sigmoide y
-      entrena mejor) e <strong>ImageBind</strong> (2023, une <em>seis</em> modalidades — imagen, texto,
-      audio, profundidad, térmico y movimiento — en un solo espacio).
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      La pérdida se llama <strong>InfoNCE</strong>: dentro de cada batch, el par correcto compite contra
+      todos los incorrectos. Y al combinar modalidades se distingue entre <strong>fusión temprana</strong>
+      (concatenar características antes de decidir) y <strong>fusión tardía</strong> (combinar las
+      similitudes de cada modalidad al final).
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.38em; margin-top: 0.2em;">
+      El ecosistema hoy: <strong>OpenCLIP</strong> (reimplementación abierta y entrenable),
+      <strong>SigLIP</strong> (2023, cambia la pérdida por una sigmoide y entrena mejor),
+      <strong>ALIGN</strong> (Google), <strong>BLIP-2</strong>, <strong>Amazon Titan Multimodal</strong>
+      (servicio en Bedrock) e <strong>ImageBind</strong> (2023, une <em>seis</em> modalidades — imagen,
+      texto, audio, profundidad, térmico y movimiento — en un solo espacio).
     </blockquote>
     <aside class="notes">
       CLIP: arXiv 2103.00020. SigLIP: arXiv 2303.15343. ImageBind: arXiv 2305.05665. El truco de ImageBind
@@ -5382,7 +5517,11 @@ E = E / np.linalg.norm(E, axis=1, keepdims=True)</code></pre>
           el mismo territorio.</p>
       </div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Con un modelo <strong>multilingüe</strong> esto va más lejos: una consulta en español puede recuperar
+      documentos en inglés, porque ambos caen en el mismo espacio.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.15em;">
       En la práctica se combinan: <strong>búsqueda híbrida</strong> (BM25 + vectorial) suele ganarle a
       cualquiera de las dos por separado — lo léxico es imbatible con nombres propios, códigos y siglas.
     </p>
@@ -5491,7 +5630,13 @@ for i in top_k:
         </ul>
       </div>
     </div>
-    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+    <table class="fragment fade-up" style="font-size: 0.36em; width: 100%; max-width: 800px; margin: 0.25em auto;">
+      <tr><th></th><th>BD relacional</th><th>BD vectorial</th></tr>
+      <tr><td>Tipo de consulta</td><td>Coincidencia exacta y filtros</td><td>Proximidad / similitud</td></tr>
+      <tr><td>Índice</td><td>B-tree, hash</td><td>HNSW, IVF, LSH, PQ</td></tr>
+      <tr><td>Resultado</td><td>Las filas que cumplen</td><td>Las k más parecidas, con su puntaje</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.2em;">
       🧭 <strong>Criterio honesto:</strong> si tienes <strong>menos de ~100,000 documentos</strong>, numpy o
       FAISS en memoria te sirven y te ahorran una dependencia entera. La base vectorial se justifica por
       <em>escala, filtros y operación</em>, no por moda.
@@ -5516,7 +5661,12 @@ for i in top_k:
         <td><strong>Pinecone</strong>, y las versiones cloud de las anteriores</td>
         <td>No quieres operar nada y puedes pagarlo</td></tr>
     </table>
-    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      <strong>Y no solo para buscar texto:</strong> recomendadores (productos parecidos a los que ya
+      compraste), búsqueda visual inversa, deduplicación de catálogos, detección de anomalías (lo que queda
+      lejos de todo lo normal), agrupación de opiniones y recuperación de contexto para RAG.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.2em;">
       Para el capstone: empieza con <strong>Chroma</strong> (dos líneas y funciona) o con
       <strong>pgvector</strong> si ya tienes PostgreSQL. Migrar después es fácil — lo caro es recalcular los
       embeddings, no cambiar de base.
