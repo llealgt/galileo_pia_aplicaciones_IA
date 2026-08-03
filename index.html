@@ -69,6 +69,7 @@
         <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
         <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Large Language Models</a>
         <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>RAG: Retrieval Augmented Generation</a>
+        <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>Recuperación de Información: los Fundamentos</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -7028,6 +7029,1121 @@ respuesta = cliente.chat.completions.create(model="...", temperature=0,
   </section>
 </section>
 
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.5em;">Recuperación de Información</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">Los Fundamentos del Retriever</h3>
+    <p style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.7em;">
+      Ya sabemos <strong>qué</strong> hace un retriever. Ahora: <strong>cómo</strong> lo hace,
+      cuáles son las tres técnicas que se usan en producción, cómo se combinan y
+      <strong>cómo se mide</strong> si funciona.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Information Retrieval Foundations"). Esta unidad es el modulo 2 del curso de RAG y abre la caja negra que en el modulo 1 se llamo simplemente "retriever".</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Trabajo Sucio del Retriever</h2>
+    <div class="columns" style="font-size: 0.44em; margin-top: 0.3em;">
+      <div class="col">
+        <h4 style="color: var(--c-blue); margin-bottom: 0.2em;">Lo que entra</h4>
+        <p style="margin: 0.15em 0;">Un <strong>prompt</strong> escrito por una persona:</p>
+        <ul style="margin: 0.2em 0;">
+          <li><strong>Sin estructura</strong>: no es una query SQL</li>
+          <li><strong>Conversacional</strong>: "¿y eso por qué pasa?"</li>
+          <li>Con errores, jerga, abreviaturas</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-green); margin-bottom: 0.2em;">Lo que hay que buscar</h4>
+        <p style="margin: 0.15em 0;">Una base de <strong>documentos</strong>:</p>
+        <ul style="margin: 0.2em 0;">
+          <li>PDFs, HTML, correos, tickets, código</li>
+          <li>Escritos <strong>para que los lea un humano</strong>, no una máquina</li>
+          <li>De largos muy distintos entre sí</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.4em;">
+      Y aun así, el retriever tiene que encontrar lo relevante <strong>en milisegundos</strong>,
+      porque el usuario está esperando la respuesta del LLM.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M2 (portada del modulo: "Needs to rapidly find relevant documents despite this mess!"). Vale la pena insistir en el "despite this mess": el desorden es el problema, no un detalle.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Tres Técnicas, no Una</h2>
+    <div class="taxonomy" style="font-size: 0.92em;">
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-purple);">
+        <strong style="color: var(--c-purple);">Filtrado por metadata</strong> —
+        descarta documentos por criterios rígidos (fecha, autor, permisos).
+        <span style="color: var(--c-text-dim);">No busca: recorta.</span>
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-blue);">
+        <strong style="color: var(--c-blue);">Búsqueda por palabras clave</strong> —
+        puntúa por coincidencia <strong>exacta</strong> de términos. TF-IDF y BM25.
+        <span style="color: var(--c-text-dim);">Décadas de uso en producción.</span>
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-green);">
+        <strong style="color: var(--c-green);">Búsqueda semántica</strong> —
+        puntúa por <strong>significado</strong> parecido, usando embeddings.
+        <span style="color: var(--c-text-dim);">Encuentra sinónimos y paráfrasis.</span>
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-yellow);">
+        <strong style="color: var(--c-yellow);">Hybrid search</strong> —
+        las tres a la vez, con sus listas <strong>fusionadas</strong> en un solo ranking.
+        <span style="color: var(--c-text-dim);">Lo que se usa de verdad.</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.4em; color: var(--c-text-dim);">
+      Un retriever bueno <strong>balancea las tres</strong> según lo que necesite el proyecto.
+      El resto de la unidad es entender cada una para poder balancearlas.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Two Search Approaches", "Search Techniques", "Hybrid Search"). Este slide es el mapa de toda la unidad: conviene volver a el al terminar cada tecnica.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Filtrado por Metadata</h2>
+    <p style="font-size: 0.45em;">
+      Usa criterios <strong>rígidos</strong> sobre los campos del documento: título, autor, fecha,
+      sección, etiquetas, permisos de acceso.
+    </p>
+    <div class="columns" style="margin-top: 0.2em;">
+      <div class="col-40">
+        <pre style="font-size: 0.32em; margin: 0;"><code class="language-sql">SELECT * FROM articulos
+WHERE fecha_publicacion = '2023-10-01'
+  AND seccion = 'Opinión'
+  AND autor   = 'Michael Chen';</code></pre>
+        <p style="font-size: 0.38em; color: var(--c-text-dim); margin-top: 0.3em;">
+          Es una consulta de base de datos de toda la vida. Sí o no, sin puntajes.
+        </p>
+      </div>
+      <div class="col-55">
+        <table style="font-size: 0.36em; width: 100%;">
+          <tr><th>Metadata</th><th>Filtro típico en RAG</th></tr>
+          <tr class="fragment fade-up"><td>suscripción</td><td>excluir <code>subscription = paid</code> si el usuario no paga</td></tr>
+          <tr class="fragment fade-up"><td>región</td><td>incluir solo <code>region = Centroamérica</code></td></tr>
+          <tr class="fragment fade-up"><td>fecha</td><td>solo documentos de los últimos 12 meses</td></tr>
+          <tr class="fragment fade-up"><td>permisos</td><td>solo lo que <strong>este</strong> usuario puede ver</td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Fíjate en el último: el filtro depende de <strong>quién pregunta</strong>, no de qué preguntó.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Metadata Filtering", "Metadata Filtering In RAG"). El caso de permisos es el mas importante en la practica empresarial: sin el, un RAG filtra informacion confidencial a quien no debe verla. Conecta con el slide 10/21 de filtros en bases vectoriales.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Metadata: Ventajas y Límites</h2>
+    <div class="comparison" style="font-size: 0.42em;">
+      <div class="side correct">
+        <h4 style="color: var(--c-green); margin-top:0;">A favor</h4>
+        <ul style="margin: 0.2em 0;">
+          <li class="fragment fade-up"><strong>Simple de entender y depurar</strong>: si sobra un documento, se ve por qué</li>
+          <li class="fragment fade-up"><strong>Rápido y maduro</strong>: son índices de base de datos, tecnología de décadas</li>
+          <li class="fragment fade-up"><strong>Reglas estrictas</strong>: garantiza que lo prohibido nunca aparece</li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">En contra</h4>
+        <ul style="margin: 0.2em 0;">
+          <li class="fragment fade-up"><strong>No es búsqueda de verdad</strong>: no mira el contenido</li>
+          <li class="fragment fade-up"><strong>No ordena</strong>: no hay "más relevante", solo pasa o no pasa</li>
+          <li class="fragment fade-up"><strong>Inútil por sí solo</strong>: te deja 5,000 documentos que cumplen el filtro, sin decir cuál sirve</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.4em;">
+      Por eso el filtro <strong>acompaña</strong> a las otras dos técnicas: recorta el espacio,
+      y otra técnica ordena lo que queda.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Advantages and Limitations"). La frase "useless alone" del original es fuerte a proposito; en clase conviene decirla tal cual.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Búsqueda por Palabras Clave</h2>
+    <p style="font-size: 0.46em;">
+      La idea más vieja del gremio: un documento es relevante si <strong>contiene las palabras</strong>
+      que el usuario escribió.
+    </p>
+    <div class="columns" style="font-size: 0.42em; margin-top: 0.35em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-yellow);">Prompt</strong></p>
+        <p style="margin:0.1em 0; font-family: 'Fira Code', monospace; font-size: 0.9em;">
+          "¿Cómo hago pizza estilo Nueva York en casa?"
+        </p>
+      </div>
+      <div class="col">
+        <p class="fragment fade-up" style="margin:0.1em 0; padding: 0.25em 0.4em; background: rgba(131,193,103,0.1); border-left: 3px solid var(--c-green);">
+          <strong>Doc 1</strong> — Usa <mark>harina</mark> de fuerza para la masa de <mark>pizza</mark> estilo <mark>Nueva York</mark>
+        </p>
+        <p class="fragment fade-up" style="margin:0.1em 0; padding: 0.25em 0.4em; background: rgba(255,134,47,0.1); border-left: 3px solid var(--c-orange);">
+          <strong>Doc 2</strong> — Las <mark>pizzerías</mark> de <mark>Nueva York</mark> abren hasta tarde para entregas
+        </p>
+        <p class="fragment fade-up" style="margin:0.1em 0; padding: 0.25em 0.4em; background: rgba(252,98,85,0.1); border-left: 3px solid var(--c-red);">
+          <strong>Doc 3</strong> — En <mark>Pizza</mark> México de <mark>Nueva York</mark> sirven la <mark>pizza</mark> con jalapeño
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.4em; color: var(--c-text-dim);">
+      Los tres comparten palabras con la pregunta. Solo uno la responde.
+      <strong>Todo el resto de la técnica es aprender a ordenarlos.</strong>
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Introduction to Keyword Search" y el ejemplo de pizza de Nueva York). El ejemplo original esta en ingles; aqui se tradujo y se reusa como corpus del resto de la unidad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Bolsa de Palabras</h2>
+    <p style="font-size: 0.45em;">
+      El primer paso es tirar información a propósito: se ignora el <strong>orden</strong> de las
+      palabras y se queda solo con <strong>cuáles</strong> aparecen y <strong>cuántas veces</strong>.
+    </p>
+    <div style="text-align:center; margin-top: 0.35em;">
+      <p style="font-size: 0.44em; font-family: 'Fira Code', monospace; color: var(--c-yellow);">
+        "Hacer pizza sin horno de pizza"
+      </p>
+      <div style="display:flex; justify-content:center; gap:0.5em; flex-wrap:wrap; margin-top:0.3em;">
+        <span class="badge" style="font-size:0.4em;">pizza <strong style="color:var(--c-yellow);">2</strong></span>
+        <span class="badge" style="font-size:0.4em;">hacer <strong style="color:var(--c-yellow);">1</strong></span>
+        <span class="badge" style="font-size:0.4em;">sin <strong style="color:var(--c-yellow);">1</strong></span>
+        <span class="badge" style="font-size:0.4em;">horno <strong style="color:var(--c-yellow);">1</strong></span>
+        <span class="badge" style="font-size:0.4em;">de <strong style="color:var(--c-yellow);">1</strong></span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em;">
+      <strong style="color: var(--c-red);">Se pierde algo importante:</strong>
+      "el perro mordió al cartero" y "el cartero mordió al perro" dan la <strong>misma bolsa</strong>.
+      A cambio, el conteo se puede indexar y buscar en millones de documentos en milisegundos.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Bag of Words"). El ejemplo del perro y el cartero no esta en el original: sirve para que quede claro que la perdida de orden es real, no teorica.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Vectores Dispersos</h2>
+    <p style="font-size: 0.44em;">
+      Si el vocabulario tiene 50,000 palabras, la bolsa es un vector de 50,000 posiciones
+      donde <strong>casi todas son cero</strong>.
+    </p>
+    <div style="overflow-x:auto; margin-top: 0.3em;">
+      <table style="font-size: 0.3em; width: 100%; font-family: 'Fira Code', monospace;">
+        <tr>
+          <th>hacer</th><th>pizza</th><th>pastel</th><th>sartén</th><th>sin</th>
+          <th>bebida</th><th>pasta</th><th>de</th><th>horno</th><th>taco</th><th>té</th><th>…</th>
+        </tr>
+        <tr style="text-align:center;">
+          <td style="color:var(--c-green);"><strong>1</strong></td>
+          <td style="color:var(--c-green);"><strong>2</strong></td>
+          <td style="color:var(--c-text-dim);">0</td>
+          <td style="color:var(--c-text-dim);">0</td>
+          <td style="color:var(--c-green);"><strong>1</strong></td>
+          <td style="color:var(--c-text-dim);">0</td>
+          <td style="color:var(--c-text-dim);">0</td>
+          <td style="color:var(--c-green);"><strong>1</strong></td>
+          <td style="color:var(--c-green);"><strong>1</strong></td>
+          <td style="color:var(--c-text-dim);">0</td>
+          <td style="color:var(--c-text-dim);">0</td>
+          <td style="color:var(--c-text-dim);">0</td>
+        </tr>
+      </table>
+    </div>
+    <div class="columns" style="font-size: 0.4em; margin-top: 0.4em;">
+      <div class="col fragment fade-up">
+        <p style="margin:0;"><strong style="color: var(--c-blue);">Disperso (sparse)</strong> —
+        50,000 dimensiones, 5 distintas de cero. Cada dimensión <strong>es</strong> una palabra:
+        se puede leer.</p>
+      </div>
+      <div class="col fragment fade-up">
+        <p style="margin:0;"><strong style="color: var(--c-green);">Denso (dense)</strong> —
+        el embedding de la unidad anterior: 384 dimensiones, <strong>todas</strong> distintas de cero,
+        ninguna legible por sí sola.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
+      Esa es la diferencia real entre las dos búsquedas: <strong>ambas comparan vectores</strong>,
+      cambia cómo se construyen.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Sparse Vectors"). El contraste sparse/dense adelanta el slide "Semantic Search vs Keyword Search" del mismo modulo y conecta con la unidad 10 de embeddings.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Matriz Término-Documento</h2>
+    <p style="font-size: 0.42em;">
+      Se indexa una vez: qué términos aparecen en qué documentos. Buscar es
+      <strong>mirar las filas de la consulta</strong> y sumar.
+    </p>
+    <div style="overflow-x:auto;">
+      <table style="font-size: 0.34em; width: 92%; margin: 0.25em auto; font-family: 'Fira Code', monospace; text-align:center;">
+        <tr><th style="text-align:left;">término</th><th>Doc 1</th><th>Doc 2</th><th>Doc 3</th><th>Doc 4</th><th>Doc 5</th><th style="color: var(--c-yellow);">df</th></tr>
+        <tr><td style="text-align:left;">hacer</td><td style="color:var(--c-green);">✔</td><td></td><td></td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td style="color: var(--c-yellow);">3/5</td></tr>
+        <tr><td style="text-align:left;">pizza</td><td style="color:var(--c-green);">✔</td><td></td><td style="color:var(--c-green);">✔</td><td></td><td></td><td style="color: var(--c-yellow);">2/5</td></tr>
+        <tr><td style="text-align:left;">sin</td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td></td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td style="color: var(--c-yellow);">4/5</td></tr>
+        <tr><td style="text-align:left;">de</td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td></td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td style="color: var(--c-yellow);">4/5</td></tr>
+        <tr><td style="text-align:left;">horno</td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td></td><td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td><td style="color: var(--c-yellow);">4/5</td></tr>
+        <tr style="border-top: 2px solid var(--c-blue);"><td style="text-align:left;"><strong>coincidencias</strong></td>
+          <td><strong style="color: var(--c-green);">5/5</strong></td><td><strong>3/5</strong></td><td><strong style="color: var(--c-red);">1/5</strong></td><td><strong>4/5</strong></td><td><strong>4/5</strong></td><td></td></tr>
+      </table>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.2em;">
+      Doc 4 y Doc 5 empatan con 4 de 5… <strong>pero coincidieron en "sin", "de" y "horno"</strong>,
+      que están en casi todos los documentos. Contar coincidencias <strong>no alcanza</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 (secuencia de matrices termino-documento con el prompt "Making pizza without a pizza oven"). El renglon de df ya prepara la idea de IDF del siguiente bloque.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Contar no Basta: TF</h2>
+    <p style="font-size: 0.42em;">Consulta: <strong style="color: var(--c-yellow); font-family: 'Fira Code', monospace;">pizza horno</strong></p>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.2em;">
+      <div class="side">
+        <p style="margin:0;"><strong>Documento 1</strong></p>
+        <p style="margin:0.15em 0; color: var(--c-text-dim);">"La <strong style="color:var(--c-blue);">pizza</strong> casera al <strong style="color:var(--c-orange);">horno</strong> es mejor que la <strong style="color:var(--c-blue);">pizza</strong> congelada"</p>
+        <p style="margin:0.15em 0;">pizza ×2, horno ×1</p>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">Conteo simple = <strong>2</strong> términos</p>
+        <p style="margin:0.1em 0;">TF = <strong style="color: var(--c-yellow);">3</strong></p>
+      </div>
+      <div class="side">
+        <p style="margin:0;"><strong>Documento 2</strong></p>
+        <p style="margin:0.15em 0; color: var(--c-text-dim);">"El <strong style="color:var(--c-orange);">horno</strong> de leña es mejor <strong style="color:var(--c-orange);">horno</strong> que un <strong style="color:var(--c-orange);">horno</strong> de piedra para la <strong style="color:var(--c-blue);">pizza</strong>"</p>
+        <p style="margin:0.15em 0;">pizza ×1, horno ×3</p>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">Conteo simple = <strong>2</strong> términos</p>
+        <p style="margin:0.1em 0;">TF = <strong style="color: var(--c-green);">4</strong></p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      Contar <em>cuántos términos distintos</em> coinciden empata los dos.
+      <strong>Term Frequency</strong> los desempata: cuenta cada aparición.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.2em; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Pero aparece un sesgo:</strong> un documento largo repite palabras solo por ser largo.
+      Solución: dividir entre el total de palabras. <span style="font-family: 'Fira Code', monospace;">TF = ocurrencias / |documento|</span>
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Frequency Based Scoring" y "Normalized TF Scoring"). Los numeros 2/2 y 3/4 son los del original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema de TF: Todas las Palabras Pesan Igual</h2>
+    <p style="font-size: 0.44em;">
+      TF trata igual a <strong style="color: var(--c-blue);">"pizza"</strong> que a
+      <strong style="color: var(--c-text-dim);">"de"</strong>. Pero coincidir en "de" no dice
+      absolutamente nada: está en todos lados.
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.4em;">
+      <div class="fragment fade-up" style="margin: 0.3em 0;">
+        <strong>1. Contar en cuántos documentos aparece</strong> (document frequency)
+        <div style="display:flex; gap:1.2em; margin-top:0.2em;">
+          <span style="padding:0.2em 0.5em; background: rgba(88,196,221,0.12);">pizza: en 5 de 100 → df = <strong style="color:var(--c-blue);">0.05</strong></span>
+          <span style="padding:0.2em 0.5em; background: rgba(168,162,144,0.1);">de: en 100 de 100 → df = <strong>1.0</strong></span>
+        </div>
+      </div>
+      <div class="fragment fade-up" style="margin: 0.3em 0;">
+        <strong>2. Invertir, para premiar lo raro</strong>
+        <div style="display:flex; gap:1.2em; margin-top:0.2em;">
+          <span style="padding:0.2em 0.5em; background: rgba(88,196,221,0.12);">1/0.05 = <strong style="color:var(--c-blue);">20</strong></span>
+          <span style="padding:0.2em 0.5em; background: rgba(168,162,144,0.1);">1/1.0 = <strong>1</strong></span>
+        </div>
+      </div>
+      <div class="fragment fade-up" style="margin: 0.3em 0;">
+        <strong>3. Aplicar logaritmo</strong>, para que la ventaja no se dispare
+        <div style="display:flex; gap:1.2em; margin-top:0.2em;">
+          <span style="padding:0.2em 0.5em; background: rgba(131,193,103,0.12);">log(20) = <strong style="color:var(--c-green);">3.0</strong></span>
+          <span style="padding:0.2em 0.5em; background: rgba(252,98,85,0.1);">log(1) = <strong style="color:var(--c-red);">0</strong></span>
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Una palabra que está en <strong>todos</strong> los documentos aporta <strong>exactamente cero</strong>.
+      El logaritmo la elimina sola, sin lista de <em>stopwords</em>.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("TF-IDF", los tres pasos "Count Documents / Flip to reward rare words / Apply log"). El original usa log base 10 (log 20 = 1.30); aqui se muestra logaritmo natural (log 20 = 3.0) porque es el que usan scikit-learn y rank_bm25. Lo importante es el cero de la derecha, que no depende de la base.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>TF-IDF</h2>
+    <div class="katex-block" style="font-size: 0.62em; margin: 0.3em 0;">
+      \[ \text{tf-idf}(t, d) \;=\; \underbrace{\frac{f(t,d)}{|d|}}_{\text{qué tanto aparece aquí}} \;\times\; \underbrace{\log\frac{N}{\text{df}(t)}}_{\text{qué tan raro es en general}} \]
+    </div>
+    <p style="font-size: 0.42em; text-align:center; color: var(--c-text-dim);">
+      El puntaje de un documento es la <strong>suma</strong> de esto sobre todos los términos de la consulta.
+    </p>
+    <div class="columns" style="font-size: 0.4em; margin-top: 0.35em;">
+      <div class="col fragment fade-up">
+        <p style="margin:0; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Documento que puntúa alto</strong><br>
+          coincide en términos <strong>raros</strong>: "jalapeño", "harina de fuerza", un código de producto
+        </p>
+      </div>
+      <div class="col fragment fade-up">
+        <p style="margin:0; padding:0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong style="color: var(--c-red);">Documento que puntúa bajo</strong><br>
+          solo coincide en términos <strong>comunes</strong>: "de", "sin", "cómo"
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.4em;">
+      TF-IDF fue el estándar durante décadas. Hoy se usa una versión refinada:
+      <strong style="color: var(--c-yellow);">BM25</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("TF-IDF" y "Refined into BM25"). Conviene escribir la formula en el pizarron y senalar que son dos factores multiplicandose: uno local al documento y uno global al corpus.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora TF, TF-IDF y BM25</h2>
+    <div class="widget-container">
+      <canvas id="bm25-canvas" width="880" height="345" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn bm25-modo-btn" data-modo="tf">TF</button>
+        <button class="widget-btn fi-btn bm25-modo-btn" data-modo="tfidf">TF-IDF</button>
+        <button class="widget-btn fi-btn bm25-modo-btn" data-modo="bm25">BM25</button>
+        <span style="width:1em;"></span>
+        <button class="widget-btn fi-btn bm25-q-btn" data-q="0">pizza sin horno</button>
+        <button class="widget-btn fi-btn bm25-q-btn" data-q="1">harina de fuerza</button>
+        <button class="widget-btn fi-btn bm25-q-btn" data-q="2">pizza con jalapeño</button>
+      </div>
+      <div id="bm25-params" style="display:flex; justify-content:center; align-items:center; gap:1.2em; margin-top:0.25em;">
+        <div class="widget-label" style="font-size:0.72em;">k₁ <span class="widget-value" id="bm25-k1-value">1.5</span>
+          <input type="range" id="bm25-k1" class="widget-slider" min="2" max="30" step="1" value="15" style="width:110px; margin-left:0.4em;">
+        </div>
+        <div class="widget-label" style="font-size:0.72em;">b <span class="widget-value" id="bm25-b-value">0.75</span>
+          <input type="range" id="bm25-b" class="widget-slider" min="0" max="100" step="5" value="75" style="width:110px; margin-left:0.4em;">
+        </div>
+      </div>
+      <div id="bm25-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.52em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. Los puntajes se calculan EN VIVO (no hay tabla precalculada), por eso los sliders mueven
+      los numeros de verdad; la implementacion se verifico contra una referencia en Python. Guion sugerido:
+      (1) en "pizza sin horno" con TF, ver que gana un documento por repetir palabras comunes;
+      (2) cambiar a TF-IDF y ver como se reordena;
+      (3) en "harina de fuerza" ver que 11 de 12 documentos valen CERO: eso es keyword search;
+      (4) con BM25, bajar b a 0 y ver que los documentos largos dejan de estar penalizados.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>BM25: las Dos Correcciones</h2>
+    <div style="font-size: 0.42em;">
+      <div class="fragment fade-up" style="margin-bottom: 0.45em;">
+        <strong style="color: var(--c-yellow);">1. Saturación de frecuencia (k₁)</strong>
+        <div class="comparison" style="margin-top:0.2em;">
+          <div class="side" style="border: 1px solid rgba(252,98,85,0.4);">
+            <strong>TF-IDF</strong> — "pizza" ×10 → puntaje X<br>"pizza" ×20 → puntaje <strong style="color: var(--c-red);">2X</strong>
+          </div>
+          <div class="side" style="border: 1px solid rgba(131,193,103,0.4);">
+            <strong>BM25</strong> — "pizza" ×10 → puntaje X<br>"pizza" ×20 → puntaje <strong style="color: var(--c-green);">1.3X</strong>
+          </div>
+        </div>
+        <p style="margin:0.2em 0 0 0; color: var(--c-text-dim);">
+          La décima repetición ya no dice nada nuevo. El puntaje <strong>se aplana</strong>.
+        </p>
+      </div>
+      <div class="fragment fade-up">
+        <strong style="color: var(--c-yellow);">2. Normalización de longitud (b)</strong>
+        <div class="comparison" style="margin-top:0.2em;">
+          <div class="side" style="border: 1px solid rgba(252,98,85,0.4);">
+            <strong>TF-IDF</strong> — divide entre <em>todo</em> el largo:
+            castigo <strong style="color: var(--c-red);">demasiado agresivo</strong> a los documentos largos
+          </div>
+          <div class="side" style="border: 1px solid rgba(131,193,103,0.4);">
+            <strong>BM25</strong> — compara contra el largo <strong>promedio</strong> del corpus:
+            castigo <strong style="color: var(--c-green);">gradual y ajustable</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M2 ("1 Term Frequency Saturation", "2 Document Length Normalization"). Los factores X, 2X y 1.3X son los del original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Fórmula de BM25</h2>
+    <div class="katex-block" style="font-size: 0.5em; margin: 0.25em 0;">
+      \[ \text{BM25}(t,d) = \underbrace{\log\!\left(1 + \frac{N - \text{df} + 0.5}{\text{df} + 0.5}\right)}_{\text{IDF}} \cdot \frac{f(t,d)\,(k_1+1)}{f(t,d) + k_1\!\left(1 - b + b\,\frac{|d|}{\text{avgdl}}\right)} \]
+    </div>
+    <table style="font-size: 0.37em; width: 96%; margin: 0.2em auto;">
+      <tr><th>Parámetro</th><th>Controla</th><th>Rango típico</th><th>Efecto</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-yellow);">k₁</strong></td>
+        <td>cuánto influye la frecuencia del término</td><td>1.2 – 2.0</td>
+        <td>más alto → repetir importa más; k₁→0 → solo importa <em>si</em> aparece</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-yellow);">b</strong></td>
+        <td>cuánto se penaliza un documento largo</td><td>0 – 1</td>
+        <td>b=0 → el largo no importa; b=1 → normalización completa</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Los valores por omisión (<strong>k₁ = 1.5, b = 0.75</strong>) funcionan sorprendentemente bien.
+      Son los que trae <code>rank_bm25</code>, Elasticsearch y OpenSearch.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      Sumando sobre todos los términos de la consulta se obtiene el puntaje del documento.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("BM25 Scoring", "BM25 Tunable Parameters"). El nombre viene de ser la variante 25 de una serie de funciones de puntuacion (Robertson y Sparck Jones). El widget anterior usa exactamente esta formula.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>BM25 en Python</h2>
+    <pre style="font-size: 0.33em; max-width: 92%; margin: 0 auto; overflow-x:auto;"><code class="language-python">from rank_bm25 import BM25Okapi
+import re, unicodedata
+
+def tokenizar(texto):
+    """Minusculas, sin tildes, solo letras y numeros.
+
+    Ojo: NO hace stemming. Por eso "hornos" y "horno" son dos tokens
+    distintos, y un documento sobre "hornos electricos" NO coincide con
+    una consulta que dice "horno". Es la limitacion mas comun (y mas
+    subestimada) de keyword search."""
+    t = unicodedata.normalize("NFD", texto.lower())
+    t = "".join(c for c in t if unicodedata.category(c) != "Mn")
+    return re.findall(r"[a-z0-9]+", t)
+
+documentos = [
+    "Cómo hacer pizza en casa sin horno de piedra, usando una sartén de hierro",
+    "Comparativa de hornos eléctricos domésticos para hacer pizza",
+    "Usa harina de fuerza para la masa de pizza estilo Nueva York",
+]
+
+# El indice se construye UNA vez sobre todo el corpus: BM25 necesita
+# conocer N y el largo promedio para calcular IDF y normalizar.
+bm25 = BM25Okapi([tokenizar(d) for d in documentos], k1=1.5, b=0.75)
+
+puntajes = bm25.get_scores(tokenizar("cómo hago pizza en casa sin horno"))
+for doc, s in sorted(zip(documentos, puntajes), key=lambda x: -x[1]):
+    print(f"{s:.3f}  {doc[:55]}")</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.25em; color: var(--c-text-dim);">
+      En producción esto no se implementa a mano: <strong>Elasticsearch</strong>, <strong>OpenSearch</strong>
+      y las bases vectoriales con búsqueda híbrida ya traen BM25 adentro.
+    </p>
+    <aside class="notes">Contenido propio. rank_bm25 es la forma mas rapida de mostrarlo en un notebook; el comentario sobre stemming anticipa el slide siguiente, donde ese problema aparece medido con datos reales.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Keyword Search no Puede Hacer</h2>
+    <table style="font-size: 0.4em; width: 100%;">
+      <tr><th>Problema</th><th>Ejemplo</th></tr>
+      <tr class="fragment fade-up"><td><strong>Sinónimos</strong></td>
+        <td>buscas <em>"contento"</em>, el documento dice <em>"feliz"</em> → puntaje <strong style="color: var(--c-red);">0</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong>Paráfrasis</strong></td>
+        <td>buscas <em>"pizza sin horno"</em>, el documento dice <em>"pan plano sin equipo profesional"</em></td></tr>
+      <tr class="fragment fade-up"><td><strong>Morfología</strong></td>
+        <td><em>"horno"</em> ≠ <em>"hornos"</em> si no hay <em>stemming</em>: son tokens distintos</td></tr>
+      <tr class="fragment fade-up"><td><strong>Polisemia</strong></td>
+        <td>buscas <em>"banco"</em> (dinero) y traes <em>"banco"</em> (del parque): coincide igual</td></tr>
+    </table>
+    <div class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.4em; padding: 0.35em 0.55em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Medido en nuestro corpus</strong>, con la consulta <em>"cómo hago pizza en casa sin horno"</em>:
+      BM25 sube al <strong>puesto 3</strong> una <em>guía de vinos</em> (coincide en "casa") y hunde al
+      <strong>puesto 8</strong> la comparativa de <em>hornos</em> eléctricos — porque dice "hornos" y no "horno".
+      La búsqueda semántica la pone en el <strong>puesto 2</strong>.
+    </div>
+    <aside class="notes">Fuente: RAG_M2 ("Cannot match synonyms / Incorrectly matches different meanings"). Los numeros del recuadro son medidos sobre el corpus de esta unidad, no inventados: se pueden reproducir en vivo con el widget de BM25 y el de RRF.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Semántica: la Misma Mecánica, Otro Vector</h2>
+    <div class="flow-row" style="font-size: 0.4em; justify-content:center; margin-top: 0.3em;">
+      <div class="flow-node">Prompt</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-yellow);">vector</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">comparar con<br>cada documento</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">ranking</div>
+    </div>
+    <p style="font-size: 0.43em; text-align:center; margin-top: 0.4em;">
+      <strong>Las dos búsquedas hacen exactamente esto.</strong> Lo único que cambia es
+      el paso del medio:
+    </p>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">Keyword</h4>
+        El vector se obtiene <strong>contando palabras</strong>.<br>
+        Disperso, 50,000 dimensiones legibles.<br>
+        <span style="color: var(--c-text-dim);">No hace falta entrenar nada.</span>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Semántica</h4>
+        El vector lo produce un <strong>modelo de embeddings</strong>.<br>
+        Denso, 384–3,072 dimensiones opacas.<br>
+        <span style="color: var(--c-text-dim);">Hay que entrenar el modelo… y ahí está lo interesante.</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
+      Los embeddings, las distancias (coseno, euclidiana, producto punto) y kNN los vimos en la
+      <strong>unidad de Embeddings</strong>. Aquí vamos a lo que faltó: <strong>cómo se entrena</strong> ese modelo.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Semantic Search vs. Keyword Search", "Measuring Vector Distance", "Semantic Search"). Las tres medidas de distancia y kNN ya se cubrieron en la unidad 10 (slides 10/4 y 10/16), por eso aqui solo se referencian y el tiempo se invierte en el entrenamiento contrastivo, que es lo que la unidad 10 no cubre.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Cómo Sabe el Modelo Dónde Poner Cada Texto?</h2>
+    <p style="font-size: 0.44em;">
+      Un modelo recién inicializado pone los textos en posiciones <strong>aleatorias</strong>.
+      Nada significa nada. La pregunta es cómo se llega de ahí a un espacio donde
+      "Buenos días" y "Hola" queden juntos.
+    </p>
+    <div style="font-size: 0.42em; margin-top: 0.4em;">
+      <div class="fragment fade-up" style="margin: 0.35em 0; padding: 0.35em 0.55em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+        <strong style="color: var(--c-green);">Par positivo</strong> — dos textos que <em>deberían</em> estar cerca<br>
+        <span style="font-family: 'Fira Code', monospace; font-size:0.9em;">("Buenos días", "Hola, ¿qué tal?")</span>
+      </div>
+      <div class="fragment fade-up" style="margin: 0.35em 0; padding: 0.35em 0.55em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Par negativo</strong> — dos textos que <em>deberían</em> estar lejos<br>
+        <span style="font-family: 'Fira Code', monospace; font-size:0.9em;">("Buenos días", "Un trombón desafinado")</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Se juntan <strong>millones</strong> de estos pares y se entrena empujando y jalando:
+      es el <strong style="color: var(--c-yellow);">entrenamiento contrastivo</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Embedding Models", "Positive and Negative Examples in Training"). De donde salen los pares en la practica: titulo-cuerpo de un articulo, pregunta-respuesta de un foro, dos traducciones de la misma frase. Los negativos suelen ser aleatorios del mismo lote ("in-batch negatives").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Entrenamiento Contrastivo</h2>
+    <div class="widget-container">
+      <canvas id="contrastive-canvas" width="880" height="340" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn" id="contrastive-animar">Entrenar / pausar</button>
+        <button class="widget-btn fi-btn" id="contrastive-paso">+20 pasos</button>
+        <button class="widget-btn fi-btn" id="contrastive-reset">Reiniciar</button>
+        <label class="widget-label" style="font-size:0.72em; cursor:pointer;">
+          <input type="checkbox" id="contrastive-pares" checked style="margin-right:0.3em;">ver fuerzas
+        </label>
+      </div>
+      <div id="contrastive-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.52em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. La animacion NO es decorativa: minimiza de verdad, por descenso de gradiente, la perdida
+      contrastiva L = Σ_pos (d − m_pos)² + Σ_neg max(0, m_neg − d)², y el numero que se ve bajar es esa perdida.
+      Arranca en ~2500 y termina cerca de 6 tras 400 pasos. Guion: reiniciar, hacer notar que las posiciones
+      iniciales no significan NADA, y luego entrenar. Pasar el mouse sobre un punto aisla sus fuerzas.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Bucle de Entrenamiento</h2>
+    <div class="roadmap" style="font-size: 0.44em;">
+      <div class="step fragment fade-up"><strong>1. Embeber</strong> — el modelo asigna un vector a cada texto del lote</div>
+      <div class="step fragment fade-up"><strong>2. Puntuar</strong> — ¿los positivos quedaron cerca? ¿los negativos lejos?</div>
+      <div class="step fragment fade-up"><strong>3. Actualizar</strong> — se ajustan los parámetros <em>del modelo</em> para mejorar ese puntaje</div>
+      <div class="step fragment fade-up"><strong>4. Repetir</strong> — millones de veces, con millones de pares</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em; padding: 0.35em 0.55em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <strong>Un matiz importante:</strong> en el widget movimos los <em>puntos</em>. En un modelo real
+      no se mueven los puntos: se ajustan los <strong>pesos de la red</strong>, y los puntos se mueven
+      como consecuencia. Por eso el modelo entrenado puede embeber texto que <strong>nunca vio</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Contrastive Training Process"). El matiz del recuadro es propio y es la diferencia entre una tabla de posiciones memorizadas y un modelo que generaliza: vale la pena detenerse ahi.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Hay que Llevarse</h2>
+    <div style="font-size: 0.43em;">
+      <div class="fragment fade-up" style="margin:0.3em 0;">
+        ● Los vectores semánticos son <strong>abstractos</strong>: ninguna dimensión significa algo por sí sola.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0;">
+        ● <strong>Antes</strong> de entrenar, las posiciones no significan nada. Son ruido.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0;">
+        ● <strong>Después</strong>, la posición significa algo <em>porque se formaron los grupos</em>:
+        el significado es la <strong>estructura</strong>, no la coordenada.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+        ● <strong style="color: var(--c-red);">Nunca compares vectores de modelos distintos.</strong>
+        Cada modelo entrenó su propio espacio, con su propia aleatoriedad inicial. Un coseno entre
+        vectores de dos modelos distintos es un número sin ningún significado.
+      </div>
+      <div class="fragment fade-up" style="margin:0.3em 0; color: var(--c-text-dim);">
+        ● Corolario práctico: si cambias de modelo de embeddings, hay que
+        <strong>reindexar toda la base</strong>. No es una migración menor.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M2 ("Key Takeaways"). El corolario de la reindexacion es propio, y es un costo real que sorprende a los equipos: cambiar de modelo obliga a recalcular todos los embeddings del corpus.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Las Tres, Comparadas</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th>Técnica</th><th>Qué hace</th><th>Velocidad</th><th>Fuerte en</th><th>Débil en</th></tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color: var(--c-purple);">Metadata</strong></td>
+        <td>descarta por criterios rígidos</td>
+        <td style="color: var(--c-green);">muy rápida</td>
+        <td>reglas duras, permisos</td>
+        <td>no ordena, no mira contenido</td></tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color: var(--c-blue);">Keyword</strong></td>
+        <td>puntúa por coincidencia exacta</td>
+        <td style="color: var(--c-green);">rápida</td>
+        <td>nombres propios, códigos, jerga, términos raros</td>
+        <td>sinónimos, paráfrasis, plurales</td></tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color: var(--c-green);">Semántica</strong></td>
+        <td>puntúa por significado</td>
+        <td style="color: var(--c-orange);">más lenta y cara</td>
+        <td>preguntas conversacionales, sinónimos</td>
+        <td>términos raros que el modelo nunca vio</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em; text-align:center;">
+      Fíjate que las columnas de "fuerte" y "débil" son <strong>casi complementarias</strong>
+      entre keyword y semántica. Ese es exactamente el argumento para usar las dos.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Key Strategies"). La observacion de la complementariedad es propia y es el puente al bloque de hybrid search.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Hybrid Search: el Pipeline</h2>
+    <div style="font-size: 0.38em; margin-top: 0.2em;">
+      <div class="flow-row" style="justify-content:center; margin: 0.3em 0;">
+        <div class="flow-node" style="border-color: var(--c-blue);">Búsqueda por<br>palabras clave</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-purple);">Filtro de<br>metadata</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-text-dim);">35 documentos</div>
+      </div>
+      <div class="flow-row" style="justify-content:center; margin: 0.3em 0;">
+        <div class="flow-node" style="border-color: var(--c-green);">Búsqueda<br>semántica</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-purple);">Filtro de<br>metadata</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-text-dim);">30 documentos</div>
+      </div>
+      <div class="flow-row fragment fade-up" style="justify-content:center; margin: 0.4em 0;">
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node" style="border-color: var(--c-yellow);">Fusionar las dos listas en un solo ranking</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);">devolver el <strong>top-k</strong></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Cada búsqueda devuelve típicamente <strong>20 a 50</strong> candidatos; el filtro recorta;
+      la fusión decide el orden final.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Search Techniques", "Hybrid Search"). Notar que el filtro de metadata puede aplicarse ANTES (pre-filtering) o DESPUES (post-filtering) de la busqueda; el compromiso se discutio en el slide 10/21.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema de Fusionar</h2>
+    <p style="font-size: 0.44em;">
+      Las dos listas traen puntajes… pero <strong>en escalas que no se pueden comparar</strong>.
+    </p>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">BM25</h4>
+        Va de <strong>0</strong> a <strong>infinito</strong>. En nuestro corpus el máximo medido fue
+        <strong>4.38</strong>, pero depende del corpus, del largo y de qué tan raras sean las palabras.
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Coseno</h4>
+        Va de <strong>−1</strong> a <strong>1</strong>, siempre. En nuestro corpus el máximo fue
+        <strong>0.886</strong>.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.4em; padding: 0.35em 0.55em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      ¿Sumarlos? Un BM25 de 4.38 aplastaría a cualquier coseno. ¿Normalizarlos primero?
+      Habría que saber el máximo posible, y <strong>cambia con cada consulta</strong>.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.43em; text-align:center; margin-top: 0.3em;">
+      La salida elegante: <strong style="color: var(--c-yellow);">ignorar los puntajes y usar solo las posiciones</strong>.
+    </p>
+    <aside class="notes">Contenido propio, apoyado en el bloque de RRF de RAG_M2. Los valores 4.38 y 0.886 son los maximos reales medidos sobre el corpus de esta unidad. Este slide justifica POR QUE existe RRF, cosa que el original da por sentada.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Reciprocal Rank Fusion</h2>
+    <div class="katex-block" style="font-size: 0.55em; margin: 0.2em 0;">
+      \[ \text{RRF}(d) \;=\; \beta \cdot \frac{1}{k + \text{rank}_{\text{sem}}(d)} \;+\; (1-\beta) \cdot \frac{1}{k + \text{rank}_{\text{kw}}(d)} \]
+    </div>
+    <p style="font-size: 0.41em; text-align:center; color: var(--c-text-dim);">
+      Cada lista da puntos según la <strong>posición</strong>: 1º vale más que 2º, que vale más que 3º.
+      Se suman los puntos de todas las listas y se reordena.
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.35em; text-align:center;">
+      <div class="fragment fade-up" style="display:inline-block; padding: 0.4em 0.8em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow); text-align:left;">
+        Un documento en <strong>2º</strong> por palabras clave y <strong>10º</strong> por semántica, con k=0 y β=0.5:<br>
+        <span style="font-family: 'Fira Code', monospace;">0.5 · 1/2 &nbsp;+&nbsp; 0.5 · 1/10 &nbsp;=&nbsp; 0.25 + 0.05 &nbsp;=&nbsp; <strong style="color: var(--c-yellow);">0.30</strong></span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.4em;">
+      Premia a los documentos que <strong>salen bien rankeados en varias listas a la vez</strong>.
+      Un documento que ninguna de las dos ama, pero que a las dos les gusta, sube.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Reciprocal Rank Fusion", "RRF Calculation"). El ejemplo del original usa 1/2 + 1/10 = 0.6 sin ponderar; aqui se muestra ya con beta=0.5 para que la formula completa sea consistente con el widget siguiente.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Fusión</h2>
+    <div class="widget-container">
+      <canvas id="rrf-canvas" width="880" height="310" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn rrf-q-btn" data-q="0">pizza sin horno</button>
+        <button class="widget-btn fi-btn rrf-q-btn" data-q="1">harina de fuerza</button>
+        <button class="widget-btn fi-btn rrf-q-btn" data-q="2">pizza con jalapeño</button>
+        <span style="width:0.6em;"></span>
+        <div class="widget-label" style="font-size:0.72em;">k <span class="widget-value" id="rrf-k-value">10</span>
+          <input type="range" id="rrf-k" class="widget-slider" min="0" max="60" step="1" value="10" style="width:100px; margin-left:0.4em;">
+        </div>
+        <div class="widget-label" style="font-size:0.72em;">β <span class="widget-value" id="rrf-beta-value">0.50</span>
+          <input type="range" id="rrf-beta" class="widget-slider" min="0" max="100" step="5" value="50" style="width:100px; margin-left:0.4em;">
+        </div>
+      </div>
+      <div id="rrf-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.52em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. La lista de keyword es BM25 calculado en vivo; la semantica son cosenos reales. Guion:
+      (1) en "pizza sin horno" ver que las dos listas solo comparten 3 de 5 en el top-5;
+      (2) en "harina de fuerza" ver que la lista semantica es basura pura salvo el primero, y que la fusion
+      igual conserva el documento correcto arriba: eso es robustez, no magia;
+      (3) mover k de 0 a 60 y ver el indicador de "ventaja del 1o sobre el 10o" caer de 10x a 1.15x.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Dos Parámetros de RRF</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <h4 style="color: var(--c-yellow); margin-bottom:0.2em;">k — cuánto manda el primer lugar</h4>
+        <table style="width:100%; font-size:0.92em;">
+          <tr><th>k</th><th>1º vs 10º</th><th>Efecto</th></tr>
+          <tr><td><strong>0</strong></td><td style="color: var(--c-red);">10×</td><td>un solo primer lugar domina todo</td></tr>
+          <tr><td><strong>10</strong></td><td>1.8×</td><td>equilibrio</td></tr>
+          <tr><td><strong>50</strong></td><td style="color: var(--c-green);">1.2×</td><td>casi solo cuenta aparecer en ambas listas</td></tr>
+        </table>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          k alto = "confío en el consenso"; k bajo = "confío en el campeón".
+        </p>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-yellow); margin-bottom:0.2em;">β — cuánto pesa cada búsqueda</h4>
+        <div style="margin:0.25em 0;">
+          <div style="display:flex; height:1.5em; border-radius:4px; overflow:hidden; font-size:0.85em;">
+            <div style="flex:8; background: rgba(131,193,103,0.55); display:flex; align-items:center; justify-content:center;">semántica 80%</div>
+            <div style="flex:2; background: rgba(88,196,221,0.55); display:flex; align-items:center; justify-content:center;">kw 20%</div>
+          </div>
+          <p style="margin:0.15em 0; text-align:center;">β = 0.8</p>
+        </div>
+        <div style="margin:0.25em 0;">
+          <div style="display:flex; height:1.5em; border-radius:4px; overflow:hidden; font-size:0.85em;">
+            <div style="flex:3; background: rgba(131,193,103,0.55); display:flex; align-items:center; justify-content:center;">sem 30%</div>
+            <div style="flex:7; background: rgba(88,196,221,0.55); display:flex; align-items:center; justify-content:center;">palabras clave 70%</div>
+          </div>
+          <p style="margin:0.15em 0; text-align:center;">β = 0.3</p>
+        </div>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Si la coincidencia <strong>exacta</strong> importa (códigos, nombres, referencias legales),
+          <strong>baja β</strong>.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Medido en nuestro corpus:</strong> mover β de 0.0 a 0.9 llevó el AP@5 de
+      <strong style="color: var(--c-red);">0.50</strong> a <strong style="color: var(--c-green);">0.92</strong>.
+      Estos parámetros <strong>se ajustan</strong>, no se dejan por omisión.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("When k = 0 / When k = 50", "Beta: Weighting Semantic vs. Keyword"). El barrido de beta es medido sobre el corpus de esta unidad: 0.50 con beta=0, 0.56 con 0.2, 0.81 con 0.4-0.8 y 0.92 con 0.9-1.0. Es la ilustracion concreta del cierre del modulo ("measure improvement from adjusting tunable parameters").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Hybrid Search en Código</h2>
+    <pre style="font-size: 0.32em; max-width: 94%; margin: 0 auto; overflow-x:auto;"><code class="language-python">def rrf(lista_kw, lista_sem, k=10, beta=0.5):
+    """Fusiona dos rankings usando solo las POSICIONES.
+
+    lista_kw / lista_sem: ids de documento, ya ordenados de mejor a peor.
+    k    : amortigua la ventaja del primer lugar (k=0 -> 10x entre 1o y 10o).
+    beta : peso de la semantica; (1-beta) es el de las palabras clave."""
+    puntos = {}
+    for pos, doc in enumerate(lista_sem):
+        puntos[doc] = puntos.get(doc, 0) + beta / (k + pos + 1)
+    for pos, doc in enumerate(lista_kw):
+        puntos[doc] = puntos.get(doc, 0) + (1 - beta) / (k + pos + 1)
+    return sorted(puntos, key=puntos.get, reverse=True)
+
+# Un documento que aparece en AMBAS listas acumula de las dos: por eso la
+# fusion premia el consenso aunque no sea el favorito de ninguna.
+top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.3em;">
+      En la práctica no lo escribes: <strong>Weaviate</strong> (<code>hybrid(alpha=…)</code>),
+      <strong>Qdrant</strong> (<code>FusionQuery(RRF)</code>), <strong>Elasticsearch</strong> (<code>rrf</code>)
+      y <strong>pgvector + tsvector</strong> lo traen listo.
+      <span style="color: var(--c-text-dim);">Ojo: el <code>alpha</code> de Weaviate es nuestro β.</span>
+    </p>
+    <aside class="notes">Contenido propio. Vale la pena mostrar que son 10 lineas: RRF es simple a proposito, y esa simplicidad es la razon de que se haya vuelto el estandar de facto para fusionar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Y Cómo Sé si Está Funcionando?</h2>
+    <p style="font-size: 0.44em;">
+      Todo lo anterior tiene parámetros que se pueden mover: k₁, b, β, k, top-k, el modelo de embeddings.
+      <strong>Sin una forma de medir, ajustarlos es adivinar.</strong>
+    </p>
+    <div class="columns" style="font-size: 0.4em; margin-top: 0.4em; text-align:center;">
+      <div class="col fragment fade-up">
+        <div style="padding:0.5em; background: rgba(88,196,221,0.08); border-radius:8px; height:100%;">
+          <strong style="color: var(--c-blue);">El prompt</strong><br>
+          <span style="color: var(--c-text-dim);">la consulta concreta que se está evaluando</span>
+        </div>
+      </div>
+      <div class="col fragment fade-up">
+        <div style="padding:0.5em; background: rgba(131,193,103,0.08); border-radius:8px; height:100%;">
+          <strong style="color: var(--c-green);">Los resultados</strong><br>
+          <span style="color: var(--c-text-dim);">los documentos devueltos, <strong>en orden</strong></span>
+        </div>
+      </div>
+      <div class="col fragment fade-up">
+        <div style="padding:0.5em; background: rgba(255,255,0,0.08); border-radius:8px; height:100%;">
+          <strong style="color: var(--c-yellow);">El ground truth</strong><br>
+          <span style="color: var(--c-text-dim);">qué documentos <strong>son</strong> relevantes, etiquetado a mano</span>
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.43em; text-align:center; margin-top: 0.4em;">
+      Toda métrica de retrieval necesita las tres.
+      <strong style="color: var(--c-red);">Si no sabes las respuestas correctas, no puedes evaluar.</strong>
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Retrieval Quality Metrics"). El tercer ingrediente es el que cuesta: conseguirlo es trabajo humano. Se retoma al final de la unidad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Precisión y Recall</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-yellow);">Precisión</strong> — de lo que traje, ¿cuánto servía?</p>
+        <div class="katex-block" style="font-size: 0.85em; margin:0.15em 0;">\[ P = \frac{\text{relevantes recuperados}}{\text{total recuperados}} \]</div>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">Castiga traer basura.</p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-green);">Recall</strong> — de lo que servía, ¿cuánto traje?</p>
+        <div class="katex-block" style="font-size: 0.85em; margin:0.15em 0;">\[ R = \frac{\text{relevantes recuperados}}{\text{total relevantes}} \]</div>
+        <p style="margin:0.1em 0; color: var(--c-text-dim);">Castiga dejar cosas fuera.</p>
+      </div>
+    </div>
+    <table style="font-size: 0.37em; width: 92%; margin: 0.35em auto;">
+      <tr><th>Base con 10 relevantes</th><th>Corrida 1</th><th>Corrida 2</th></tr>
+      <tr><td>Documentos devueltos</td><td>12</td><td>15</td></tr>
+      <tr><td>De ellos, relevantes</td><td>8</td><td>9</td></tr>
+      <tr class="fragment fade-up"><td><strong>Precisión</strong></td><td>8/12 = <strong style="color: var(--c-yellow);">66%</strong></td><td>9/15 = <strong>60%</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong>Recall</strong></td><td>8/10 = <strong>80%</strong></td><td>9/10 = <strong style="color: var(--c-green);">90%</strong></td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center;">
+      La corrida 2 encontró <strong>más</strong> de lo relevante, pero trajo <strong>más ruido</strong>.
+      Es el mismo compromiso del slider de <em>k</em> de la unidad anterior.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Precision and Recall", "Example"). Los numeros 12/8 y 15/9 son los del original. Perfeccion (100% en ambas) = devolver EXACTAMENTE los relevantes y en los primeros lugares.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Todo Depende de k</h2>
+    <p style="font-size: 0.43em;">
+      Un retriever no "acierta" o "falla": devuelve una <strong>lista ordenada</strong>.
+      Las métricas solo tienen sentido <strong>a una profundidad k</strong>.
+    </p>
+    <div class="columns" style="font-size: 0.38em; margin-top: 0.25em;">
+      <div class="col-40">
+        <table style="width:100%; font-size:0.95em;">
+          <tr><th>Rank</th><th>¿Relevante?</th></tr>
+          <tr><td>1</td><td style="color: var(--c-green);">● sí</td></tr>
+          <tr><td>2</td><td style="color: var(--c-text-dim);">○ no</td></tr>
+          <tr><td>3</td><td style="color: var(--c-text-dim);">○ no</td></tr>
+          <tr><td>4</td><td style="color: var(--c-green);">● sí</td></tr>
+          <tr><td>5</td><td style="color: var(--c-text-dim);">○ no</td></tr>
+          <tr><td>6 – 10</td><td style="color: var(--c-green);">● 4 más</td></tr>
+        </table>
+      </div>
+      <div class="col-55">
+        <div style="font-size:1.05em;">
+          <p class="fragment fade-up" style="margin:0.3em 0; padding:0.25em 0.5em; background: rgba(255,255,0,0.06);">
+            <strong>Precisión@5</strong> = 2 de 5 = <strong style="color: var(--c-yellow);">40%</strong>
+          </p>
+          <p class="fragment fade-up" style="margin:0.3em 0; padding:0.25em 0.5em; background: rgba(255,255,0,0.06);">
+            <strong>Precisión@10</strong> = 6 de 10 = <strong style="color: var(--c-yellow);">60%</strong>
+          </p>
+          <p class="fragment fade-up" style="margin:0.3em 0; padding:0.25em 0.5em; background: rgba(131,193,103,0.06);">
+            <strong>Recall@10</strong> = 6 de 8 relevantes totales = <strong style="color: var(--c-green);">75%</strong>
+          </p>
+        </div>
+        <p class="fragment fade-up" style="margin-top:0.4em; color: var(--c-text-dim);">
+          Top-1 y top-5 son exigentes. En RAG se suele evaluar entre
+          <strong>top-5 y top-15</strong>: es lo que de verdad cabe en el prompt.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M2 ("Top k", "Example" con precision@5, precision@10 y recall@10). Notar que precision@10 SUBIO respecto a @5: no es monotona, depende de donde caigan los relevantes.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>MAP: Premiar el Buen Orden</h2>
+    <p style="font-size: 0.42em;">
+      Precisión y recall no distinguen si el documento bueno salió <strong>1º</strong> o <strong>10º</strong>.
+      <strong>Average Precision</strong> sí.
+    </p>
+    <div class="columns" style="font-size: 0.37em; margin-top: 0.2em;">
+      <div class="col-40">
+        <table style="width:100%; font-size:0.95em;">
+          <tr><th>Rank</th><th>¿Rel.?</th><th>Precisión@rank</th></tr>
+          <tr style="background: rgba(131,193,103,0.1);"><td>1</td><td style="color: var(--c-green);">●</td><td>1/1 = <strong>1.00</strong></td></tr>
+          <tr><td>2</td><td style="color: var(--c-text-dim);">○</td><td style="color: var(--c-text-dim);">1/2 = 0.50</td></tr>
+          <tr><td>3</td><td style="color: var(--c-text-dim);">○</td><td style="color: var(--c-text-dim);">1/3 = 0.33</td></tr>
+          <tr style="background: rgba(131,193,103,0.1);"><td>4</td><td style="color: var(--c-green);">●</td><td>2/4 = <strong>0.50</strong></td></tr>
+          <tr style="background: rgba(131,193,103,0.1);"><td>5</td><td style="color: var(--c-green);">●</td><td>3/5 = <strong>0.60</strong></td></tr>
+          <tr><td>6</td><td style="color: var(--c-text-dim);">○</td><td style="color: var(--c-text-dim);">3/6 = 0.50</td></tr>
+        </table>
+      </div>
+      <div class="col-55" style="font-size:1.05em;">
+        <p class="fragment fade-up" style="margin:0.25em 0;">
+          <strong>1.</strong> Sumar la precisión <strong>solo en las filas relevantes</strong>:<br>
+          <span style="font-family: 'Fira Code', monospace; color: var(--c-yellow);">1.00 + 0.50 + 0.60 = 2.10</span>
+        </p>
+        <p class="fragment fade-up" style="margin:0.25em 0;">
+          <strong>2.</strong> Dividir entre el número de relevantes:<br>
+          <span style="font-family: 'Fira Code', monospace; color: var(--c-yellow);">2.10 / 3 = 0.70</span> &nbsp;← <strong>AP</strong>
+        </p>
+        <p class="fragment fade-up" style="margin:0.25em 0;">
+          <strong>3.</strong> Promediar el AP sobre <strong>muchas consultas</strong>:<br>
+          eso es <strong style="color: var(--c-green);">MAP</strong> (Mean Average Precision).
+        </p>
+        <p class="fragment fade-up" style="margin:0.35em 0; color: var(--c-text-dim);">
+          Si el relevante del rank 4 hubiera salido 2º, su precisión sería 1.00 en vez de 0.50:
+          <strong>subir un buen documento sube el AP</strong>.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M2 ("Mean Average Precision"). Los numeros 1.0, 0.5, 0.6 -> 2.1/3 = 0.7 son los del original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>MRR: ¿Qué tan Arriba Está el Primero?</h2>
+    <p style="font-size: 0.43em;">
+      <strong>Reciprocal Rank</strong> mira una sola cosa: en qué posición apareció
+      el <strong>primer</strong> documento relevante.
+    </p>
+    <div class="columns" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="col-40">
+        <table style="width:100%;">
+          <tr><th>Primer relevante en…</th><th>RR</th></tr>
+          <tr><td>rank 1</td><td style="color: var(--c-green);"><strong>1.00</strong></td></tr>
+          <tr><td>rank 2</td><td>0.50</td></tr>
+          <tr><td>rank 4</td><td>0.25</td></tr>
+          <tr><td>rank 10</td><td style="color: var(--c-red);">0.10</td></tr>
+        </table>
+      </div>
+      <div class="col-55">
+        <p style="margin:0.1em 0;"><strong>MRR</strong> = promedio del RR sobre muchas consultas:</p>
+        <p style="margin:0.2em 0; font-family: 'Fira Code', monospace; font-size:0.92em;">
+          (1.00 + 0.33 + 0.17 + 0.50) / 4 = <strong style="color: var(--c-yellow);">0.50</strong>
+        </p>
+        <p class="fragment fade-up" style="margin-top:0.35em;">
+          Es la métrica correcta cuando <strong>basta con un documento bueno</strong> para responder:
+          preguntas factuales, búsqueda de un manual, "¿cuál es el código de error 502?".
+        </p>
+        <p class="fragment fade-up" style="margin-top:0.25em; color: var(--c-text-dim);">
+          No sirve cuando la respuesta requiere <strong>juntar varias fuentes</strong>: ahí manda el recall.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M2 ("Reciprocal rank", "Mean Reciprocal Rank"). Los cuatro valores 1.0, 0.33, 0.17 y 0.5 son los del original.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora las Métricas</h2>
+    <div class="widget-container">
+      <canvas id="metrics-canvas" width="880" height="336" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.45em; margin-top:0.3em; flex-wrap:wrap;">
+        <span style="font-size:0.55em; color: var(--c-text-dim);">ordenado por</span>
+        <button class="widget-btn fi-btn metrics-src-btn" data-src="bm25">BM25</button>
+        <button class="widget-btn fi-btn metrics-src-btn" data-src="sem">semántica</button>
+        <button class="widget-btn fi-btn metrics-src-btn" data-src="rrf">híbrida (RRF)</button>
+        <div class="widget-label" style="font-size:0.72em; margin-left:0.6em;">k <span class="widget-value" id="metrics-k-value">5</span>
+          <input type="range" id="metrics-k" class="widget-slider" min="1" max="12" step="1" value="5" style="width:110px; margin-left:0.4em;">
+        </div>
+      </div>
+      <div id="metrics-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.25em; font-size:0.52em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio, sobre el mismo corpus y con un ground truth explicito de 3 documentos relevantes.
+      Guion: con k=5, BM25 da AP 0.500 y la semantica 0.917 — el MISMO corpus y la MISMA consulta,
+      solo cambia quien ordeno. Subir k a 10: el recall llega a 100% en los tres, pero la precision cae a 30%.
+      Es la demostracion de que "mejor retriever" no significa nada sin decir a que k y con que metrica.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Métrica Usar</h2>
+    <table style="font-size: 0.39em; width: 100%;">
+      <tr><th>Métrica</th><th>Responde</th><th>Úsala cuando…</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-green);">Recall@k</strong></td>
+        <td>¿se me escapó algo relevante?</td>
+        <td>es la más citada: captura el objetivo fundamental del retriever</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-yellow);">Precisión@k</strong></td>
+        <td>¿cuánta basura le estoy metiendo al prompt?</td>
+        <td>la ventana de contexto es cara o el LLM se distrae</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-blue);">MAP@k</strong></td>
+        <td>¿los buenos están arriba?</td>
+        <td>el orden importa (el LLM pesa más lo primero del contexto)</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-purple);">MRR</strong></td>
+        <td>¿qué tan rápido aparece el primero bueno?</td>
+        <td>con un solo documento correcto basta para responder</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      No se elige una: se reportan varias. Sirven para <strong>comparar configuraciones</strong>
+      (¿subir β mejoró?) mucho más que como nota absoluta.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("How to use retriever metrics"). El uso real de estas metricas es de REGRESION: se fija una linea base y se verifica que cada cambio de configuracion la mejore, igual que con el experiment tracking de la unidad 9.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Costo Escondido: el Ground Truth</h2>
+    <p style="font-size: 0.44em;">
+      Todas las métricas anteriores dependen de tener <strong>etiquetas de relevancia</strong>.
+      Nadie te las regala.
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.3em 0.5em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+        <strong>Etiquetado manual</strong> — 50 a 100 consultas representativas, con sus documentos
+        relevantes marcados a mano. <span style="color: var(--c-text-dim);">Caro, pero es el estándar de oro.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue);">
+        <strong>Datos de uso</strong> — qué documento abrió o marcó útil el usuario.
+        <span style="color: var(--c-text-dim);">Gratis y masivo, pero sesgado: solo se hace clic en lo que se mostró.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.3em 0.5em; background: rgba(255,134,47,0.07); border-left: 3px solid var(--c-orange);">
+        <strong>Consultas sintéticas</strong> — pedirle a un LLM que genere preguntas
+        <em>a partir de</em> cada documento; ese documento es, por construcción, el relevante.
+        <span style="color: var(--c-text-dim);">Rápido y sorprendentemente útil para arrancar.</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Para el capstone: <strong>30 consultas etiquetadas a mano</strong> valen más que cualquier
+      intuición sobre si el retriever "se siente" bien.
+    </p>
+    <aside class="notes">Contenido propio, ampliando "All metrics depend on having ground truth relevant documents" de RAG_M2. Las consultas sinteticas son hoy la practica mas comun para arrancar un set de evaluacion; conviene mencionarlas porque es lo que los estudiantes pueden hacer en una tarde para su capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="font-size: 0.4em;">
+      <div class="step fragment fade-up"><strong style="color: var(--c-purple);">Metadata</strong> —
+        recorta por criterios rígidos. Rápida y confiable, pero <strong>no ordena</strong> e inútil sola.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-blue);">Keyword (BM25)</strong> —
+        puntúa por coincidencia exacta, con IDF para premiar lo raro, saturación (k₁) y
+        normalización de longitud (b). Imbatible con términos raros; ciega ante sinónimos.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-green);">Semántica</strong> —
+        puntúa por significado, con un modelo entrenado <strong>contrastivamente</strong>
+        a punta de pares positivos y negativos. Nunca mezcles vectores de modelos distintos.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-yellow);">Hybrid + RRF</strong> —
+        fusiona las listas usando solo posiciones, con <strong>k</strong> (cuánto manda el 1º) y
+        <strong>β</strong> (cuánto pesa cada búsqueda).</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-orange);">Evaluación</strong> —
+        precisión, recall, MAP y MRR, siempre <strong>@k</strong> y siempre contra un ground truth.
+        Sin medir, ajustar parámetros es adivinar.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
+      En los siguientes módulos: cómo se <strong>parten</strong> los documentos (chunking), el
+      <strong>re-ranking</strong>, y la evaluación del sistema RAG completo — no solo del retriever.
+    </p>
+    <aside class="notes">Fuente: RAG_M2 ("Conclusion"). Cierra el mapa que se abrio en el tercer slide de la unidad; conviene volver a ese slide y marcar que ya se cubrieron las tres ramas y la fusion.</aside>
+  </section>
+
+</section>
+
 </div>
 </div>
 
@@ -7068,6 +8184,11 @@ respuesta = cliente.chat.completions.create(model="...", temperature=0,
 <script src="js/widgets/rag-data.js"></script>
 <script src="js/widgets/rag-pipeline-widget.js"></script>
 <script src="js/widgets/rag-retriever-widget.js"></script>
+<script src="js/widgets/ir-data.js"></script>
+<script src="js/widgets/bm25-widget.js"></script>
+<script src="js/widgets/contrastive-widget.js"></script>
+<script src="js/widgets/rrf-widget.js"></script>
+<script src="js/widgets/retrieval-metrics-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -7262,6 +8383,30 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initRagRetrieverWidget === 'function') {
       initRagRetrieverWidget();
       widgetsInitialized.ragRetriever = true;
+    }
+  }
+  if (slide.querySelector('#bm25-canvas') && !widgetsInitialized.bm25) {
+    if (typeof initBm25Widget === 'function') {
+      initBm25Widget();
+      widgetsInitialized.bm25 = true;
+    }
+  }
+  if (slide.querySelector('#contrastive-canvas') && !widgetsInitialized.contrastive) {
+    if (typeof initContrastiveWidget === 'function') {
+      initContrastiveWidget();
+      widgetsInitialized.contrastive = true;
+    }
+  }
+  if (slide.querySelector('#rrf-canvas') && !widgetsInitialized.rrf) {
+    if (typeof initRrfWidget === 'function') {
+      initRrfWidget();
+      widgetsInitialized.rrf = true;
+    }
+  }
+  if (slide.querySelector('#metrics-canvas') && !widgetsInitialized.retrievalMetrics) {
+    if (typeof initRetrievalMetricsWidget === 'function') {
+      initRetrievalMetricsWidget();
+      widgetsInitialized.retrievalMetrics = true;
     }
   }
 });
