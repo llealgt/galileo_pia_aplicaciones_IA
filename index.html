@@ -67,6 +67,7 @@
         <a class="toc-item" onclick="Reveal.slide(8, 0)"><span class="toc-num">8</span>Callbacks</a>
         <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
         <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
+        <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Large Language Models</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -5925,6 +5926,488 @@ docs = retriever.invoke(
   </section>
 </section>
 
+<!-- ============================================================
+     SECCION 11 — Large Language Models
+     ============================================================ -->
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Large Language Models</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 780px;">
+        Qué hace realmente un LLM por dentro: predecir el siguiente token, una y otra vez. De ahí salen
+        <strong style="color: var(--c-yellow);">todas</strong> sus virtudes y todos sus defectos — incluidas
+        las alucinaciones.
+      </p>
+    </div>
+    <aside class="notes">
+      Unidad basada en la seccion "Introduction to LLMs" del modulo 1 del curso de RAG de DeepLearning.AI
+      (Zain Hasan), ampliada. Los widgets usan distribuciones REALES de un GPT-2 en espanol.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Un LLM es un Autocompletado muy Sofisticado</h2>
+    <p style="font-size: 0.55em; text-align:center; margin-top: 0.3em;">
+      <span style="color: var(--c-text);">Los LLMs son simplemente</span>
+      <span style="color: var(--c-yellow);"><strong>autocompletado</strong></span>
+      <span style="color: var(--c-text-dim);"> de lujo</span>
+    </p>
+    <p style="font-size: 0.46em; margin-top: 0.4em;">
+      Suena reduccionista, pero es literalmente lo que hace: dado un texto, <strong>predecir qué viene
+      después</strong>. Todo lo demás — responder preguntas, escribir código, resumir — sale de hacer eso
+      muy bien y muchas veces seguidas.
+    </p>
+    <div class="fragment fade-up" style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em; margin-top: 0.4em;">
+      <p style="font-size: 0.5em; margin: 0.1em 0;"><strong>Prompt:</strong>
+        <span style="font-family: 'Fira Code', monospace;">Qué día tan bonito, el sol está ___</span></p>
+      <p style="font-size: 0.44em; margin: 0.3em 0 0.1em 0; color: var(--c-text-dim);">Completions posibles:</p>
+      <p style="font-size: 0.46em; font-family: 'Fira Code', monospace; margin: 0.15em 0;">
+        …el sol está <span style="background: rgba(255,134,47,0.35); padding: 0 0.25em;">brillando</span></p>
+      <p style="font-size: 0.46em; font-family: 'Fira Code', monospace; margin: 0.15em 0;">
+        …el sol está <span style="background: rgba(88,196,221,0.35); padding: 0 0.25em;">muy alto</span></p>
+      <p style="font-size: 0.46em; font-family: 'Fira Code', monospace; margin: 0.15em 0;">
+        …el sol está <span style="background: rgba(131,193,103,0.35); padding: 0 0.25em;">saliendo</span></p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Fíjate: <strong>varias continuaciones son válidas</strong>. No hay una única respuesta correcta, y esa
+      idea va a explicar casi todo lo que sigue.
+    </p>
+    <aside class="notes">Fuente: RAG_M1, seccion Introduction to LLMs ("LLMs are just fancy autocomplete").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Tokens: la Unidad de Trabajo</h2>
+    <p style="font-size: 0.46em;">
+      El modelo no ve letras ni palabras: ve <strong>tokens</strong>, piezas de palabra de un vocabulario
+      fijo (típicamente entre <strong>10,000 y 100,000</strong> entradas).
+    </p>
+    <div style="text-align:center; margin: 0.35em 0;">
+      <span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(88,196,221,0.35); padding:0.15em 0.3em; border-radius:3px;">Londres</span>
+      <span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(131,193,103,0.35); padding:0.15em 0.3em; border-radius:3px; margin-left:0.4em;">puerta</span>
+      <span style="margin-left:1.2em;">
+        <span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(255,134,47,0.35); padding:0.15em 0.3em; border-radius:3px;">in</span><span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(228,139,176,0.35); padding:0.15em 0.3em; border-radius:3px;">feliz</span>
+      </span>
+      <span style="margin-left:1.2em;">
+        <span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(154,114,172,0.35); padding:0.15em 0.3em; border-radius:3px;">program</span><span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(92,208,179,0.35); padding:0.15em 0.3em; border-radius:3px;">ática</span><span style="font-family:'Fira Code',monospace; font-size:0.5em; background:rgba(255,255,0,0.3); padding:0.15em 0.3em; border-radius:3px;">mente</span>
+      </span>
+    </div>
+    <ul style="font-size: 0.42em;">
+      <li class="fragment fade-up">Las palabras <strong>comunes</strong> suelen ser un solo token</li>
+      <li class="fragment fade-up">Las <strong>largas o raras</strong> se parten en varios</li>
+      <li class="fragment fade-up">Los <strong>signos de puntuación</strong> y hasta los espacios son tokens</li>
+      <li class="fragment fade-up">Por eso un vocabulario de ~50,000 tokens puede representar
+        <strong>cualquier</strong> palabra, incluso una que nunca vio</li>
+    </ul>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      💰 Importa en la práctica: las APIs <strong>cobran por token</strong>, y el límite de contexto se mide
+      en tokens. Como regla gruesa en español, <strong>1 token ≈ 0.75 palabras</strong>.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1 (slide "Token"). El tokenizador tipico es BPE o SentencePiece.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Idea Central: es un Clasificador</h2>
+    <p style="font-size: 0.46em;">
+      Aquí está el corazón de todo, y es más simple de lo que parece. Un LLM se entrena con la misma
+      estructura que un <strong>clasificador</strong> de los que ya conocemos:
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Un clasificador de imágenes</h3>
+        <p style="font-size: 0.78em;"><strong>Entrada:</strong> los píxeles de una imagen</p>
+        <p style="font-size: 0.78em;"><strong>Salida:</strong> una probabilidad por cada una de las
+          10 clases</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">softmax sobre 10 categorías</p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Un LLM</h3>
+        <p style="font-size: 0.78em;"><strong>Entrada:</strong> una secuencia de tokens</p>
+        <p style="font-size: 0.78em;"><strong>Salida:</strong> una probabilidad por cada token
+          del vocabulario</p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">softmax sobre <strong>50,000</strong>
+          categorías</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.35em;">
+      Es un <strong style="color: var(--c-yellow);">clasificador multiclase gigante</strong> cuya pregunta,
+      repetida millones de veces durante el entrenamiento, siempre es la misma:
+      <em>"dado este texto, ¿cuál es el siguiente token?"</em>
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      Y como es un clasificador, todo lo de la unidad de evaluación aplica: la salida es una
+      <strong>distribución de probabilidad</strong>, no una decisión. Lo que cambia es que aquí esa
+      distribución se usa para <em>generar</em>.
+    </blockquote>
+    <aside class="notes">
+      Este encuadre es el pedido explicito: entrada = secuencia de tokens, salida = clasificacion sobre el
+      siguiente token. No entramos en la funcion de perdida, pero conviene decir que es la misma
+      cross-entropy que ya vieron en clasificacion.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Bucle de Generación</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.72em;">
+      <div class="step fragment fade-up">1. <strong>Procesar el estado actual</strong> — todo el texto que
+        lleva hasta ahora (prompt + lo ya generado)</div>
+      <div class="step fragment fade-up">2. <strong>Calcular probabilidades</strong> — una por cada token
+        del vocabulario</div>
+      <div class="step fragment fade-up">3. <strong>Seleccionar el siguiente token</strong> — muestreando de
+        esa distribución</div>
+      <div class="step fragment fade-up">4. <strong>Agregarlo al texto y volver al paso 1</strong></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.4em;">
+      A esto se le llama <strong style="color: var(--c-yellow);">autorregresivo</strong>: el modelo se
+      alimenta de su propia salida. Cada token nuevo cambia el contexto del siguiente — por eso las
+      continuaciones tienen coherencia.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      ⚙️ Consecuencia práctica: generar 500 tokens cuesta <strong>500 pasadas</strong> por el modelo, no
+      una. Por eso la generación se ve "escribiendo" y por eso las respuestas largas cuestan más.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1 (slides del ciclo Process / Calculate / Select y "Autoregressive").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Generación Token por Token</h2>
+    <div class="widget-container">
+      <canvas id="token-gen-canvas" width="880" height="360" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.35em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn tg-prompt-btn" data-prompt="sol">"el sol está…"</button>
+        <button class="widget-btn fi-btn tg-prompt-btn" data-prompt="einstein">"¿Cuándo nació Einstein?"</button>
+        <div class="widget-label" style="font-size:0.75em;">T <span class="widget-value" id="token-gen-temp-value">1.00</span>
+          <input type="range" id="token-gen-temp" class="widget-slider" min="0" max="2" step="0.05" value="1" style="width:90px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" style="font-size:0.75em;">top-k <span class="widget-value" id="token-gen-topk-value">4</span>
+          <input type="range" id="token-gen-topk" class="widget-slider" min="1" max="4" step="1" value="4" style="width:70px; margin-left:0.3em;">
+        </div>
+        <button class="widget-btn fi-btn" id="token-gen-next">Siguiente token</button>
+        <button class="widget-btn fi-btn" id="token-gen-all">Generar todo</button>
+        <button class="widget-btn fi-btn" id="token-gen-reset">Otra corrida</button>
+      </div>
+      <div id="token-gen-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.3em; font-size:0.55em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.36em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      Distribuciones <strong>reales</strong> de un GPT-2 en español. Presiona <strong>Otra corrida</strong>
+      varias veces con el mismo prompt: el resultado <strong>cambia</strong>.
+    </p>
+    <aside class="notes">
+      Widget propio con datos reales (js/widgets/llm-tree-data.js), precalculados con DeepESP/gpt2-spanish.
+      Guion: (1) "Siguiente token" paso a paso viendo la ruleta del muestreo; (2) bajar T a 0.1 y notar que
+      siempre sale lo mismo; (3) subirla a 2 y ver que se aplana; (4) "Otra corrida" varias veces.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dos Corridas, Dos Respuestas</h2>
+    <p style="font-size: 0.46em;">
+      Como el token se <strong>muestrea</strong> de una distribución, el mismo prompt puede producir textos
+      distintos. No es un error: es el diseño.
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.2em;">
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.42em; color: var(--c-blue);"><strong>Corrida 1</strong></p>
+        <p style="font-family:'Fira Code',monospace; font-size: 0.42em; background: rgba(13,13,26,0.5); padding: 0.4em; border-radius: 6px;">
+          Qué día tan bonito, el sol está<br>
+          <span style="color: var(--c-blue);">muy alto, y el</span>…
+        </p>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.42em; color: var(--c-orange);"><strong>Corrida 2</strong></p>
+        <p style="font-family:'Fira Code',monospace; font-size: 0.42em; background: rgba(13,13,26,0.5); padding: 0.4em; border-radius: 6px;">
+          Qué día tan bonito, el sol está<br>
+          <span style="color: var(--c-orange);">en el cielo y</span>…
+        </p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🎲 <strong>Implicaciones que sí duelen:</strong> tus pruebas automatizadas no pueden comparar contra
+      un texto exacto; un bug reportado por un usuario puede no reproducirse; y evaluar un sistema con LLM
+      exige correr <strong>varias veces</strong>, igual que hacíamos con las semillas en cross-validation.
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      Si quieres reproducibilidad: <code>temperature=0</code> (siempre el más probable) y, si la API lo
+      ofrece, fijar un <code>seed</code>. Aun así, no está garantizado al 100%.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("running the same prompt leads to different completion"). Los dos textos son caminos reales del arbol precalculado.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Parámetros de Muestreo</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th>Parámetro</th><th>Qué hace</th><th>Efecto</th><th>Valores típicos</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-yellow);">temperature</strong></td>
+        <td>Divide los logits antes del softmax: aplana o afila la distribución</td>
+        <td>Baja → conservador y repetitivo. Alta → creativo y caótico</td>
+        <td>0 – 1.0 (creativo: 1.2)</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">top-k</strong></td>
+        <td>Solo considera los <em>k</em> tokens más probables</td>
+        <td>Corta la cola larga de tokens absurdos</td>
+        <td>k = 40 – 50</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">top-p</strong> (nucleus)</td>
+        <td>Toma los tokens que acumulen probabilidad <em>p</em></td>
+        <td>Como top-k pero <strong>adaptativo</strong>: pocos candidatos si el modelo está seguro,
+          muchos si duda</td>
+        <td>p = 0.9 – 0.95</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">max_tokens</strong></td>
+        <td>Corta la generación</td><td>Controla costo y latencia</td><td>según el caso</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-purple);">frequency / presence penalty</strong></td>
+        <td>Castiga tokens ya usados</td><td>Reduce repeticiones</td><td>0 – 1</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-teal);">stop</strong></td>
+        <td>Secuencias que detienen la generación</td><td>Útil para formatos estructurados</td>
+        <td><code>["\\n\\n"]</code></td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.38em; margin-top: 0.25em;">
+      🧭 <strong>Regla práctica:</strong> ajusta <strong>una</strong> de temperature o top-p, no ambas. Para
+      tareas factuales (extracción, clasificación, SQL) usa <code>temperature=0</code>. Para redacción
+      creativa, sube a 0.8–1.0.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio, ampliando el material del curso de RAG. temperature=0 en la practica es "greedy":
+      siempre el argmax. Nota: con temperature=0 muchas APIs siguen sin ser 100% deterministas por como
+      paralelizan las operaciones en GPU.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Temperatura: la Intuición</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.42em;">La temperatura reescala las probabilidades antes de muestrear:</p>
+        <p class="katex-block" style="font-size: 0.62em;">p_i^{(T)} \propto p_i^{1/T}</p>
+        <ul style="font-size: 0.4em;">
+          <li><strong>T &lt; 1</strong> — <em>afila</em>: los probables se vuelven aún más probables</li>
+          <li><strong>T = 1</strong> — la distribución original del modelo</li>
+          <li><strong>T &gt; 1</strong> — <em>aplana</em>: los raros ganan oportunidad</li>
+          <li><strong>T → 0</strong> — siempre el máximo: <strong>determinista</strong></li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.4em; color: var(--c-text-dim);">Ejemplo con la distribución real del widget
+          (<code>el sol está…</code>):</p>
+        <table style="font-size: 0.36em; width: 100%;">
+          <tr><th>token</th><th>T=0.5</th><th>T=1</th><th>T=1.5</th></tr>
+          <tr><td><code>muy</code></td><td>32%</td><td>28%</td><td>27%</td></tr>
+          <tr><td><code>alto</code></td><td>30%</td><td>27%</td><td>26%</td></tr>
+          <tr><td><code>en</code></td><td>29%</td><td>27%</td><td>26%</td></tr>
+          <tr><td><code>a</code></td><td>11%</td><td>17%</td><td>20%</td></tr>
+        </table>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.25em;">
+          Aquí los tres primeros están casi empatados, así que la temperatura mueve poco. Cuando el modelo
+          <strong>está seguro</strong> (como el 68.7% del ejemplo de Einstein) el efecto es mucho más
+          dramático.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      Mueve el slider del widget anterior y observa cómo cambian las barras naranjas: eso es exactamente
+      esta fórmula.
+    </p>
+    <aside class="notes">Los porcentajes salen de aplicar p^(1/T) renormalizado sobre los 4 candidatos reales del arbol.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Patrones Estadísticos, no Conocimiento</h2>
+    <p style="font-size: 0.46em;">
+      El modelo aprende <strong>qué texto suele seguir a qué texto</strong> en internet. Eso no siempre
+      coincide con "responder la pregunta". Mira lo que un GPT-2 en español predice después de
+      <code>¿Cuándo nació Einstein?</code>:
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em 0.7em; margin-top: 0.3em;">
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5.5em; color:var(--c-red);">68.7%</span>
+        <span style="display:inline-block; background:var(--c-red); height:0.7em; width:11em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;">salto de línea</span></p>
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5.5em; color:var(--c-orange);">14.7%</span>
+        <span style="display:inline-block; background:var(--c-orange); height:0.7em; width:2.4em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;"><strong>"¿"</strong> — empieza <em>otra pregunta</em></span></p>
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5.5em; color:var(--c-text-dim);">3.4%</span>
+        <span style="display:inline-block; background:var(--c-text-dim); height:0.7em; width:0.6em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;">un guion de diálogo</span></p>
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5.5em; color:var(--c-green);">0.5%</span>
+        <span style="display:inline-block; background:var(--c-green); height:0.7em; width:0.25em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;">"En" — <em>por fin</em> algo que parece una respuesta</span></p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Y si elegimos ese <strong>"¿"</strong>, el token más probable después es
+      <strong style="color: var(--c-yellow);">"Cuándo"</strong> (19.6%). Es decir: el modelo continúa con
+      <em>"¿Cuándo nació Planck?"</em> — porque en internet las preguntas
+      <strong>viven en listas de preguntas</strong>, no seguidas de su respuesta.
+    </p>
+    <aside class="notes">
+      Numeros medidos con DeepESP/gpt2-spanish al preparar esta unidad. Es el ejemplo pedido: continuar una
+      pregunta con otra pregunta es estadisticamente natural. Los modelos que si responden lo hacen porque
+      DESPUES se les entrena con instrucciones (instruction tuning / RLHF), no por el pre-entrenamiento.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Respuestas Probables, no Correctas</h2>
+    <p style="font-size: 0.46em;">
+      Dejemos que ese mismo modelo responda, escogiendo siempre el token más probable:
+    </p>
+    <div style="text-align:center; background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em; margin: 0.35em 0;">
+      <p style="font-family:'Fira Code',monospace; font-size: 0.52em; margin: 0.2em 0;">
+        ¿Cuándo nació Einstein? →
+        <span style="color: var(--c-red);"><strong>"En 1919,…"</strong></span></p>
+      <p style="font-size: 0.42em; color: var(--c-text-dim); margin: 0.3em 0 0 0;">
+        Einstein nació en <strong style="color: var(--c-green);">1879</strong>. 1919 es el año del eclipse
+        que confirmó la relatividad — un año que aparece <em>muchísimo</em> junto a su nombre.
+      </p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em;">
+      La respuesta tiene la <strong>forma</strong> correcta, suena segura, y es <strong>falsa</strong>. El
+      modelo no consultó nada: produjo la secuencia de tokens que estadísticamente encaja mejor.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.25em;">
+      🎯 <strong>La frase que hay que llevarse de esta unidad:</strong> un LLM está diseñado para generar
+      texto <strong style="color: var(--c-yellow);">probable</strong>, no texto
+      <strong style="color: var(--c-yellow);">verdadero</strong>. Cuando ambos coinciden, parece que sabe;
+      cuando no, <em>alucina con la misma seguridad</em>.
+    </blockquote>
+    <aside class="notes">
+      El error es real y medido, no inventado: el camino greedy del modelo produce "En 1919". Es el mejor
+      ejemplo posible de "truthful != probable" del material de RAG_M1.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo Aprenden</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em;">
+          Se entrenan con <strong>colecciones enormes de texto</strong> y suelen tener
+          <strong>miles de millones de parámetros</strong>.
+        </p>
+        <p style="font-size: 0.42em;">
+          El procedimiento es el de siempre — el mismo bucle de la unidad de callbacks:
+        </p>
+        <ol style="font-size: 0.4em;">
+          <li>Tapar un token del texto real</li>
+          <li>Pedirle al modelo que lo prediga</li>
+          <li>Comparar con el token verdadero</li>
+          <li>Ajustar los parámetros y repetir</li>
+        </ol>
+        <p style="font-size: 0.38em; color: var(--c-text-dim);">
+          Nota: <strong>nadie etiquetó nada</strong>. La "etiqueta" es la siguiente palabra del propio
+          texto — por eso se puede entrenar con todo internet.
+        </p>
+      </div>
+      <div class="col-45">
+        <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em;">
+          <p style="font-size: 0.4em; color: var(--c-text-dim); margin: 0.1em 0;">Ejemplos de entrenamiento:</p>
+          <p style="font-family:'Fira Code',monospace; font-size: 0.42em; margin: 0.25em 0;">
+            Qué día tan bonito, el sol
+            <span style="background:rgba(255,255,0,0.25); padding:0 0.3em;">_____</span></p>
+          <p style="font-family:'Fira Code',monospace; font-size: 0.42em; margin: 0.25em 0;">
+            Las rosas son rojas, las violetas
+            <span style="background:rgba(255,255,0,0.25); padding:0 0.3em;">_____</span></p>
+        </div>
+        <blockquote style="font-size: 0.38em; margin-top: 0.4em;">
+          Antes de entrenar, el modelo produce <strong>galimatías</strong>:
+          <em>"¡Adelante a la pista de baile de Saturno!", maulló, con la cola transmitiendo ritmos disco.</em>
+        </blockquote>
+      </div>
+    </div>
+    <aside class="notes">
+      Fuente: RAG_M1 (slides "How LLMs Learn"). Es aprendizaje auto-supervisado: la supervision sale del
+      propio texto. No entramos en la funcion de perdida, pero es cross-entropy sobre el vocabulario.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Por Qué Alucinan</h2>
+    <ul style="font-size: 0.46em;">
+      <li class="fragment fade-up"><strong style="color: var(--c-yellow);">Generan secuencias probables</strong>
+        — solo reproducen patrones estadísticos de sus datos de entrenamiento</li>
+      <li class="fragment fade-up"><strong style="color: var(--c-orange);">Los huecos de conocimiento se
+        rellenan igual</strong> — si no lo sabe, no se calla: produce lo que <em>suena</em> bien</li>
+      <li class="fragment fade-up"><strong style="color: var(--c-red);">Verdadero ≠ probable</strong> — están
+        diseñados para lo segundo, y nada en el entrenamiento premia decir "no sé"</li>
+    </ul>
+    <p class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.4em;">
+      Además hay cosas que sencillamente <strong>no pueden saber</strong>:
+    </p>
+    <div class="columns fragment fade-up" style="margin-top: 0.15em;">
+      <div class="col-45">
+        <ul style="font-size: 0.4em;">
+          <li><strong>Datos privados</strong>: tus documentos internos no estaban en internet</li>
+          <li><strong>Información difícil de encontrar</strong>: lo que no está bien representado en la web</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <ul style="font-size: 0.4em;">
+          <li><strong>Datos en tiempo real</strong>: se entrenaron con el pasado y no se actualizan solos</li>
+          <li><strong>Lo posterior a su corte</strong> de entrenamiento</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      La solución no es pedirle que "no invente": es <strong style="color: var(--c-yellow);">darle la
+      información en el prompt</strong>. Eso es RAG, y es la siguiente unidad.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Why LLMs Hallucinate" y "What LLMs don't know").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Ventana de Contexto</h2>
+    <p style="font-size: 0.46em;">
+      Si la solución es meter información en el prompt, ¿por qué no meterla <strong>toda</strong>? Por dos
+      razones:
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Costo de cómputo</h3>
+        <ul style="font-size: 0.72em; text-align:left;">
+          <li>Prompts más largos cuestan más tiempo y más dinero</li>
+          <li>El modelo revisa <strong>todos</strong> los tokens…</li>
+          <li>…y lo hace <strong>antes de generar cada token nuevo</strong></li>
+        </ul>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Límite duro</h3>
+        <ul style="font-size: 0.72em; text-align:left;">
+          <li>Cada modelo tiene una <strong>ventana de contexto</strong> máxima</li>
+          <li>Modelos pequeños: unos pocos miles de tokens</li>
+          <li>Los más grandes: cientos de miles o millones</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      ⚠️ Y aunque quepa, más contexto no siempre es mejor: los modelos tienden a
+      <strong>prestar menos atención a lo que queda en medio</strong> de un prompt muy largo. Por eso
+      importa <em>seleccionar</em> qué se le pasa — que es justo el trabajo del retriever de la unidad
+      anterior.
+    </blockquote>
+    <aside class="notes">
+      Fuente: RAG_M1 ("Why not add everything?"). El fenomeno del medio se conoce como "lost in the middle"
+      (Liu et al., 2023).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Hay que Llevarse</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.68em;">
+      <div class="step fragment fade-up">Un LLM es un <strong>clasificador del siguiente token</strong>:
+        entra una secuencia, sale una distribución sobre el vocabulario</div>
+      <div class="step fragment fade-up">Genera <strong>autorregresivamente</strong>: muestrea un token, lo
+        agrega, y repite</div>
+      <div class="step fragment fade-up">Como <strong>muestrea</strong>, el mismo prompt da resultados
+        distintos — y eso se controla con temperature, top-k y top-p</div>
+      <div class="step fragment fade-up">Reproduce <strong>patrones estadísticos</strong>: continuar una
+        pregunta con otra pregunta le resulta más natural que responderla</div>
+      <div class="step fragment fade-up">Produce texto <strong>probable</strong>, no
+        <strong>verdadero</strong>: por eso alucina con total seguridad</div>
+      <div class="step fragment fade-up">No sabe lo privado, lo reciente ni lo raro → hay que
+        <strong>darle el contexto</strong>, y ahí entra RAG</div>
+    </div>
+    <aside class="notes">Cierre de la unidad. Conecta hacia adelante con RAG y hacia atras con embeddings y busqueda semantica, que son las piezas del retriever.</aside>
+  </section>
+</section>
+
 </div>
 </div>
 
@@ -5959,6 +6442,8 @@ docs = retriever.invoke(
 <script src="js/widgets/embeddings-data.js"></script>
 <script src="js/widgets/embedding-space-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
+<script src="js/widgets/llm-tree-data.js"></script>
+<script src="js/widgets/token-generation-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -6129,6 +6614,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSemanticSearchWidget === 'function') {
       initSemanticSearchWidget();
       widgetsInitialized.semanticSearch = true;
+    }
+  }
+  if (slide.querySelector('#token-gen-canvas') && !widgetsInitialized.tokenGen) {
+    if (typeof initTokenGenerationWidget === 'function') {
+      initTokenGenerationWidget();
+      widgetsInitialized.tokenGen = true;
     }
   }
 });
