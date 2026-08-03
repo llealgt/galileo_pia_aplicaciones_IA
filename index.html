@@ -7640,22 +7640,22 @@ for doc, s in sorted(zip(documentos, puntajes), key=lambda x: -x[1]):
   <section data-transition="fade">
     <h2>Lo que Hay que Llevarse</h2>
     <div style="font-size: 0.43em;">
-      <div class="fragment fade-up" style="margin:0.3em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0;">
         ● Los vectores semánticos son <strong>abstractos</strong>: ninguna dimensión significa algo por sí sola.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0;">
         ● <strong>Antes</strong> de entrenar, las posiciones no significan nada. Son ruido.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0;">
         ● <strong>Después</strong>, la posición significa algo <em>porque se formaron los grupos</em>:
         el significado es la <strong>estructura</strong>, no la coordenada.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
         ● <strong style="color: var(--c-red);">Nunca compares vectores de modelos distintos.</strong>
         Cada modelo entrenó su propio espacio, con su propia aleatoriedad inicial. Un coseno entre
         vectores de dos modelos distintos es un número sin ningún significado.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0; color: var(--c-text-dim);">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0; color: var(--c-text-dim);">
         ● Corolario práctico: si cambias de modelo de embeddings, hay que
         <strong>reindexar toda la base</strong>. No es una migración menor.
       </div>
@@ -8330,18 +8330,8 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
       El problema de NSW es que arranca en un nodo cualquiera y avanza <strong>a pasos cortos</strong>.
       HNSW agrega capas con cada vez <strong>menos nodos</strong>, para cruzar el espacio rápido.
     </p>
-    <div style="font-size: 0.4em; margin-top: 0.3em;">
-      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
-        <strong>Capa 3</strong> — se queda con ~10 vectores al azar. Grafo ralo, saltos enormes.
-        <span style="color: var(--c-text-dim);">Aterrizar en la región correcta cuesta 2 o 3 saltos.</span>
-      </div>
-      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(255,134,47,0.08); border-left: 3px solid var(--c-orange);">
-        <strong>Capa 2</strong> — ~100 vectores. Se entra por el mejor nodo de la capa 3 y se afina.
-      </div>
-      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
-        <strong>Capa 1</strong> — los 1,000 vectores completos. Se entra por el mejor de la capa 2
-        y se hace la búsqueda fina, ya <strong>cerca</strong> del objetivo.
-      </div>
+    <div style="margin-top: 0.2em;">
+      <svg viewBox="0 0 780 358" style="width:100%; max-width:790px; display:block; margin:0 auto;"><rect x="6" y="0" width="768" height="104" rx="9" fill="#FC6255" opacity="0.06"/><text x="20" y="19" fill="#FC6255" font-size="13" font-weight="700" font-family="Fira Code, monospace">Capa 3</text><text x="84" y="19" fill="#a8a290" font-size="10.5" font-family="Fira Code, monospace">~10 vectores · saltos enormes</text><circle cx="248" cy="38" r="3.2" fill="#FC6255" opacity="0.42"/><circle cx="96" cy="64" r="3.2" fill="#FC6255" opacity="0.42"/><circle cx="324" cy="33" r="3.2" fill="#FC6255" opacity="0.42"/><circle cx="595" cy="73" r="6" fill="#FC6255"/><circle cx="595" cy="73" r="11" fill="none" stroke="#FC6255" stroke-width="1.6"/><circle cx="653" cy="47" r="3.2" fill="#FC6255" opacity="0.42"/><circle cx="167" cy="41" r="3.2" fill="#FC6255" opacity="0.42"/><rect x="6" y="118" width="768" height="104" rx="9" fill="#FF862F" opacity="0.06"/><text x="20" y="137" fill="#FF862F" font-size="13" font-weight="700" font-family="Fira Code, monospace">Capa 2</text><text x="84" y="137" fill="#a8a290" font-size="10.5" font-family="Fira Code, monospace">~100 vectores · se afina</text><circle cx="248" cy="156" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="96" cy="182" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="324" cy="151" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="595" cy="191" r="6" fill="#FF862F"/><circle cx="595" cy="191" r="11" fill="none" stroke="#FF862F" stroke-width="1.6"/><circle cx="653" cy="165" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="167" cy="159" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="431" cy="154" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="647" cy="171" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="309" cy="172" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="411" cy="197" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="436" cy="160" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="632" cy="191" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="200" cy="168" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="488" cy="149" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="650" cy="201" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="489" cy="154" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="471" cy="189" r="3.2" fill="#FF862F" opacity="0.42"/><circle cx="534" cy="191" r="3.2" fill="#FF862F" opacity="0.42"/><rect x="6" y="236" width="768" height="104" rx="9" fill="#58C4DD" opacity="0.06"/><text x="20" y="255" fill="#58C4DD" font-size="13" font-weight="700" font-family="Fira Code, monospace">Capa 1</text><text x="84" y="255" fill="#a8a290" font-size="10.5" font-family="Fira Code, monospace">los 1,000 vectores · búsqueda fina</text><circle cx="248" cy="274" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="96" cy="300" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="324" cy="269" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="595" cy="309" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="653" cy="283" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="167" cy="277" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="431" cy="272" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="647" cy="289" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="309" cy="290" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="411" cy="315" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="436" cy="278" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="632" cy="309" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="200" cy="286" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="488" cy="267" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="650" cy="319" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="489" cy="272" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="471" cy="307" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="534" cy="309" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="517" cy="275" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="142" cy="309" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="613" cy="293" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="557" cy="303" r="6" fill="#58C4DD"/><circle cx="557" cy="303" r="11" fill="none" stroke="#58C4DD" stroke-width="1.6"/><circle cx="236" cy="265" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="399" cy="266" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="473" cy="293" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="175" cy="287" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="138" cy="276" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="568" cy="290" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="232" cy="269" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="232" cy="275" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="458" cy="268" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="466" cy="294" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="209" cy="320" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="127" cy="294" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="395" cy="317" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="495" cy="309" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="193" cy="279" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="440" cy="295" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="334" cy="280" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="86" cy="319" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="144" cy="283" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="577" cy="267" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="641" cy="318" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="107" cy="287" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="648" cy="281" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="302" cy="265" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="661" cy="311" r="3.2" fill="#58C4DD" opacity="0.42"/><circle cx="427" cy="308" r="3.2" fill="#58C4DD" opacity="0.42"/><line x1="595" y1="85" x2="595" y2="178" stroke="#FFFF00" stroke-width="2" stroke-dasharray="5 3" opacity="0.9"/><polygon points="595,180 590,171 600,171" fill="#FFFF00"/><text x="605" y="132" fill="#FFFF00" font-size="9.5" font-family="Fira Code, monospace">se entra por el mejor</text><line x1="595" y1="203" x2="557" y2="290" stroke="#FFFF00" stroke-width="2" stroke-dasharray="5 3" opacity="0.9"/><polygon points="557,292 552,283 562,283" fill="#FFFF00"/><text x="586" y="247" fill="#FFFF00" font-size="9.5" font-family="Fira Code, monospace">se entra por el mejor</text><line x1="591" y1="273" x2="566" y2="296" stroke="#FFFF00" stroke-width="1" opacity="0.5"/><circle cx="591" cy="273" r="7" fill="#FFFF00" stroke="#1b1b2f" stroke-width="2"/><text x="604" y="277" fill="#FFFF00" font-size="10.5" font-family="Fira Code, monospace">consulta</text></svg>
     </div>
     <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
       Cada capa reduce los candidatos por un factor constante. Eso convierte la búsqueda
@@ -8380,17 +8370,17 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
   <section data-transition="fade">
     <h2>ANN: Lo que Hay que Llevarse</h2>
     <div style="font-size: 0.43em;">
-      <div class="fragment fade-up" style="margin:0.3em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0;">
         ● ANN es <strong>mucho más rápido</strong> que kNN, y la ventaja crece con el tamaño.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0;">
         ● Encuentra documentos <strong>cercanos</strong>, pero <strong>no garantiza</strong> los mejores.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0;">
         ● Depende de un grafo que es <strong>caro de construir</strong>… pero se construye
         <strong>una sola vez</strong> y se reutiliza en cada búsqueda.
       </div>
-      <div class="fragment fade-up" style="margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <div class="fragment fade-up" style="text-align:left; margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
         ● Corolario práctico: insertar documentos <strong>no es gratis</strong>. Un índice HNSW se
         actualiza bien, pero borrar y reconstruir a cada rato sí duele. Con datos que cambian mucho,
         hay que planear la reindexación.
@@ -8573,9 +8563,9 @@ r = articulos.query.near_text(
       </div>
     </div>
     <div style="font-size: 0.4em; margin-top: 0.3em;">
-      <div class="fragment fade-up" style="margin:0.2em 0;">● El vector es un <strong>promedio</strong> de todo el libro: no representa bien ningún capítulo.</div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">● Una pregunta sobre un tema específico <strong>no se parece</strong> a ese promedio.</div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">● Y si lo recuperas… <strong>metes 300 páginas al prompt</strong>. La ventana de contexto se acaba con un solo resultado.</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● El vector es un <strong>promedio</strong> de todo el libro: no representa bien ningún capítulo.</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● Una pregunta sobre un tema específico <strong>no se parece</strong> a ese promedio.</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● Y si lo recuperas… <strong>metes 300 páginas al prompt</strong>. La ventana de contexto se acaba con un solo resultado.</div>
     </div>
     <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
       Tres razones para partir: <strong>límites de tokens</strong>, <strong>mejor relevancia</strong>
@@ -8921,9 +8911,9 @@ Devuelve JSON: [{"titulo":..., "texto":...}]
       </p>
     </div>
     <div style="font-size: 0.41em; margin-top: 0.2em;">
-      <div class="fragment fade-up" style="margin:0.2em 0;">● <strong>Ambiguo</strong>: ¿"eso del clima" es qué exactamente?</div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">● <strong>Conversacional</strong>: la mitad de las palabras no aportan nada a la búsqueda</div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">● <strong>Sin los términos del dominio</strong>: los documentos dicen "precipitación" y "temperatura media"</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● <strong>Ambiguo</strong>: ¿"eso del clima" es qué exactamente?</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● <strong>Conversacional</strong>: la mitad de las palabras no aportan nada a la búsqueda</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● <strong>Sin los términos del dominio</strong>: los documentos dicen "precipitación" y "temperatura media"</div>
     </div>
     <p class="fragment fade-up" style="font-size: 0.43em; text-align:center; margin-top: 0.4em;">
       La idea de <strong style="color: var(--c-orange);">query parsing</strong>:
@@ -9775,29 +9765,32 @@ No expliques.</code></pre>
 
   <section data-transition="fade">
     <h2>Lo que Cuesta Generar</h2>
-    <div style="font-size: 0.41em;">
-      <div class="fragment fade-up" style="margin:0.25em 0;">
-        ● Producir <strong>un solo token</strong> exige pasar por <strong>todas</strong> las capas,
-        con todas sus cabezas.
+    <div class="widget-container">
+      <canvas id="attcost-canvas" width="880" height="235" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.9em; margin-top:0.25em; flex-wrap:wrap;">
+        <div class="widget-label" style="font-size:0.68em;">tokens del prompt <span class="widget-value" id="attcost-n-value">2k</span>
+          <input type="range" id="attcost-n" class="widget-slider" min="500" max="64000" step="500" value="2000" style="width:150px; margin-left:0.35em;">
+        </div>
+        <div class="widget-label" style="font-size:0.68em;">dimensión del modelo <span class="widget-value" id="attcost-d-value">4096</span>
+          <input type="range" id="attcost-d" class="widget-slider" min="0" max="3" step="1" value="2" style="width:100px; margin-left:0.35em;">
+        </div>
       </div>
-      <div class="fragment fade-up" style="margin:0.25em 0;">
-        ● Cada token debe <strong>mirar a todos los demás</strong>: el costo de la atención crece
-        con el <strong>cuadrado</strong> del largo del prompt.
-      </div>
-      <div class="fragment fade-up" style="margin:0.25em 0;">
-        ● El costo sube con el prompt <strong>y</strong> con el largo de la respuesta.
-      </div>
-      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
-        ● <strong>La mayor parte del costo de un sistema RAG está aquí</strong>, en correr el
-        transformer — no en el retriever, que es comparativamente baratísimo.
-      </div>
+      <div id="attcost-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.2em; font-size:0.5em;"></div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em;">
-      Consecuencia directa para el diseño: <strong>cada token que agregas al prompt lo pagas
-      en cada consulta</strong>. Por eso importaba tanto el <em>top-k</em> del retriever, y por eso
-      importa el chunking. Todo se conecta aquí.
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <strong>La mayor parte del costo de un sistema RAG está aquí</strong>, no en el retriever.
+      Y de ahí la consecuencia de diseño: <strong>cada token que agregas al prompt lo pagas en cada
+      consulta</strong> — por eso importaba tanto el <em>top-k</em> del retriever y el chunking.
     </p>
-    <aside class="notes">Fuente: RAG_M4 ("Computational expense"). El crecimiento cuadratico es la razon de que existan FlashAttention, atencion con ventana deslizante y modelos de espacio de estados; no hace falta entrar en eso, pero conviene nombrarlo si alguien pregunta por que las ventanas largas son caras.</aside>
+    <aside class="notes">
+      Fuente: RAG_M4 ("Computational expense"). Widget propio: las dos curvas se calculan con las
+      formulas reales de operaciones de un transformer — atencion ∝ 4n²d y feed forward ∝ 16nd² — asi
+      que no hay tiempos medidos ni inventados, son proporciones de operaciones. Guion: mover el slider
+      a 64k y ver que cuesta 609 veces mas que un prompt de 500 tokens, con solo 128 veces mas tokens.
+      Y el matiz que casi nadie sabe: la atencion NO domina siempre; solo pasa a dominar cuando el
+      prompt supera 4 veces la dimension del modelo (16 mil tokens con d=4096). Por debajo de eso, el
+      grueso del costo esta en el feed forward. Bajar la dimension del modelo mueve ese cruce.
+    </aside>
   </section>
 
   <section data-transition="fade">
@@ -10135,14 +10128,14 @@ Eres un asistente que da datos precisos sobre países.&lt;|eot_id|&gt;
 &lt;|start_header_id|&gt;assistant&lt;|end_header_id|&gt;
 Ottawa — conocida por la Colina del Parlamento y su cultura bilingüe.&lt;|eot_id|&gt;</code></pre>
     <div style="font-size: 0.39em; margin-top: 0.3em;">
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Cada familia de modelos tiene <strong>su propio formato</strong>. Usar el equivocado
         degrada la calidad sin dar ningún error.
       </div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Esos tokens especiales <strong>también cuentan</strong> para la ventana de contexto y para la factura.
       </div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Y son la razón de que un usuario no pueda "hacerse pasar por system":
         no puede escribir esos tokens, están <strong>reservados</strong>.
       </div>
@@ -10615,10 +10608,10 @@ Por lo tanto, la capital de Canadá es Ottawa.</code></pre>
     </p>
     <div style="font-size: 0.39em; margin-top: 0.3em;">
       <p style="margin:0.15em 0;"><strong>Lo que se le pide al LLM:</strong></p>
-      <div class="fragment fade-up" style="margin:0.15em 0;">● Responder <strong>con claridad</strong> a lo que se preguntó</div>
-      <div class="fragment fade-up" style="margin:0.15em 0;">● <strong>Incorporar</strong> la información relevante que recibió</div>
-      <div class="fragment fade-up" style="margin:0.15em 0;">● <strong>Citar</strong> las fuentes</div>
-      <div class="fragment fade-up" style="margin:0.15em 0;">● <strong>Ignorar</strong> los documentos irrelevantes que se colaron</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.15em 0;">● Responder <strong>con claridad</strong> a lo que se preguntó</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.15em 0;">● <strong>Incorporar</strong> la información relevante que recibió</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.15em 0;">● <strong>Citar</strong> las fuentes</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.15em 0;">● <strong>Ignorar</strong> los documentos irrelevantes que se colaron</div>
     </div>
     <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
       Todas son <strong>subjetivas</strong>: no hay una fórmula como la precisión@k.
@@ -10749,14 +10742,14 @@ print(resultado)
       </div>
     </div>
     <div style="font-size: 0.39em; margin-top: 0.35em;">
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Cada LLM hace <strong>una sola tarea</strong>: entra texto, sale texto. Es un diagrama de flujo.
       </div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● <strong>Modelos distintos para tareas distintas</strong>: uno chico y barato para enrutar
         y evaluar; uno grande solo para redactar la respuesta.
       </div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● El router puede decidir que <strong>ni siquiera hace falta recuperar</strong>
         (un saludo no necesita RAG) y ahorrarse todo el pipeline.
       </div>
@@ -11130,13 +11123,13 @@ print(resultado)
       con el tiempo de cada paso. Es la herramienta de diagnóstico principal.
     </p>
     <div style="font-size: 0.38em; margin-top: 0.3em;">
-      <div class="fragment fade-up" style="margin:0.13em 0;">● El <strong>prompt inicial</strong> del usuario</div>
-      <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>consulta</strong> que realmente se le mandó al retriever (tras reescribirla)</div>
-      <div class="fragment fade-up" style="margin:0.13em 0;">● Los <strong>chunks</strong> que devolvió, con sus puntajes</div>
-      <div class="fragment fade-up" style="margin:0.13em 0;">● Lo que hizo el <strong>reranker</strong> con ellos</div>
-      <div class="fragment fade-up" style="margin:0.13em 0;">● El <strong>prompt final</strong> que recibió el LLM</div>
-      <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>respuesta</strong> generada</div>
-      <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>latencia</strong> de cada etapa</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● El <strong>prompt inicial</strong> del usuario</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● La <strong>consulta</strong> que realmente se le mandó al retriever (tras reescribirla)</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● Los <strong>chunks</strong> que devolvió, con sus puntajes</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● Lo que hizo el <strong>reranker</strong> con ellos</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● El <strong>prompt final</strong> que recibió el LLM</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● La <strong>respuesta</strong> generada</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.13em 0;">● La <strong>latencia</strong> de cada etapa</div>
     </div>
     <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
       Sin trazas, cuando un usuario reporta una respuesta mala solo puedes <strong>adivinar</strong>
@@ -11203,13 +11196,13 @@ print(resultado)
       </div>
     </div>
     <div style="font-size: 0.4em; margin-top: 0.35em;">
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Los errores que importan aparecen en el <strong>tráfico real</strong>, no en tus pruebas.
       </div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Ajustas el sistema a <strong>cómo se usa de verdad</strong>, no a cómo imaginaste que se usaría.
       </div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
         ● Y cada vuelta del ciclo <strong>deja el sistema mejor</strong> que la anterior.
       </div>
     </div>
@@ -11713,9 +11706,9 @@ print(resultado)
       </div>
     </div>
     <div style="font-size: 0.41em; margin-top: 0.35em;">
-      <div class="fragment fade-up" style="margin:0.2em 0;">● Casi toda la latencia viene de los <strong>transformers</strong>.</div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">● Las llamadas al LLM son <strong>el cuello de botella</strong>.</div>
-      <div class="fragment fade-up" style="margin:0.2em 0;">● La recuperación y la base de datos son <strong>rápidas</strong>: decenas de milisegundos.</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● Casi toda la latencia viene de los <strong>transformers</strong>.</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● Las llamadas al LLM son <strong>el cuello de botella</strong>.</div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">● La recuperación y la base de datos son <strong>rápidas</strong>: decenas de milisegundos.</div>
     </div>
     <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
       Consecuencia práctica: <strong>optimizar el retriever no acelera casi nada</strong>.
@@ -12210,6 +12203,7 @@ print(resultado)
 <script src="js/widgets/cache-widget.js"></script>
 <script src="js/widgets/budget-widget.js"></script>
 <script src="js/widgets/pdfrag-widget.js"></script>
+<script src="js/widgets/attention-cost-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -12500,6 +12494,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initPdfRagWidget === 'function') {
       initPdfRagWidget();
       widgetsInitialized.pdfrag = true;
+    }
+  }
+  if (slide.querySelector('#attcost-canvas') && !widgetsInitialized.attCost) {
+    if (typeof initAttentionCostWidget === 'function') {
+      initAttentionCostWidget();
+      widgetsInitialized.attCost = true;
     }
   }
 });
