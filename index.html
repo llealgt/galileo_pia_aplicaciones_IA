@@ -7623,7 +7623,7 @@ for doc, s in sorted(zip(documentos, puntajes), key=lambda x: -x[1]):
 
   <section data-transition="fade">
     <h2>El Bucle de Entrenamiento</h2>
-    <div class="roadmap" style="font-size: 0.44em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.44em;">
       <div class="step fragment fade-up"><strong>1. Embeber</strong> — el modelo asigna un vector a cada texto del lote</div>
       <div class="step fragment fade-up"><strong>2. Puntuar</strong> — ¿los positivos quedaron cerca? ¿los negativos lejos?</div>
       <div class="step fragment fade-up"><strong>3. Actualizar</strong> — se ajustan los parámetros <em>del modelo</em> para mejorar ese puntaje</div>
@@ -8122,7 +8122,7 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
 
   <section data-transition="fade">
     <h2>Conceptos Clave</h2>
-    <div class="roadmap" style="font-size: 0.4em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.4em;">
       <div class="step fragment fade-up"><strong style="color: var(--c-purple);">Metadata</strong> —
         recorta por criterios rígidos. Rápida y confiable, pero <strong>no ordena</strong> e inútil sola.</div>
       <div class="step fragment fade-up"><strong style="color: var(--c-blue);">Keyword (BM25)</strong> —
@@ -8193,7 +8193,7 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
     <p style="font-size: 0.44em;">
       La búsqueda semántica, tal como la implementamos en la unidad de embeddings:
     </p>
-    <div class="roadmap" style="font-size: 0.42em; margin-top: 0.25em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.42em; margin-top: 0.25em;">
       <div class="step">Vectorizar todos los documentos <span style="color: var(--c-text-dim);">(una sola vez)</span></div>
       <div class="step">Vectorizar el prompt</div>
       <div class="step">Calcular la distancia contra <strong>todos</strong> los vectores</div>
@@ -8248,7 +8248,7 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
       La idea: si no puedes revisar todos los documentos, al menos ten un
       <strong>mapa</strong> que te diga a dónde moverte.
     </p>
-    <div class="roadmap" style="font-size: 0.41em; margin-top: 0.25em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.41em; margin-top: 0.25em;">
       <div class="step fragment fade-up"><strong>Construcción</strong> (una vez, cara):
         un nodo por documento, conectado a sus <strong>M vecinos más cercanos</strong>.
         El resultado es un <em>grafo de proximidad</em>.</div>
@@ -8430,7 +8430,7 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
 
   <section data-transition="fade">
     <h2>Las Operaciones de Siempre</h2>
-    <div class="roadmap" style="font-size: 0.42em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.42em;">
       <div class="step fragment fade-up"><strong>1.</strong> Conectarse y crear la <strong>colección</strong> (el equivalente a una tabla)</div>
       <div class="step fragment fade-up"><strong>2.</strong> Cargar los documentos, normalmente <strong>por lotes</strong></div>
       <div class="step fragment fade-up"><strong>3.</strong> Generar los <strong>vectores dispersos</strong> para la búsqueda por palabras clave</div>
@@ -8438,11 +8438,23 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
       <div class="step fragment fade-up"><strong>5.</strong> Construir el <strong>índice HNSW</strong></div>
       <div class="step fragment fade-up"><strong>6.</strong> Buscar</div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em;">
       Los pasos 3, 4 y 5 los hace la base <strong>sola</strong> al insertar, si se configuró bien.
       Es la razón principal para usar una en vez de <code>numpy</code>.
     </p>
-    <aside class="notes">Fuente: RAG_M3 ("Typical Vector Database Operations"). Notar que el orden importa: el indice HNSW se construye sobre los vectores, asi que primero se vectoriza.</aside>
+    <div class="fragment fade-up" style="margin-top: 0.3em;">
+      <div class="flow-row" style="justify-content:center; font-size: 0.36em;">
+        <div class="flow-node" style="border-color: var(--c-purple);">Configurar<br>la base<br><span style="color: var(--c-text-dim);">paso 1</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-blue);">Cargar<br>e indexar<br><span style="color: var(--c-text-dim);">pasos 2 a 5</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);">Buscar<br><br><span style="color: var(--c-text-dim);">paso 6</span></div>
+      </div>
+      <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+        Las dos primeras fases se hacen <strong>una vez</strong>; la tercera, en cada consulta.
+      </p>
+    </div>
+    <aside class="notes">Fuente: RAG_M3 ("Typical Vector Database Operations" y "Complete Workflow"). Notar que el orden importa: el indice HNSW se construye sobre los vectores, asi que primero se vectoriza.</aside>
   </section>
 
   <section data-transition="fade">
@@ -8751,7 +8763,7 @@ md = RecursiveCharacterTextSplitter\
       En vez de cortar cada N caracteres, cortar <strong>donde cambia el tema</strong>.
       El algoritmo es sorprendentemente simple:
     </p>
-    <div class="roadmap" style="font-size: 0.4em; margin-top: 0.25em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.4em; margin-top: 0.25em;">
       <div class="step fragment fade-up"><strong>1.</strong> Recorrer el documento <strong>oración por oración</strong></div>
       <div class="step fragment fade-up"><strong>2.</strong> Vectorizar la oración actual y la siguiente, y medir la <strong>distancia coseno</strong></div>
       <div class="step fragment fade-up"><strong>3.</strong> Si la distancia está <strong>por debajo</strong> del umbral, siguen hablando de lo mismo: se agrega al chunk</div>
@@ -8879,7 +8891,7 @@ Devuelve JSON: [{"titulo":..., "texto":...}]
 
   <section data-transition="fade">
     <h2>¿Cuál Uso?</h2>
-    <div class="roadmap" style="font-size: 0.41em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.41em;">
       <div class="step fragment fade-up">
         <strong style="color: var(--c-blue);">Empieza con recursivo + traslape.</strong>
         Son el valor por omisión razonable y resuelven el 80% de los casos.
@@ -9389,7 +9401,7 @@ No expliques.</code></pre>
 
   <section data-transition="fade">
     <h2>Conceptos Clave</h2>
-    <div class="roadmap" style="font-size: 0.39em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.39em;">
       <div class="step fragment fade-up"><strong style="color: var(--c-blue);">ANN</strong> —
         grafos de proximidad navegables por capas (HNSW). Cambian exactitud por velocidad;
         el ahorro <strong>crece</strong> con el tamaño del corpus, y el recall depende de
@@ -9973,7 +9985,7 @@ respuesta = cliente.chat.completions.create(
     top_p=0.9,                   # pero sin tocar la cola absurda
     frequency_penalty=0.3,       # que no repita las mismas frases
 )</code></pre>
-    <div class="roadmap" style="font-size: 0.38em; margin-top: 0.3em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.38em; margin-top: 0.3em;">
       <div class="step fragment fade-up">Fija <strong>temperatura y top-p</strong> según el dominio: código y hechos → bajos; creatividad → altos.</div>
       <div class="step fragment fade-up">Agrega penalizaciones y sesgos <strong>solo si aparece el problema</strong> que resuelven.</div>
       <div class="step fragment fade-up">Y <strong>regístralos</strong> con la corrida: son hiperparámetros, igual que en la unidad de experiment tracking.</div>
@@ -10422,7 +10434,7 @@ Por lo tanto, la capital de Canadá es Ottawa.</code></pre>
     <h2>Podar el Contexto</h2>
     <div class="columns" style="font-size: 0.39em;">
       <div class="col">
-        <div class="roadmap" style="font-size:1.02em;">
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size:1.02em;">
           <div class="step fragment fade-up">Si la conversación es de <strong>un solo turno</strong>,
             sáltate las técnicas que no aporten nada. No pagues por lo que no usas.</div>
           <div class="step fragment fade-up">En conversaciones largas, <strong>descarta los mensajes
@@ -10623,7 +10635,7 @@ Por lo tanto, la capital de Canadá es Ottawa.</code></pre>
         <h4 style="color: var(--c-blue); margin-bottom:0.15em;">Relevancia de la respuesta</h4>
         <p style="margin:0.1em 0;">¿La respuesta <strong>contesta lo que se preguntó</strong>?
           (sin importar si es cierta)</p>
-        <div class="roadmap" style="font-size:0.95em; margin-top:0.2em;">
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size:0.95em; margin-top:0.2em;">
           <div class="step">Un LLM lee la respuesta y <strong>inventa las preguntas</strong> que
             podrían haberla generado</div>
           <div class="step">Se embeben esas preguntas y la original</div>
@@ -10638,7 +10650,7 @@ Por lo tanto, la capital de Canadá es Ottawa.</code></pre>
         <h4 style="color: var(--c-green); margin-bottom:0.15em;">Fidelidad <em>(faithfulness)</em></h4>
         <p style="margin:0.1em 0;">¿La respuesta es <strong>consistente con los documentos</strong>
           que se recuperaron?</p>
-        <div class="roadmap" style="font-size:0.95em; margin-top:0.2em;">
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size:0.95em; margin-top:0.2em;">
           <div class="step">Un LLM extrae <strong>todas las afirmaciones</strong> de la respuesta</div>
           <div class="step">Para cada una, revisa si el contexto la <strong>respalda</strong></div>
           <div class="step">Fidelidad = <strong>% de afirmaciones respaldadas</strong></div>
@@ -10915,7 +10927,7 @@ print(resultado)
 
   <section data-transition="fade">
     <h2>Conceptos Clave</h2>
-    <div class="roadmap" style="font-size: 0.375em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.375em;">
       <div class="step fragment fade-up"><strong style="color: var(--c-blue);">Transformer</strong> —
         atención (de dónde tomo contexto) + feed forward (qué sé del mundo), repetido en decenas de capas.
         <strong>RAG funciona porque la atención no distingue</strong> entre lo memorizado y lo inyectado.</div>
@@ -11087,7 +11099,7 @@ print(resultado)
 
   <section data-transition="fade">
     <h2>Cómo se Registra</h2>
-    <div class="roadmap" style="font-size: 0.42em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.42em;">
       <div class="step fragment fade-up">
         <strong style="color: var(--c-blue);">Estadísticas agregadas</strong> —
         tendencias en el tiempo y detección de <strong>regresiones</strong>.
@@ -11126,10 +11138,24 @@ print(resultado)
       <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>respuesta</strong> generada</div>
       <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>latencia</strong> de cada etapa</div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
       Sin trazas, cuando un usuario reporta una respuesta mala solo puedes <strong>adivinar</strong>
       si falló el retriever, el reranker o el LLM. Con trazas, lo ves.
     </p>
+    <div class="fragment fade-up" style="font-size: 0.37em; margin-top: 0.3em;">
+      <p style="margin:0 0 0.15em 0; color: var(--c-text-dim);">Y sobre esas trazas, la plataforma te deja:</p>
+      <div class="columns" style="gap: 0.8em;">
+        <div class="col" style="padding:0.25em 0.4em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue);">
+          <strong>Probar prompts</strong> de forma interactiva contra tu propio sistema
+        </div>
+        <div class="col" style="padding:0.25em 0.4em; background: rgba(255,134,47,0.07); border-left: 3px solid var(--c-orange);">
+          <strong>Comparar A/B</strong> dos configuraciones sobre el mismo tráfico
+        </div>
+        <div class="col" style="padding:0.25em 0.4em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+          <strong>Generar reportes</strong> periódicos de las métricas clave
+        </div>
+      </div>
+    </div>
     <aside class="notes">Fuente: RAG_M5 ("Traces"). Plataformas de observabilidad para LLMs: Phoenix de Arize (open source, la del curso), LangSmith, Langfuse, Weights &amp; Biases Weave. Todas hacen lo mismo: capturar metricas de sistema y de componente, registrar el trafico y permitir experimentar.</aside>
   </section>
 
@@ -11272,7 +11298,7 @@ print(resultado)
 
   <section data-transition="fade">
     <h2>Un Diagnóstico Real, Paso a Paso</h2>
-    <div class="roadmap" style="font-size: 0.4em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.4em;">
       <div class="step fragment fade-up">
         <strong style="color: var(--c-orange);">1. Señal</strong> — los usuarios reportan que los
         <strong>diagramas</strong> que genera el sistema son de mala calidad.
@@ -11424,7 +11450,7 @@ print(resultado)
     <h2>Los Cuatro Pasos</h2>
     <div class="columns" style="font-size: 0.38em;">
       <div class="col">
-        <div class="roadmap" style="font-size:1.02em;">
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size:1.02em;">
           <div class="step"><strong>1.</strong> Encontrar el <strong>mínimo</strong> y el <strong>máximo</strong> del vector</div>
           <div class="step"><strong>2.</strong> Partir ese rango en <strong>2<sup>bits</sup> niveles</strong></div>
           <div class="step"><strong>3.</strong> Asignar a cada componente el <strong>entero</strong> del nivel más cercano</div>
@@ -11949,7 +11975,7 @@ print(resultado)
     <h2>Cómo Ve un Modelo una Imagen</h2>
     <div class="columns" style="font-size: 0.4em;">
       <div class="col">
-        <div class="roadmap" style="font-size:1.02em;">
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size:1.02em;">
           <div class="step fragment fade-up"><strong>Modelo de lenguaje y visión</strong> —
             procesa texto e imágenes en una <strong>misma secuencia de tokens</strong></div>
           <div class="step fragment fade-up"><strong>Tokenización de la imagen</strong> —
@@ -12070,7 +12096,7 @@ print(resultado)
 
   <section data-transition="fade">
     <h2>Conceptos Clave</h2>
-    <div class="roadmap" style="font-size: 0.375em;">
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.375em;">
       <div class="step fragment fade-up"><strong style="color: var(--c-orange);">Producción es otra cosa</strong> —
         más tráfico, prompts impredecibles, datos sucios y errores que cuestan reputación y dinero.
         Ya no se optimiza solo la calidad.</div>
