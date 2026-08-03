@@ -72,6 +72,7 @@
         <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>Recuperación de Información: los Fundamentos</a>
         <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación en Producción</a>
         <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>LLMs y Generación de Texto</a>
+        <a class="toc-item" onclick="Reveal.slide(16, 0)"><span class="toc-num">16</span>RAG en Producción</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -10940,6 +10941,1189 @@ print(resultado)
 
 </section>
 
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.45em;">RAG en Producción</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">Cuando Deja de Ser un Prototipo</h3>
+    <p style="font-size: 0.44em; color: var(--c-text-dim); margin-top: 0.7em;">
+      Ya sabemos construir el sistema completo. Falta lo que pasa cuando lo usan
+      <strong>usuarios reales</strong>: medirlo, vigilarlo, abaratarlo, acelerarlo,
+      protegerlo, y hacerlo funcionar con PDFs e imágenes.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("RAG Systems in Production"). Ultimo modulo del curso de RAG. El cambio de mentalidad: hasta ahora se optimizaba la calidad; en produccion hay tres variables a la vez —calidad, costo y latencia— y mejorar una empeora las otras.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cinco Cosas que Cambian</h2>
+    <div class="taxonomy" style="font-size: 0.86em;">
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-blue);">
+        <strong style="color: var(--c-blue);">Escala</strong> — más tráfico significa más latencia,
+        más memoria y más cómputo. Sostener el rendimiento mientras se crece es difícil.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-orange);">
+        <strong style="color: var(--c-orange);">Prompts impredecibles</strong> — por más que pruebes,
+        no puedes anticipar todo lo que la gente va a escribir. Los usuarios son creativos.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-green);">
+        <strong style="color: var(--c-green);">Datos del mundo real</strong> — fragmentados, sucios,
+        sin metadata. Y buena parte <strong>no es texto</strong>: son PDFs, imágenes, presentaciones.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-red);">
+        <strong style="color: var(--c-red);">Seguridad y privacidad</strong> — casi siempre se elige
+        RAG justamente porque los datos son privados. Hay que mantenerlos así.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-purple);">
+        <strong style="color: var(--c-purple);">Los errores cuestan</strong> — en reputación y en
+        dinero. Y no le pasa solo a los principiantes.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Scaling Performance", "Unpredictability of Prompts", "Messy Real World Data", "Security and Privacy", "Mistakes in Production Can Be Costly").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Caso "Cómete unas Piedras"</h2>
+    <div style="text-align:center; margin: 0.3em 0;">
+      <p style="font-size: 0.44em; font-family: 'Fira Code', monospace; color: var(--c-yellow); padding: 0.35em 0.6em; background: rgba(255,255,0,0.06); display:inline-block;">
+        Usuario: "¿cuántas piedras debería comer al día?"
+      </p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center;">
+      Un sistema de RAG en producción recuperó un artículo <strong>satírico</strong> y lo trató
+      como una fuente confiable. La respuesta recomendaba comer piedras.
+    </p>
+    <div class="columns" style="font-size: 0.39em; margin-top: 0.35em;">
+      <div class="col fragment fade-up">
+        <p style="margin:0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong>Más ejemplos reales:</strong> chatbots de aerolíneas que ofrecieron
+          <strong>descuentos inventados</strong> — y un tribunal obligó a la aerolínea a
+          respetarlos.
+        </p>
+      </div>
+      <div class="col fragment fade-up">
+        <p style="margin:0; padding: 0.3em 0.5em; background: rgba(255,134,47,0.08); border-left: 3px solid var(--c-orange);">
+          <strong>Y usuarios maliciosos</strong> que intentan sacar productos gratis o
+          extraer secretos del sistema a propósito.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      La conclusión no es "no lo pongas en producción". Es:
+      <strong>anticipa, registra y verifica</strong> — tanto los problemas como los arreglos.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("The 'Eat Rocks' Case", "More Failure Examples"). El caso de las piedras es el de AI Overviews de Google en 2024, que recupero un comentario satirico de Reddit. El de la aerolinea es Air Canada, 2024. Ambos son publicos y verificables; conviene mencionarlos por nombre.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dos Familias de Métricas</h2>
+    <div class="comparison" style="font-size: 0.41em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">Rendimiento del software</h4>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Latencia</strong> — cuánto tarda una consulta</li>
+          <li><strong>Throughput</strong> — cuántas se atienden por segundo</li>
+          <li><strong>Memoria y cómputo</strong></li>
+          <li><strong>Tokens por segundo</strong></li>
+        </ul>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Se miden con código, son objetivas y baratas.
+        </p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Calidad</h4>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Satisfacción</strong> del usuario</li>
+          <li><strong>Calidad de la respuesta</strong></li>
+          <li>Métricas del <strong>retriever</strong>: recall, precisión</li>
+          <li>Métricas del <strong>LLM</strong>: RAGAS</li>
+        </ul>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Subjetivas, caras, y las que de verdad importan.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Un sistema puede estar <strong>rapidísimo y responder mal</strong>, o
+      <strong>responder perfecto y ser inusable</strong>. Hay que mirar las dos familias
+      <strong>a la vez</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Key Metrics" y el mapa completo de metricas). Las metricas de retriever se vieron en la unidad 13 y las de RAGAS en la 15; aqui se integran en un solo tablero.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Quién Evalúa y a Qué Nivel</h2>
+    <table style="font-size: 0.36em; width: 100%;">
+      <tr><th></th><th style="color: var(--c-blue);">Con código</th>
+        <th style="color: var(--c-purple);">LLM como juez</th>
+        <th style="color: var(--c-green);">Con humanos</th></tr>
+      <tr class="fragment fade-up">
+        <td><strong>Componente</strong><br><span style="color: var(--c-text-dim);">dónde y por qué falla</span></td>
+        <td>latencia del retriever</td>
+        <td>calidad del contexto</td>
+        <td>relevancia del documento recuperado</td></tr>
+      <tr class="fragment fade-up">
+        <td><strong>Sistema</strong><br><span style="color: var(--c-text-dim);">qué problemas existen</span></td>
+        <td>uso de tokens</td>
+        <td>exactitud de las citas</td>
+        <td>pulgar arriba / abajo</td></tr>
+    </table>
+    <div style="font-size: 0.38em; margin-top: 0.4em;">
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.28em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+        <strong>Con código</strong> — lo más barato y directo: contar prompts por segundo,
+        pruebas unitarias de que el JSON sea válido. <strong>Prácticamente gratis.</strong>
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.28em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple);">
+        <strong>LLM como juez</strong> — el punto medio: más flexible que el código y más barato
+        que las personas. Necesita <strong>rúbricas claras</strong> y funciona mejor con etiquetas
+        simples ("relevante" / "irrelevante").
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.28em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+        <strong>Con humanos</strong> — lo más caro, pero captura lo que el código no ve:
+        pulgares, comentarios de texto, conjuntos de prueba etiquetados a mano.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 (la matriz de Scope x Evaluator Type y los tres slides de cada tipo). La distincion sistema/componente es la clave del diagnostico: el sistema te dice QUE falla, el componente te dice DONDE y POR QUE.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo se Registra</h2>
+    <div class="roadmap" style="font-size: 0.42em;">
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-blue);">Estadísticas agregadas</strong> —
+        tendencias en el tiempo y detección de <strong>regresiones</strong>.
+        <span style="color: var(--c-text-dim);">"la latencia p95 subió 40% desde el martes"</span>
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-green);">Registros detallados</strong> —
+        seguir <strong>un prompt concreto</strong> por todo el pipeline.
+        <span style="color: var(--c-text-dim);">"¿por qué esta consulta contestó mal?"</span>
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-orange);">Experimentación</strong> —
+        pruebas A/B y ensayos controlados.
+        <span style="color: var(--c-text-dim);">"¿el reranker nuevo mejoró algo o solo agregó latencia?"</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.4em;">
+      Los tres son <strong>necesarios y distintos</strong>: el agregado te dice que algo pasó,
+      el detallado te dice qué, y el experimento te dice si el arreglo sirvió.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("How to Track"). Es la misma disciplina de la unidad 9 de experiment tracking, ahora aplicada a trafico real en vez de a corridas de entrenamiento.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Trazas: Seguir un Prompt</h2>
+    <p style="font-size: 0.42em;">
+      Una <strong>traza</strong> registra el recorrido completo de una consulta por el pipeline,
+      con el tiempo de cada paso. Es la herramienta de diagnóstico principal.
+    </p>
+    <div style="font-size: 0.38em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.13em 0;">● El <strong>prompt inicial</strong> del usuario</div>
+      <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>consulta</strong> que realmente se le mandó al retriever (tras reescribirla)</div>
+      <div class="fragment fade-up" style="margin:0.13em 0;">● Los <strong>chunks</strong> que devolvió, con sus puntajes</div>
+      <div class="fragment fade-up" style="margin:0.13em 0;">● Lo que hizo el <strong>reranker</strong> con ellos</div>
+      <div class="fragment fade-up" style="margin:0.13em 0;">● El <strong>prompt final</strong> que recibió el LLM</div>
+      <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>respuesta</strong> generada</div>
+      <div class="fragment fade-up" style="margin:0.13em 0;">● La <strong>latencia</strong> de cada etapa</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Sin trazas, cuando un usuario reporta una respuesta mala solo puedes <strong>adivinar</strong>
+      si falló el retriever, el reranker o el LLM. Con trazas, lo ves.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Traces"). Plataformas de observabilidad para LLMs: Phoenix de Arize (open source, la del curso), LangSmith, Langfuse, Weights &amp; Biases Weave. Todas hacen lo mismo: capturar metricas de sistema y de componente, registrar el trafico y permitir experimentar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Presupuesto del Pipeline</h2>
+    <div class="widget-container">
+      <canvas id="budget-canvas" width="880" height="270" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.32em; margin-top:0.26em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn budget-etapa-btn" data-k="router" style="font-size:0.72em;">router</button>
+        <button class="widget-btn fi-btn budget-etapa-btn" data-k="rewrite" style="font-size:0.72em;">reescritor</button>
+        <button class="widget-btn fi-btn budget-etapa-btn" data-k="bm25" style="font-size:0.72em;">híbrida</button>
+        <button class="widget-btn fi-btn budget-etapa-btn" data-k="rerank" style="font-size:0.72em;">reranker</button>
+        <button class="widget-btn fi-btn budget-etapa-btn" data-k="cite" style="font-size:0.72em;">citador</button>
+        <button class="widget-btn fi-btn" id="budget-reset" style="font-size:0.72em;">Reiniciar</button>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.32em; margin-top:0.2em; flex-wrap:wrap;">
+        <span style="font-size:0.5em; color: var(--c-text-dim);">modelo generador:</span>
+        <button class="widget-btn fi-btn budget-modelo-btn" data-modelo="grande" style="font-size:0.72em;">grande</button>
+        <button class="widget-btn fi-btn budget-modelo-btn" data-modelo="chico" style="font-size:0.72em;">chico</button>
+        <button class="widget-btn fi-btn budget-modelo-btn" data-modelo="chico-cuantizado" style="font-size:0.72em;">chico int8</button>
+      </div>
+      <div id="budget-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.2em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. Las latencias del reranker (50 ms), el reescritor (300 ms) y el router (200 ms) son
+      las del modulo; el resto son valores de REFERENCIA, no medidos. Guion: (1) ver que la barra de
+      generacion se come casi todo el tiempo — es el cuello de botella;
+      (2) apagar el reescritor: se ahorran 300 ms y se pierden 8 puntos de calidad;
+      (3) cambiar a modelo chico int8: la latencia cae a la mitad y el costo 20 veces, con 13 puntos
+      menos de calidad; (4) mirar la ultima cifra: a 100 mil consultas al mes esa decision son cientos
+      de dolares. Ese es el compromiso del modulo.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Volante de Mejora</h2>
+    <div style="text-align:center; margin: 0.3em 0;">
+      <div class="flow-row" style="justify-content:center; font-size: 0.4em;">
+        <div class="flow-node" style="border-color: var(--c-blue);"><strong>Observar</strong><br>el tráfico real</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);"><strong>Evaluar</strong><br>el rendimiento</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-orange);"><strong>Experimentar</strong><br>con cambios</div>
+        <div class="flow-arrow">↻</div>
+      </div>
+    </div>
+    <div style="font-size: 0.4em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Los errores que importan aparecen en el <strong>tráfico real</strong>, no en tus pruebas.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Ajustas el sistema a <strong>cómo se usa de verdad</strong>, no a cómo imaginaste que se usaría.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Y cada vuelta del ciclo <strong>deja el sistema mejor</strong> que la anterior.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Una buena observabilidad no es un lujo: es lo que <strong>convierte el uso en mejoras</strong>.
+      Sin ella, cada versión nueva es una apuesta.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Iteratively Improving Your RAG System"). Es el mismo ciclo de la unidad 9 (monitoreo -> diagnostico -> experimento) aplicado a un sistema RAG.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Tu Propio Conjunto de Evaluación</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Un <strong>dataset propio</strong>: prompts que ya recibiste, con todo lo que les pasó
+          en el camino.
+        </p>
+        <ul style="margin:0.2em 0;">
+          <li>Tienes <strong>total libertad</strong> sobre qué guardar</li>
+          <li>Y <strong>lo que guardes decide</strong> qué evaluaciones podrás correr después</li>
+          <li><strong>Prompts y respuestas</strong> son un buen mínimo para evaluar el sistema</li>
+          <li>Para diagnosticar componentes hace falta guardar <strong>más</strong> de cada etapa</li>
+        </ul>
+        <p style="margin:0.25em 0; padding: 0.25em 0.45em; background: rgba(252,98,85,0.08);">
+          <strong>Cuidado:</strong> estos datasets <strong>crecen muchísimo</strong>.
+          Guardar todos los chunks de todas las consultas se vuelve caro rápido.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.82em;"><code class="language-json">{
+  "id": "req_8f21",
+  "fecha": "2026-03-14T10:22:31Z",
+  "prompt": "¿ofrecen descuento a estudiantes?",
+  "consulta_reescrita": "descuento estudiantil...",
+  "chunks": [
+    {"id": "d_112", "score": 0.71},
+    {"id": "d_087", "score": 0.64}
+  ],
+  "modelo": "chico-int8",
+  "respuesta": "No tengo información...",
+  "latencia_ms": {"retriever": 27, "llm": 640},
+  "tokens": {"entrada": 488, "salida": 61},
+  "feedback": "pulgar_arriba"
+}</code></pre>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Custom Datasets"). Consejo practico: guardar el 100% de los prompts y respuestas (baratos) y solo una MUESTRA de las trazas completas (caras). Asi se puede evaluar el sistema siempre y diagnosticar componentes cuando haga falta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Sale de Analizarlo</h2>
+    <div class="columns" style="font-size: 0.38em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-blue);">Calidad por tema</strong></p>
+        <table style="width:100%; font-size:0.95em; margin-top:0.15em;">
+          <tr><td>Reembolsos</td><td style="color: var(--c-green);">92%</td></tr>
+          <tr><td>Crear cuenta</td><td style="color: var(--c-green);">87%</td></tr>
+          <tr><td>Características del producto</td><td style="color: var(--c-green);">84%</td></tr>
+          <tr><td><strong>Retrasos de pedidos</strong></td><td style="color: var(--c-red);"><strong>58%</strong></td></tr>
+        </table>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          El promedio se veía bien. <strong>Un tema estaba roto</strong> y el promedio lo escondía.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-orange);">Rendimiento por componente</strong></p>
+        <table style="width:100%; font-size:0.95em; margin-top:0.15em;">
+          <tr><td>Precisión del contexto</td><td style="color: var(--c-red);">42% baja</td></tr>
+          <tr><td>Relevancia de la respuesta</td><td style="color: var(--c-orange);">55% baja</td></tr>
+          <tr><td>Fidelidad</td><td style="color: var(--c-yellow);">68% regular</td></tr>
+          <tr><td>Chunks recuperados</td><td style="color: var(--c-red);">1.5 pocos</td></tr>
+        </table>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Aquí el diagnóstico es claro: <strong>el retriever trae poco y malo</strong>.
+          Cambiar el LLM no arreglaría nada.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em;">
+      Segmentar es lo que convierte un número en una <strong>acción</strong>.
+      Un 84% global no te dice qué arreglar.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Example Analysis"). Los numeros son los del original. El mensaje es el de siempre en evaluacion: el promedio esconde; hay que segmentar por tema, por tipo de consulta y por componente.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Un Diagnóstico Real, Paso a Paso</h2>
+    <div class="roadmap" style="font-size: 0.4em;">
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-orange);">1. Señal</strong> — los usuarios reportan que los
+        <strong>diagramas</strong> que genera el sistema son de mala calidad.
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-blue);">2. Análisis de registros</strong> — se revisan los prompts
+        que pedían diagramas. Aparece un patrón: <em>"dibuja un diagrama de…"</em>
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-red);">3. Problema</strong> — el <strong>router</strong> estaba
+        clasificando mal esas peticiones y las mandaba a un <strong>modelo de difusión</strong>
+        (generador de imágenes) en vez de al generador de gráficas.
+      </div>
+      <div class="step fragment fade-up">
+        <strong style="color: var(--c-green);">4. Solución</strong> — se actualizó el system prompt del
+        router para enrutar las peticiones de diagramas al componente correcto.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.4em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Fíjate dónde estaba el error: <strong>no en el LLM, ni en el retriever, ni en los datos</strong>.
+      En una línea del system prompt de un componente auxiliar. Sin registros detallados,
+      encontrarlo habría sido imposible.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 (el caso del router que mandaba los diagramas al modelo de difusion). Es el mejor ejemplo del modulo de por que hacen falta trazas: la senal venia del usuario, la causa estaba tres componentes mas atras.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ver los Datos, no Solo Leerlos</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Con miles de consultas registradas, la forma de encontrar tendencias es
+          <strong>visualizarlas</strong>.
+        </p>
+        <p style="margin:0.25em 0;">
+          Las herramientas de <strong>clustering</strong> agrupan los prompts por su embedding
+          y dejan ver cómo se usa el sistema <strong>de verdad</strong>… y evaluar cada grupo
+          por separado.
+        </p>
+        <p style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(131,193,103,0.08);">
+          Es la misma proyección 2D de la <strong>unidad de embeddings</strong>, ahora aplicada
+          a las consultas de tus usuarios en vez de a documentos.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-yellow);">Clasificación de consultas</strong></p>
+        <div style="font-size:0.95em; margin-top:0.2em;">
+          <div style="display:flex; gap:0.5em; align-items:center; margin:0.18em 0;">
+            <span style="flex:1; padding:0.2em 0.4em; background: rgba(88,196,221,0.12);">"Explica el protocolo TCP/IP"</span>
+            <span style="color: var(--c-blue);">→ técnica</span>
+          </div>
+          <div style="display:flex; gap:0.5em; align-items:center; margin:0.18em 0;">
+            <span style="flex:1; padding:0.2em 0.4em; background: rgba(88,196,221,0.12);">"¿Qué es el sobreajuste?"</span>
+            <span style="color: var(--c-blue);">→ técnica</span>
+          </div>
+          <div style="display:flex; gap:0.5em; align-items:center; margin:0.18em 0;">
+            <span style="flex:1; padding:0.2em 0.4em; background: rgba(131,193,103,0.12);">"¿Cuál es la capital de Canadá?"</span>
+            <span style="color: var(--c-green);">→ no técnica</span>
+          </div>
+          <div style="display:flex; gap:0.5em; align-items:center; margin:0.18em 0;">
+            <span style="flex:1; padding:0.2em 0.4em; background: rgba(131,193,103,0.12);">"¿Un chiste de jarabe de maple?"</span>
+            <span style="color: var(--c-green);">→ no técnica</span>
+          </div>
+        </div>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Clasificar sirve para <strong>medir por segmento</strong> y también para
+          <strong>enrutar</strong>: cada tipo puede ir por un camino distinto.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Visualizing Data", "Advance query classification"). El clustering de prompts suele revelar usos que nadie habia previsto: es la forma mas rapida de descubrir que la gente usa tu sistema para algo distinto de lo que pensabas.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cuantización: la Idea</h2>
+    <p style="font-size: 0.43em;">
+      Los modelos y los vectores usan números de <strong>32 o 16 bits</strong>.
+      ¿Y si bastara con <strong>8, 4 o incluso 1</strong>?
+    </p>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">Antes</h4>
+        <ul style="margin:0.2em 0;">
+          <li>LLMs con parámetros de <strong>16 bits</strong></li>
+          <li>Embeddings de 768 a 4,096 dimensiones en float32</li>
+          <li>Costo alto de <strong>memoria y cómputo</strong></li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Después</h4>
+        <ul style="margin:0.2em 0;">
+          <li>Parámetros de <strong>8 o 4 bits</strong></li>
+          <li>Vectores de 8 bits, o incluso 1</li>
+          <li><strong>Más pequeño, más rápido y más barato</strong></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Un LLM típico tiene entre mil millones y un billón de parámetros.
+      Pasar de 16 a 4 bits <strong>divide su huella de memoria entre cuatro</strong>.
+      La pregunta es cuánta calidad cuesta — y la vamos a <strong>medir</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Quantization", "LLM Quantization"). La cuantizacion aplica igual a los pesos del LLM y a los vectores de la base; en RAG se usan las dos, y la de vectores es la que mas se nota en la factura de la base vectorial.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Ocupan los Vectores</h2>
+    <table style="font-size: 0.4em; width: 88%; margin: 0.25em auto;">
+      <tr><th>Modelo</th><th>Dimensiones</th><th>1 vector</th><th>1 millón de vectores</th></tr>
+      <tr class="fragment fade-up"><td>SBERT <code>all-mpnet-base-v2</code></td><td>768</td><td>3 KB</td><td><strong>3 GB</strong></td></tr>
+      <tr class="fragment fade-up"><td>OpenAI <code>ada-002</code></td><td>1,536</td><td>6 KB</td><td><strong>6 GB</strong></td></tr>
+      <tr class="fragment fade-up"><td>Cohere <code>embed-english-v2.0</code></td><td>4,096</td><td>16 KB</td><td style="color: var(--c-red);"><strong>16 GB</strong></td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      Y eso es <strong>solo los vectores</strong>: sin contar el índice HNSW (que también vive en RAM)
+      ni el texto de los documentos.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.2em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Con 10 millones de chunks y el modelo de Cohere serían <strong>160 GB de RAM</strong>.
+      Ahí la cuantización deja de ser una optimización elegante y pasa a ser
+      <strong>la diferencia entre poder hacerlo o no</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Example sizes of common vector embeddings"). Los tres modelos y sus cifras son los del original. Notar que un vector de 384 dims como el que usamos en el curso ocupa 1.5 KB: la mitad que SBERT.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Cuantización</h2>
+    <div class="widget-container">
+      <canvas id="quant-canvas" width="880" height="245" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.45em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn quant-vista-btn" data-vista="proceso">el proceso</button>
+        <button class="widget-btn fi-btn quant-vista-btn" data-vista="recall">recall medido</button>
+        <div class="widget-label" style="font-size:0.7em;">bits <span class="widget-value" id="quant-bits-value">8</span>
+          <input type="range" id="quant-bits" class="widget-slider" min="0" max="4" step="1" value="3" style="width:110px; margin-left:0.35em;">
+        </div>
+      </div>
+      <div id="quant-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. La vista "el proceso" ejecuta los 4 pasos del modulo sobre 8 componentes reales de
+      un embedding y calcula el error de reconstruccion en vivo. La vista "recall medido" trae un
+      experimento REAL: se cuantizo un corpus de 42 documentos y se midio el recall@10 contra el ranking
+      exacto en float32. Guion: bajar bits desde 8 y ver el error crecer; luego pasar a "recall medido"
+      y hacer notar que int8 conserva el 100% con 4 veces menos memoria.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Cuatro Pasos</h2>
+    <div class="columns" style="font-size: 0.38em;">
+      <div class="col">
+        <div class="roadmap" style="font-size:1.02em;">
+          <div class="step"><strong>1.</strong> Encontrar el <strong>mínimo</strong> y el <strong>máximo</strong> del vector</div>
+          <div class="step"><strong>2.</strong> Partir ese rango en <strong>2<sup>bits</sup> niveles</strong></div>
+          <div class="step"><strong>3.</strong> Asignar a cada componente el <strong>entero</strong> del nivel más cercano</div>
+          <div class="step"><strong>4.</strong> Guardar el <strong>mínimo y la escala</strong> para poder reconstruir</div>
+        </div>
+      </div>
+      <div class="col">
+        <div style="font-family: 'Fira Code', monospace; font-size:0.92em;">
+          <p style="margin:0.15em 0; color: var(--c-blue);">float32: [0.0, 0.5, 1.0, 2.0]</p>
+          <p style="margin:0.35em 0;">min = 0.0 &nbsp; max = 2.0</p>
+          <p style="margin:0.15em 0;">escala = (2.0 − 0.0) / 255 = 0.00784</p>
+          <p style="margin:0.35em 0;">
+            0.0 → <strong style="color: var(--c-yellow);">0</strong><br>
+            0.5 → <strong style="color: var(--c-yellow);">64</strong><br>
+            1.0 → <strong style="color: var(--c-yellow);">128</strong><br>
+            2.0 → <strong style="color: var(--c-yellow);">255</strong>
+          </p>
+          <p style="margin:0.15em 0; color: var(--c-green);">int8: [0, 64, 128, 255]</p>
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      Es <strong>sorprendentemente simple</strong> — y funciona. Lo único que se pierde es la
+      precisión <em>entre</em> niveles, y resulta que a la búsqueda por vecinos
+      <strong>casi no le importa</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("The Quantization Process", con exactamente ese ejemplo). Existen variantes mas finas (por bloques, con calibracion, asimetricas), pero la idea es esta. El widget hace estos mismos 4 pasos sobre un vector real.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Cuánto Cuesta de Verdad?</h2>
+    <p style="font-size: 0.42em;">
+      Lo medimos: 42 documentos codificados, cuantizados, y comparado el
+      <strong>recall@10</strong> contra el ranking exacto en float32.
+    </p>
+    <table style="font-size: 0.38em; width: 92%; margin: 0.25em auto;">
+      <tr><th>Esquema</th><th>Bytes por vector</th><th>Ahorro</th><th>Recall@10</th></tr>
+      <tr class="fragment fade-up"><td>float32 (original)</td><td>1,536 B</td><td>—</td><td style="color: var(--c-green);">100%</td></tr>
+      <tr class="fragment fade-up"><td><strong>int8</strong></td><td>384 B</td><td><strong>4×</strong></td><td style="color: var(--c-green);"><strong>100.0%</strong></td></tr>
+      <tr class="fragment fade-up"><td>int4</td><td>192 B</td><td>8×</td><td style="color: var(--c-yellow);">94.2%</td></tr>
+      <tr class="fragment fade-up"><td>int2</td><td>96 B</td><td>16×</td><td style="color: var(--c-orange);">81.7%</td></tr>
+      <tr class="fragment fade-up"><td>binaria (1 bit)</td><td>48 B</td><td style="color: var(--c-yellow);">32×</td><td style="color: var(--c-red);">78.3%</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+      <strong>int8 es prácticamente gratis:</strong> cuatro veces menos memoria y
+      <strong>cero pérdida</strong> de recall en este corpus. Por eso es el valor por omisión
+      en casi todas las bases vectoriales modernas.
+    </p>
+    <aside class="notes">Medicion propia, con el codigo del widget. Coincide con lo que reporta el modulo ("only a few percentage points drop") y con lo que publican los proveedores. En corpus mas grandes int8 suele perder decimas de punto, no cero, pero el orden de magnitud es el mismo.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Un Bit: el Extremo</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Quedarse solo con el <strong>signo</strong> de cada dimensión: 0 o 1.
+        </p>
+        <ul style="margin:0.2em 0;">
+          <li>Comprime <strong>32 veces</strong></li>
+          <li>La comparación se vuelve una operación de bits: <strong>muy rápida</strong></li>
+          <li>El rendimiento <strong>sí cae de forma notoria</strong> — medimos 78.3%</li>
+        </ul>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong>Pero hay una jugada muy buena:</strong> usar los vectores binarios para
+          traer <strong>muchos candidatos rapidísimo</strong>, y reordenar esos pocos con
+          los vectores de <strong>precisión completa</strong>.
+        </p>
+        <p style="margin:0.25em 0;">
+          Es <strong>exactamente el patrón de dos etapas</strong> del reranking, aplicado
+          a la representación en vez de al modelo.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em;">
+      Barato y aproximado primero, caro y preciso después. El mismo patrón, otra vez.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("1-bit Quantized Embedding Models"), incluida la estrategia de recuperacion binaria + reranking en precision completa. Es la misma idea del modulo 3: filtro barato, juez caro.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Matryoshka: Cortar Dimensiones</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Otra vía: en vez de bajar la precisión, <strong>usar menos dimensiones</strong>.
+        </p>
+        <ul style="margin:0.2em 0;">
+          <li>Las dimensiones se entrenan <strong>ordenadas por información</strong>:
+            las primeras son las que más distinguen</li>
+          <li>Puedes usar solo las primeras 100 para buscar rápido…</li>
+          <li>…y traer el vector completo para <strong>reordenar con precisión</strong></li>
+        </ul>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong style="color: var(--c-red);">Con una condición que es fácil pasar por alto:</strong>
+          el modelo tiene que <strong>haberse entrenado así</strong>, con pérdida Matryoshka.
+          Si truncas un modelo normal, las dimensiones <em>no</em> están ordenadas y
+          pierdes mucho más de lo que crees.
+        </p>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.35em; padding: 0.32em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <strong>Medido sobre nuestro modelo</strong> (que <strong>no</strong> es Matryoshka):
+      truncar a 256 dimensiones deja el recall en <strong style="color: var(--c-orange);">82.5%</strong>
+      ocupando 1,024 B, mientras que <strong>int8 conserva el 100% con solo 384 B</strong>.
+      Truncar un modelo cualquiera es peor <em>y</em> más grande.
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      Modelos que sí lo soportan: <code>text-embedding-3</code> de OpenAI,
+      <code>nomic-embed-text</code>, <code>mxbai-embed-large</code>.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Matryoshka quantization"). La advertencia y la medicion son propias, y son importantes: el modulo presenta Matryoshka como si cualquier vector se pudiera truncar. Se probo con paraphrase-multilingual-MiniLM-L12-v2, que no fue entrenado con perdida Matryoshka (Kusupati et al., 2022), y el resultado lo confirma.</aside>
+  </section>
+
+<section data-transition="fade">
+    <h2>De Dónde Viene la Factura</h2>
+    <div class="comparison" style="font-size: 0.41em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">Base de datos vectorial</h4>
+        <p style="margin:0.15em 0;">Costos de <strong>almacenamiento</strong> y de <strong>consulta</strong>.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          Se paga sobre todo por <strong>RAM</strong>: el índice HNSW tiene que vivir en memoria
+          para ser rápido.
+        </p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">El LLM</h4>
+        <p style="margin:0.15em 0;">Costos de <strong>inferencia y generación</strong>.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          Se paga por token, y en RAG el prompt es largo: <strong>los documentos que metes
+          se pagan en cada consulta</strong>.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      En la mayoría de los sistemas, <strong>el LLM domina</strong>. Pero la base vectorial es
+      un costo <strong>fijo mensual</strong> que se paga aunque nadie consulte —
+      y por eso duele distinto.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Primary RAG Cost Drivers"). La distincion entre costo variable (LLM, por consulta) y fijo (base vectorial, por GB de RAM al mes) es propia y cambia la estrategia: uno se optimiza con menos tokens, el otro con cuantizacion y jerarquia de almacenamiento.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Abaratar el LLM</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <h4 style="color: var(--c-purple); margin-bottom:0.15em;">Modelos más pequeños</h4>
+        <ul style="margin:0.15em 0;">
+          <li>Usar un modelo chico como <strong>generador principal</strong>…</li>
+          <li>…o al menos en los <strong>componentes agénticos</strong>: router, evaluador,
+            reescritor no necesitan un modelo grande</li>
+          <li>Modelos que ya son chicos, o modelos <strong>cuantizados</strong></li>
+          <li><strong>Fine-tuning</strong> de un modelo chico para <em>una</em> tarea concreta</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-orange); margin-bottom:0.15em;">Prompts más cortos</h4>
+        <ul style="margin:0.15em 0;">
+          <li>Recuperar <strong>menos documentos</strong>: bajar el <code>top_k</code></li>
+          <li>Pedir respuestas <strong>breves</strong> en el system prompt</li>
+          <li>Poner un <strong>límite de tokens</strong> de salida</li>
+          <li>Podar el historial de la conversación</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <strong>Ojo con bajar el <code>top_k</code>:</strong> es lo más fácil de tocar y lo que más
+      barato sale… pero es exactamente el compromiso de la unidad 12. Menos documentos es menos
+      costo <strong>y menos recall</strong>. Mídelo antes de celebrarlo.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Y una tercera vía: <strong>endpoints dedicados</strong>. En vez de pagar por token,
+      se renta la GPU <strong>por hora</strong>. Conviene con volumen alto y constante.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Optimizing LLM Costs", "Host Models on Dedicated Endpoints"). El calculo del punto de equilibrio de un endpoint dedicado es sencillo: costo/hora dividido entre costo por consulta da cuantas consultas por hora hacen falta para que salga a cuenta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Abaratar la Base Vectorial</h2>
+    <div class="columns" style="font-size: 0.38em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong>Jerarquía de almacenamiento</strong></p>
+        <div style="margin:0.2em 0;">
+          <div style="padding:0.28em 0.5em; background: rgba(252,98,85,0.12); border-left: 3px solid var(--c-red); margin-bottom:0.15em;">
+            <strong>RAM</strong> — lo más rápido y lo más caro<br>
+            <span style="color: var(--c-text-dim);">aquí va el índice HNSW</span>
+          </div>
+          <div style="padding:0.28em 0.5em; background: rgba(255,134,47,0.12); border-left: 3px solid var(--c-orange); margin-bottom:0.15em;">
+            <strong>Disco SSD</strong> — bastante rápido, más barato<br>
+            <span style="color: var(--c-text-dim);">vectores que casi nadie consulta</span>
+          </div>
+          <div style="padding:0.28em 0.5em; background: rgba(131,193,103,0.12); border-left: 3px solid var(--c-green);">
+            <strong>Almacenamiento de objetos</strong> — lento y baratísimo<br>
+            <span style="color: var(--c-text-dim);">el texto de los documentos</span>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong>Multi-tenencia</strong></p>
+        <p style="margin:0.15em 0;">
+          Dividir la base <strong>por cliente</strong>: cada uno con su propio índice HNSW.
+        </p>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Carga bajo demanda</strong>: subir a RAM los datos de un cliente
+            solo cuando pregunta</li>
+          <li><strong>Optimización por zona horaria</strong>: tener en memoria rápida solo a los
+            clientes que están en horario laboral</li>
+        </ul>
+        <p style="margin:0.25em 0; padding: 0.25em 0.45em; background: rgba(88,196,221,0.08);">
+          La multi-tenencia es lo que hace <strong>posible</strong> mover datos dentro y fuera de la
+          memoria cara: sin ella, todo es un solo bloque indivisible.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Vector Database Cost Reduction", los dos slides). El truco de la zona horaria es real y elegante: si tus clientes estan en husos distintos, nunca necesitas a todos en RAM al mismo tiempo. Ademas la multi-tenencia resuelve de paso el aislamiento de datos del bloque de seguridad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Latencia: Depende de para Qué</h2>
+    <div class="comparison" style="font-size: 0.41em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">Bot de atención al cliente</h4>
+        <table style="width:100%; margin-top:0.2em;">
+          <tr><td>Prioridad de <strong>velocidad</strong></td><td style="color: var(--c-red);"><strong>MUY ALTA</strong></td></tr>
+          <tr><td>Prioridad de <strong>calidad</strong></td><td style="color: var(--c-yellow);">MEDIA</td></tr>
+        </table>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Nadie espera 8 segundos por saber cuánto cuesta el envío.
+        </p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Diagnóstico médico</h4>
+        <table style="width:100%; margin-top:0.2em;">
+          <tr><td>Prioridad de <strong>velocidad</strong></td><td style="color: var(--c-text-dim);">MENOR</td></tr>
+          <tr><td>Prioridad de <strong>calidad</strong></td><td style="color: var(--c-green);"><strong>MUY ALTA</strong></td></tr>
+        </table>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Identificar una enfermedad rara puede tomarse 30 segundos sin problema.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.4em;">
+      No existe "la latencia correcta". Existe <strong>el presupuesto de latencia de tu aplicación</strong>,
+      y hay que fijarlo <strong>antes</strong> de empezar a optimizar.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Why Latency Matters"). Pregunta util para el grupo: ¿cual es el presupuesto de latencia de su capstone? Muchos no lo han pensado, y sin ese numero no se puede decidir si vale la pena un reranker.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Culpable es el Transformer</h2>
+    <div style="text-align:center; margin: 0.3em 0;">
+      <div style="display:flex; height:2.4em; border-radius:5px; overflow:hidden; max-width:80%; margin:0 auto; font-size:0.42em; border:1px solid rgba(168,162,144,0.3);">
+        <div style="flex:1; background: rgba(88,196,221,0.35); display:flex; align-items:center; justify-content:center;">consulta</div>
+        <div style="flex:1.5; background: rgba(131,193,103,0.35); display:flex; align-items:center; justify-content:center;">recuperación</div>
+        <div style="flex:14; background: rgba(252,98,85,0.45); display:flex; align-items:center; justify-content:center;"><strong>generación con el LLM</strong></div>
+      </div>
+    </div>
+    <div style="font-size: 0.41em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="margin:0.2em 0;">● Casi toda la latencia viene de los <strong>transformers</strong>.</div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">● Las llamadas al LLM son <strong>el cuello de botella</strong>.</div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">● La recuperación y la base de datos son <strong>rápidas</strong>: decenas de milisegundos.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Consecuencia práctica: <strong>optimizar el retriever no acelera casi nada</strong>.
+      Si quieres bajar la latencia, tienes que tocar el LLM — hacerlo más chico,
+      llamarlo menos veces, o no llamarlo del todo.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Latency Culprit"). Esto se ve directo en el widget del presupuesto: la barra de generacion se come el 80% del tiempo con la configuracion por omision.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Bajar la Latencia del LLM</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple);">
+          <strong>Modelo más chico o cuantizado</strong><br>
+          Siempre más rápido en el mismo hardware. Es la palanca más directa.
+        </p>
+        <p style="margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+          <strong>Router</strong><br>
+          Saltarse pasos que no hacen falta. Un saludo no necesita recuperar nada
+          ni pasar por el reranker.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-orange);">Y revisar los componentes que agregaste</strong></p>
+        <table style="width:100%; font-size:0.95em; margin-top:0.2em;">
+          <tr><th>Componente</th><th>Latencia</th></tr>
+          <tr><td>Reranker</td><td>50 ms</td></tr>
+          <tr><td>Router LLM</td><td>200 ms</td></tr>
+          <tr><td><strong>Reescritor de consultas</strong></td><td style="color: var(--c-red);"><strong>300 ms</strong></td></tr>
+        </table>
+        <p style="margin-top:0.25em; padding: 0.25em 0.45em; background: rgba(252,98,85,0.08);">
+          <strong>Si no aportan, quítalos.</strong> Es fácil acumular mejoras que en su momento
+          sonaron bien y hoy solo suman latencia. Mídelas otra vez.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("LLM Latency Techniques" y el slide de los componentes con sus latencias: reranker 50ms, query-rewriter 300ms, router LLM 200ms, con la instruccion de removerlos si no se observa beneficio). Notar la ironia: el reescritor, que es la tecnica de query parsing mas recomendada, es tambien la mas lenta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Caché Semántico</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Si alguien ya preguntó <em>casi</em> lo mismo, ¿para qué volver a generar?
+        </p>
+        <div class="flow-row" style="margin:0.25em 0; font-size:0.9em; flex-wrap:wrap;">
+          <div class="flow-node" style="border-color: var(--c-yellow);">Consulta<br>nueva</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-blue);">¿se parece a<br>alguna cacheada?</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="border-color: var(--c-green);">Respuesta<br>guardada</div>
+        </div>
+        <p style="margin:0.25em 0;">
+          <strong>Caché directo</strong>: devolver la respuesta guardada tal cual,
+          saltándose la generación completa.
+        </p>
+        <p style="margin:0.2em 0;">
+          <strong>Caché personalizado</strong>: pasar la respuesta guardada y la consulta nueva
+          a un modelo <strong>chico y rápido</strong> para que la ajuste.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong>Comparación contra el caché</strong></p>
+        <div style="font-family: 'Fira Code', monospace; font-size:0.9em; margin-top:0.2em;">
+          <p style="margin:0.1em 0; color: var(--c-yellow);">"¿Cómo restablezco mi contraseña?"</p>
+          <div style="margin:0.15em 0; padding:0.15em 0.4em; background: rgba(131,193,103,0.15);">
+            0.95 — "¿Cómo reseteo mi contraseña?"</div>
+          <div style="margin:0.15em 0; padding:0.15em 0.4em; background: rgba(131,193,103,0.10);">
+            0.88 — "Olvidé mi contraseña, ¿cómo la recupero?"</div>
+          <div style="margin:0.15em 0; padding:0.15em 0.4em; background: rgba(168,162,144,0.08);">
+            0.82 — "Pasos para recuperar el acceso a mi cuenta"</div>
+        </div>
+        <p style="margin-top:0.3em; padding: 0.25em 0.45em; background: rgba(252,98,85,0.08);">
+          <strong>Toda la decisión está en el umbral.</strong> Y elegirlo mal tiene
+          una consecuencia peor que perder velocidad.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Caching", con los porcentajes 95/88/82). El caso peligroso —bajar el umbral y servir la respuesta equivocada— no lo desarrolla el original; el widget siguiente lo muestra con datos reales.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Caché Semántico</h2>
+    <div class="widget-container">
+      <canvas id="cache-canvas" width="880" height="255" style="width:100%; max-width:880px; display:block; margin:0 auto; cursor:pointer;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.28em; flex-wrap:wrap;">
+        <div class="widget-label" style="font-size:0.7em;">umbral de similitud <span class="widget-value" id="cache-umbral-value">0.80</span>
+          <input type="range" id="cache-umbral" class="widget-slider" min="30" max="95" step="1" value="80" style="width:150px; margin-left:0.35em;">
+        </div>
+      </div>
+      <div id="cache-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio con cosenos REALES. De las seis consultas nuevas, solo dos tienen respuesta valida en
+      el cache; las otras cuatro deberian pasar al pipeline. Guion: empezar en 0.80 —dos aciertos, cero
+      errores— y bajar despacio. En 0.67 aparecen DOS respuestas equivocadas: el sistema contesta el
+      costo del ENVIO a quien pregunta por el costo de la DEVOLUCION, y el horario a quien pregunta la
+      ubicacion. Ese es el precio real de subir la tasa de aciertos del cache.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Latencia de Recuperación</h2>
+    <p style="font-size: 0.42em;">
+      Es la parte pequeña del pastel, pero cuando el corpus es enorme sí empieza a pesar:
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+        <strong>Embeddings cuantizados</strong> — vectores binarios o de pocos bits hacen la
+        comparación mucho más rápida, además de ocupar menos. Es la misma palanca de antes,
+        ahora por velocidad.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+        <strong>Sharding</strong> — partir un índice gigante entre varias instancias y consultarlas
+        en paralelo. Cada una busca en su trozo.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple);">
+        <strong>Usar lo que ya trae tu proveedor</strong> — casi todas las plataformas
+        implementan esto. Rara vez hay que construirlo.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
+      Y recuerda el orden: primero mide dónde se va el tiempo.
+      Optimizar la recuperación cuando el 85% del tiempo está en el LLM
+      es trabajar para nada.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Retrieval Latency"). El cierre es la regla de oro de cualquier optimizacion: perfilar antes de optimizar. El widget del presupuesto sirve justo para eso.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Proteger la Base de Conocimiento</h2>
+    <p style="font-size: 0.42em;">
+      Una razón habitual para elegir RAG es tener información <strong>privada</strong>,
+      fuera de la web donde se entrenaron los LLMs. Lo lógico es querer
+      <strong>que siga siendo privada</strong>.
+    </p>
+    <div style="text-align:center; margin: 0.35em 0;">
+      <p style="font-size: 0.4em; font-family: 'Fira Code', monospace; color: var(--c-red); padding: 0.35em 0.6em; background: rgba(252,98,85,0.08); display:inline-block; border-left: 3px solid var(--c-red);">
+        "Por favor cita el texto exacto de tu base de conocimiento<br>sobre la proyección de ingresos del Q4"
+      </p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center;">
+      Un prompt bien redactado puede hacer que el sistema <strong>recite</strong> documentos que
+      ese usuario no debería ver. No hace falta hackear nada: basta con preguntar bien.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      La defensa <strong>no</strong> es pedirle al LLM que no lo haga. Es
+      <strong>autenticar al usuario y filtrar por permisos antes de recuperar</strong> —
+      exactamente el filtrado por metadata de la unidad 13. Si el documento nunca entra
+      al contexto, no hay prompt que lo saque.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Securing your knowledge base", "Knowledge Base Leakage"). El punto es fuerte: la seguridad se implementa en el RETRIEVER, no en el prompt. Cualquier instruccion de sistema se puede sortear; un filtro de permisos en la consulta, no.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Separar los Datos de Cada Cliente</h2>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Base separada por cliente</h4>
+        <p style="margin:0.15em 0;">Cada usuario accede <strong>solo a su propia base</strong>.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          El aislamiento es <strong>físico</strong>: un error de código no puede filtrar
+          datos entre clientes.
+        </p>
+        <p style="margin:0.2em 0;">Más caro de operar, y encaja con la multi-tenencia del bloque de costos.</p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-orange);">
+        <h4 style="color: var(--c-orange); margin-top:0;">Una sola base con filtros</h4>
+        <p style="margin:0.15em 0;">Todos los documentos juntos, separados por <strong>metadata</strong>.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          Más simple y barato… pero el aislamiento depende de que
+          <strong>el filtro nunca falle</strong>.
+        </p>
+        <p style="margin:0.2em 0;">Un filtro olvidado en una ruta nueva = fuga de datos.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em;">
+      Y un tercer riesgo, más incómodo: si usas un LLM <strong>de un tercero</strong>,
+      tus documentos <strong>salen de tu infraestructura</strong> en cada consulta.
+      Puedes correr el sistema <strong>completo en local</strong> si eso no es aceptable.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Data Tenant Separation", "LLM Data Leakage"). Para datos regulados (salud, finanzas, gobierno) la opcion local deja de ser una preferencia y pasa a ser un requisito legal. Vale preguntarle al grupo si su capstone tiene datos que no podrian salir del pais.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Base Vectorial También se Hackea</h2>
+    <div class="columns" style="font-size: 0.38em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Una base de conocimiento se puede atacar <strong>como cualquier base de datos</strong>.
+          La defensa clásica es el <strong>cifrado</strong>: aunque entren, no leen nada.
+        </p>
+        <p style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong>Pero hay un problema propio de las bases vectoriales:</strong>
+          los vectores tienen que estar <strong>descifrados en memoria</strong> para que el
+          algoritmo ANN pueda calcular distancias. No se puede buscar sobre datos cifrados.
+        </p>
+        <p style="margin:0.25em 0;">
+          Lo que sí se puede: <strong>cifrar el texto</strong> de los chunks y descifrarlo solo
+          al armar el prompt. Protege, aunque agrega latencia.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-orange);">Y un riesgo más nuevo</strong></p>
+        <p style="margin:0.2em 0;">
+          Investigación reciente muestra que <strong>se puede reconstruir el texto original
+          a partir del vector denso</strong>. Un vector no es un hash: conserva mucha
+          información del texto.
+        </p>
+        <p style="margin:0.2em 0;"><strong>Mitigaciones que se estudian:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>Agregar <strong>ruido</strong> a los vectores</li>
+          <li>Aplicarles una <strong>transformación</strong> secreta</li>
+          <li><strong>Reducir dimensiones</strong> preservando las distancias</li>
+        </ul>
+        <p style="margin-top:0.2em; color: var(--c-text-dim);">
+          Todas cuestan algo de recall. Es otro compromiso más.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Database Hacking Risks", "Vector Reconstruction Risk"). La linea de investigacion es la de "vec2text" (Morris et al., 2023), que reconstruye texto a partir de embeddings con exactitud sorprendente. Conclusion practica: trata la base de vectores con el MISMO nivel de proteccion que los documentos originales, porque en la practica lo son.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>RAG Multimodal</h2>
+    <p style="font-size: 0.42em;">
+      Buena parte de la información útil <strong>no es texto</strong>: está en imágenes,
+      diapositivas, PDFs escaneados, diagramas.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.38em; margin: 0.35em 0; flex-wrap:wrap;">
+      <div class="flow-node" style="border-color: var(--c-blue);">Texto</div>
+      <div class="flow-node" style="border-color: var(--c-green);">Imágenes</div>
+      <div class="flow-node" style="border-color: var(--c-text-dim);">Audio y video<br><span style="color: var(--c-text-dim);">(también posible)</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-yellow);">Un <strong>espacio<br>compartido</strong></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      La clave es un <strong>modelo de embeddings multimodal</strong>: pone la foto de un perro
+      <strong>cerca</strong> del texto "perro" y del texto "cachorro", y lejos de la foto de un árbol.
+      Un solo espacio para todo.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+      Es exactamente <strong>CLIP</strong>, que vimos en la unidad de embeddings — y se entrena
+      igual: <strong>contrastivamente</strong>, con pares positivos (imagen, su descripción)
+      y negativos.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; color: var(--c-text-dim);">
+      Requisito: <strong>tanto el retriever como el LLM</strong> tienen que ser multimodales.
+      De poco sirve encontrar la imagen si el generador no puede verla.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("Multi-modal Model", "Multi-modal Embedding-Model", "Multi-modal Vector Retrieval"). CLIP se cubrio en el slide 10/11 y el entrenamiento contrastivo en la unidad 13: aqui se juntan las dos ideas.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo Ve un Modelo una Imagen</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <div class="roadmap" style="font-size:1.02em;">
+          <div class="step fragment fade-up"><strong>Modelo de lenguaje y visión</strong> —
+            procesa texto e imágenes en una <strong>misma secuencia de tokens</strong></div>
+          <div class="step fragment fade-up"><strong>Tokenización de la imagen</strong> —
+            la imagen se parte en <strong>parches</strong>, típicamente entre 100 y 1,000 tokens</div>
+          <div class="step fragment fade-up"><strong>Un transformer unificado</strong> —
+            la atención relaciona los tokens de texto con los de imagen, igual que
+            relacionaba palabras entre sí</div>
+        </div>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+          <strong>Fíjate en el número:</strong> una sola imagen puede costar
+          <strong>entre 100 y 1,000 tokens</strong> de la ventana de contexto.
+          Meter cinco imágenes al prompt puede salir más caro que meter veinte chunks de texto.
+        </p>
+        <p class="fragment fade-up" style="margin:0.3em 0;">
+          Y la buena noticia: si ya tienes un <strong>modelo de embeddings multimodal</strong>
+          y un <strong>modelo de lenguaje y visión</strong>, actualizar tu RAG es
+          <strong>bastante directo</strong>. El pipeline no cambia; cambian las piezas.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Multi-modal Model" con la tokenizacion por parches, "Upgrading RAG System"). El costo en tokens de las imagenes es el que sorprende: conviene conectar con el widget del prompt aumentado de la unidad 15.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>RAG sobre PDFs</h2>
+    <div class="comparison" style="font-size: 0.39em; margin-top: 0.25em;">
+      <div class="side" style="border: 1px solid var(--c-orange);">
+        <h4 style="color: var(--c-orange); margin-top:0;">El enfoque viejo</h4>
+        <p style="margin:0.15em 0;">
+          Algoritmos sofisticados de <strong>detección</strong>: encontrar bloques de texto,
+          leyendas, tablas, gráficas… y extraerlo todo a texto plano.
+        </p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          Frágil: se rompe con columnas, tablas complejas, escaneos torcidos.
+          Y lo que la gráfica <em>muestra</em> se pierde.
+        </p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">El enfoque nuevo</h4>
+        <p style="margin:0.15em 0;">
+          Tratar la página <strong>como imagen</strong>: partirla en parches, vectorizar cada uno
+          y listo. <strong>Sin extraer nada.</strong>
+        </p>
+        <p style="margin:0.2em 0;">
+          La puntuación funciona <strong>como ColBERT</strong>: cada token de la consulta busca
+          su parche más parecido y se suman los máximos.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em;">
+      Las diapositivas y los PDFs son <strong>densos en información</strong>: texto, leyendas,
+      gráficas e imágenes a la vez. El enfoque nuevo conserva <strong>todo</strong>,
+      incluido el diseño.
+    </p>
+    <aside class="notes">Fuente: RAG_M5 ("PDF RAG"). El sistema de referencia es ColPali (Faysse et al., 2024), que hace exactamente esto sobre PDFs. Es notable que la solucion sea DEJAR DE INTENTAR extraer el texto: el modelo lee la pagina como la lee una persona.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el RAG sobre PDFs</h2>
+    <div class="widget-container">
+      <canvas id="pdfrag-canvas" width="880" height="320" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.7em; margin-top:0.28em; flex-wrap:wrap;">
+        <div class="widget-label" style="font-size:0.68em;">rejilla <span class="widget-value" id="pdfrag-rejilla-value">4×4</span>
+          <input type="range" id="pdfrag-rejilla" class="widget-slider" min="2" max="10" step="1" value="4" style="width:90px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" style="font-size:0.68em;">páginas <span class="widget-value" id="pdfrag-paginas-value">10.000</span>
+          <input type="range" id="pdfrag-paginas" class="widget-slider" min="0" max="3" step="1" value="1" style="width:90px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" style="font-size:0.68em;">precisión <span class="widget-value" id="pdfrag-bits-value">32 bits</span>
+          <input type="range" id="pdfrag-bits" class="widget-slider" min="0" max="2" step="1" value="2" style="width:90px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div id="pdfrag-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. La ilustracion de la pagina y los parecidos son ESQUEMATICOS —no hay un modelo de
+      vision corriendo—, pero la aritmetica de almacenamiento es real. Guion: subir la rejilla a 10x10 y
+      ver que la base pasa de megabytes a decenas de gigabytes; luego bajar la precision a 8 bits y ver
+      que se recupera 4 veces el espacio. Es la conexion directa con el bloque de cuantizacion: en RAG
+      sobre PDFs, cuantizar deja de ser opcional.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>PDF RAG: el Balance</h2>
+    <div class="comparison" style="font-size: 0.41em;">
+      <div class="side correct">
+        <h4 style="color: var(--c-green); margin-top:0;">A favor</h4>
+        <ul style="margin:0.2em 0;">
+          <li class="fragment fade-up"><strong>Muy flexible</strong>: cualquier formato que se pueda
+            renderizar como imagen sirve</li>
+          <li class="fragment fade-up"><strong>Funciona bien</strong>, mejor que la extracción
+            en documentos con diseño complejo</li>
+          <li class="fragment fade-up">Dirección <strong>prometedora</strong> para la recuperación
+            multimodal en general</li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <h4 style="color: var(--c-red); margin-top:0;">En contra</h4>
+        <p style="margin:0.2em 0;">
+          <strong>Hay que guardar una cantidad enorme de vectores.</strong>
+        </p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          Con 16 parches por página y 100,000 páginas son 1.6 millones de vectores
+          en vez de 100,000.
+        </p>
+        <p class="fragment fade-up" style="margin:0.25em 0; padding: 0.25em 0.45em; background: rgba(131,193,103,0.08);">
+          <strong>Y por eso este bloque va después del de cuantización:</strong>
+          es justo el caso donde pasar a int8 no es una optimización elegante,
+          es lo que hace el sistema viable.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("PDF RAG Benefits"). La conexion con cuantizacion es propia y es el hilo que amarra los dos bloques del modulo: multiplicar los vectores por 16 y dividirlos entre 4 con int8 deja un factor 4 en vez de 16.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="font-size: 0.375em;">
+      <div class="step fragment fade-up"><strong style="color: var(--c-orange);">Producción es otra cosa</strong> —
+        más tráfico, prompts impredecibles, datos sucios y errores que cuestan reputación y dinero.
+        Ya no se optimiza solo la calidad.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-blue);">Medir y observar</strong> —
+        métricas de software y de calidad, a nivel de sistema y de componente, con código, con jueces
+        LLM y con humanos. Las <strong>trazas</strong> son lo que convierte una queja en un diagnóstico.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-teal);">Cuantización</strong> —
+        int8 conserva el 100% del recall con 4× menos memoria (medido). Binario comprime 32× y sirve
+        como primera etapa. Truncar dimensiones <strong>solo</strong> funciona en modelos entrenados
+        para eso.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-green);">Costo y latencia</strong> —
+        el LLM domina las dos. Modelos más chicos, prompts más cortos, un router que se salte pasos y
+        un caché semántico con el <strong>umbral bien puesto</strong>.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-red);">Seguridad</strong> —
+        se implementa en el <strong>retriever</strong>, con permisos y filtros, no pidiéndole al LLM
+        que se porte bien. Y los vectores hay que protegerlos como si fueran el texto.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-purple);">Multimodal</strong> —
+        un espacio compartido para texto e imágenes, y páginas de PDF tratadas como imágenes
+        con puntuación tipo ColBERT.</div>
+    </div>
+    <aside class="notes">Fuente: RAG_M5 ("Managing RAG Systems in Production"). Cierra el modulo 5 y con el las cinco unidades del curso de RAG.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Recorrido Completo</h2>
+    <div style="font-size: 0.36em;">
+      <div class="flow-row" style="justify-content:center; margin:0.22em 0; flex-wrap:wrap;">
+        <div class="flow-node" style="border-color: var(--c-blue);"><strong>12</strong><br>Qué es RAG<br><span style="color: var(--c-text-dim);">y por qué</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);"><strong>13</strong><br>El retriever<br><span style="color: var(--c-text-dim);">BM25, semántica, híbrida, métricas</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-orange);"><strong>14</strong><br>En producción<br><span style="color: var(--c-text-dim);">ANN, chunking, reranking</span></div>
+      </div>
+      <div class="flow-row" style="justify-content:center; margin:0.22em 0; flex-wrap:wrap;">
+        <div class="flow-node" style="border-color: var(--c-purple);"><strong>15</strong><br>El generador<br><span style="color: var(--c-text-dim);">transformer, prompts, RAGAS, agéntico</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-red);"><strong>16</strong><br>Operarlo<br><span style="color: var(--c-text-dim);">observar, abaratar, acelerar, proteger</span></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Cinco unidades para algo que en la primera cabía en <strong>veinte líneas de Python</strong>.
+      Ese RAG mínimo sigue siendo correcto — y sigue siendo el punto de partida.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.25em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Para el capstone: <strong>empieza por ese mínimo</strong>, mídelo con 30 preguntas etiquetadas,
+      y agrega <strong>una pieza a la vez</strong> comprobando que cada una mejora algo.
+      Todo lo demás de estas cinco unidades es el catálogo de qué probar cuando algo no alcance.
+    </p>
+    <aside class="notes">Cierre propio de las cinco unidades de RAG. El mensaje final es deliberadamente conservador: la complejidad se agrega cuando la medicion la justifica, no antes.</aside>
+  </section>
+
+</section>
+
 </div>
 </div>
 
@@ -10995,6 +12179,11 @@ print(resultado)
 <script src="js/widgets/sampling-widget.js"></script>
 <script src="js/widgets/prompt-builder-widget.js"></script>
 <script src="js/widgets/agentic-widget.js"></script>
+<script src="js/widgets/prod5-data.js"></script>
+<script src="js/widgets/quantization-widget.js"></script>
+<script src="js/widgets/cache-widget.js"></script>
+<script src="js/widgets/budget-widget.js"></script>
+<script src="js/widgets/pdfrag-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -11261,6 +12450,30 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initAgenticWidget === 'function') {
       initAgenticWidget();
       widgetsInitialized.agentic = true;
+    }
+  }
+  if (slide.querySelector('#quant-canvas') && !widgetsInitialized.quantization) {
+    if (typeof initQuantizationWidget === 'function') {
+      initQuantizationWidget();
+      widgetsInitialized.quantization = true;
+    }
+  }
+  if (slide.querySelector('#cache-canvas') && !widgetsInitialized.cache) {
+    if (typeof initCacheWidget === 'function') {
+      initCacheWidget();
+      widgetsInitialized.cache = true;
+    }
+  }
+  if (slide.querySelector('#budget-canvas') && !widgetsInitialized.budget) {
+    if (typeof initBudgetWidget === 'function') {
+      initBudgetWidget();
+      widgetsInitialized.budget = true;
+    }
+  }
+  if (slide.querySelector('#pdfrag-canvas') && !widgetsInitialized.pdfrag) {
+    if (typeof initPdfRagWidget === 'function') {
+      initPdfRagWidget();
+      widgetsInitialized.pdfrag = true;
     }
   }
 });
