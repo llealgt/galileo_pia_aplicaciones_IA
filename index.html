@@ -66,6 +66,7 @@
         <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos, CV e Hyper-parameter Tuning</a>
         <a class="toc-item" onclick="Reveal.slide(8, 0)"><span class="toc-num">8</span>Callbacks</a>
         <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
+        <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -5000,6 +5001,780 @@ run.log({"ejemplos": wandb.Image(imagen, boxes={
   </section>
 </section>
 
+<!-- ============================================================
+     SECCION 10 — Embeddings y Busqueda Semantica
+     ============================================================ -->
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>Embeddings y Búsqueda Semántica</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 780px;">
+        Cómo se convierte texto, imágenes o audio en <strong style="color: var(--c-yellow);">vectores
+        donde la distancia significa parecido</strong>, y qué se construye encima: búsqueda semántica,
+        bases de datos vectoriales y recuperación con filtros automáticos.
+      </p>
+    </div>
+    <aside class="notes">
+      Unidad propia. Es la base de RAG, buscadores modernos, recomendadores y de casi cualquier capstone
+      que involucre texto. Los widgets usan embeddings REALES calculados con un modelo multilingue.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema: los Modelos Comen Números</h2>
+    <p style="font-size: 0.48em;">
+      Un modelo no procesa "perro", procesa vectores. La forma ingenua es
+      <strong>one-hot</strong>: una dimensión por palabra del vocabulario.
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side incorrect">
+        <h3>One-hot</h3>
+        <pre style="font-size: 0.52em; text-align:left;"><code>perro = [0,0,1,0,...,0]
+gato  = [0,1,0,0,...,0]
+avion = [1,0,0,0,...,0]</code></pre>
+        <ul style="font-size: 0.7em; text-align:left;">
+          <li>Vectores de <strong>50,000+</strong> dimensiones</li>
+          <li>Todo par de palabras está a la <strong>misma distancia</strong></li>
+          <li>"perro" y "gato" son tan distintos como "perro" y "avión"</li>
+        </ul>
+      </div>
+      <div class="side correct">
+        <h3>Embedding</h3>
+        <pre style="font-size: 0.52em; text-align:left;"><code>perro = [0.21, -0.7, ..., 0.4]
+gato  = [0.19, -0.6, ..., 0.3]
+avion = [-0.8,  0.1, ..., -0.5]</code></pre>
+        <ul style="font-size: 0.7em; text-align:left;">
+          <li><strong>Denso</strong>: cientos de dimensiones, no miles</li>
+          <li>La <strong>distancia significa algo</strong>: perro está cerca de gato</li>
+          <li>Se <strong>aprende</strong> de los datos, no se diseña a mano</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.35em;">
+      Un <strong style="color: var(--c-yellow);">embedding</strong> es una representación densa donde la
+      <strong>geometría codifica el significado</strong>: cosas parecidas quedan cerca.
+    </p>
+    <aside class="notes">Contenido propio. La comparacion one-hot vs denso es la intuicion fundacional; conviene insistir en que la propiedad clave es que la DISTANCIA tiene sentido.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Espacio de Embeddings</h2>
+    <div class="widget-container">
+      <canvas id="embedding-space-canvas" width="880" height="320" style="width:100%; max-width:880px; display:block; margin:0 auto; cursor:pointer;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.4em; flex-wrap:wrap;">
+        <select id="embedding-space-select" class="widget-btn fi-btn" style="max-width:330px;"></select>
+        <span style="color:var(--c-text-dim); font-size:0.5em;">vecinos:</span>
+        <button class="widget-btn fi-btn emb-k-btn" data-k="1">1</button>
+        <button class="widget-btn fi-btn emb-k-btn" data-k="3">3</button>
+        <button class="widget-btn fi-btn emb-k-btn" data-k="5">5</button>
+        <button class="widget-btn fi-btn" id="embedding-space-temas">Colorear por tema</button>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      20 frases reales codificadas con <code>paraphrase-multilingual-MiniLM-L12-v2</code>. Puedes hacer clic
+      en cualquier punto del mapa. <strong>Ojo:</strong> los vecinos se calculan con el coseno en las
+      <strong>384 dimensiones originales</strong>, no con la distancia del dibujo — el mapa 2D es una
+      proyección con pérdida.
+    </p>
+    <aside class="notes">
+      Widget propio con datos reales (js/widgets/embeddings-data.js). Las 2 componentes de PCA explican solo
+      el 27% de la varianza: por eso a veces dos puntos se ven juntos en el mapa pero no son vecinos. Es un
+      buen momento para advertir contra sobre-interpretar los mapas 2D de embeddings.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Qué Significa Cada Dimensión?</h2>
+    <p style="font-size: 0.48em;">
+      La pregunta natural es "¿la dimensión 37 es el género? ¿la 112 es el tamaño?".
+      La respuesta honesta: <strong style="color: var(--c-red);">individualmente no significan nada
+      interpretable</strong>. El significado vive en la <em>geometría del conjunto</em>, no en los ejes.
+    </p>
+    <div class="columns" style="margin-top: 0.2em;">
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.46em; color: var(--c-green);"><strong>Lo que sí se puede leer</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li><strong>Distancias:</strong> qué está cerca de qué</li>
+          <li><strong>Direcciones:</strong> ciertas direcciones capturan relaciones consistentes</li>
+          <li><strong>Vecindarios:</strong> agrupamientos por tema o función</li>
+        </ul>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.46em; color: var(--c-yellow);"><strong>La aritmética vectorial</strong></p>
+        <p class="katex-block" style="font-size: 0.58em;">\vec{rey} - \vec{hombre} + \vec{mujer} \approx \vec{reina}</p>
+        <p style="font-size: 0.4em;">
+          Medido con el modelo de esta unidad, los cosenos del vector resultante fueron:
+          <strong style="color: var(--c-green);">reina 0.82</strong>, mujer 0.79, rey 0.69, princesa 0.69.
+          El vecino más cercano <strong>es</strong> "reina".
+        </p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      ⚠️ Esta propiedad se descubrió con <strong>Word2Vec</strong> y es más limpia ahí que en los modelos
+      modernos; no todas las analogías funcionan. Sirve como <em>intuición</em> de que el espacio tiene
+      estructura, no como una herramienta que uno use en producción.
+    </blockquote>
+    <aside class="notes">
+      Los numeros son reales: se midieron con paraphrase-multilingual-MiniLM-L12-v2 al preparar la unidad.
+      Vale la pena decir que muchas analogias famosas fallan y que hay literatura criticando la evaluacion
+      por analogias.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo se Mide el Parecido</h2>
+    <table style="font-size: 0.4em; width: 100%; max-width: 860px; margin: 0 auto;">
+      <tr><th>Medida</th><th>Fórmula</th><th>Qué mira</th><th>Cuándo usarla</th></tr>
+      <tr class="fragment fade-up">
+        <td><strong style="color:var(--c-yellow);">Coseno</strong></td>
+        <td><code>a·b / (‖a‖‖b‖)</code></td>
+        <td>Solo el <strong>ángulo</strong>, ignora la magnitud</td>
+        <td><strong>El default</strong> para texto</td></tr>
+      <tr class="fragment fade-up">
+        <td>Producto punto</td><td><code>a·b</code></td>
+        <td>Ángulo <em>y</em> magnitud</td>
+        <td>Si los vectores ya están normalizados, equivale al coseno</td></tr>
+      <tr class="fragment fade-up">
+        <td>Distancia euclidiana (L2)</td><td><code>‖a − b‖</code></td>
+        <td>Separación en el espacio</td>
+        <td>Imágenes, o cuando la magnitud importa</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.35em;">
+      <strong>Por qué el coseno para texto:</strong> un documento largo produce un vector de mayor magnitud
+      que uno corto aunque hablen de lo mismo. El coseno mide <strong>dirección</strong>, así que compara
+      <em>de qué trata</em> sin castigar la longitud.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.25em;">
+      💡 <strong>Truco estándar:</strong> normaliza los vectores a norma 1 al guardarlos
+      (<code>normalize_embeddings=True</code>). Entonces coseno = producto punto, que es una simple
+      multiplicación de matrices — mucho más rápido, y es lo que hacen por dentro las bases vectoriales.
+    </blockquote>
+    <aside class="notes">Contenido propio. Con vectores normalizados tambien se cumple que ||a-b||^2 = 2 - 2·cos, asi que ordenar por L2 o por coseno da el MISMO ranking.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>De Estáticos a Contextuales</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.66em;">
+      <div class="step fragment fade-up"><strong>2013 — Word2Vec</strong> (Mikolov et al.): predecir palabras
+        vecinas produce vectores con estructura semántica. Un vector <strong>fijo</strong> por palabra.</div>
+      <div class="step fragment fade-up"><strong>2014 — GloVe</strong> (Pennington et al.): mismo objetivo desde
+        estadísticas globales de co-ocurrencia. <strong>2016 — FastText</strong>: usa sub-palabras, así que
+        maneja palabras nunca vistas.</div>
+      <div class="step fragment fade-up"><strong>2018 — ELMo</strong> (Peters et al., <em>Deep contextualized word
+        representations</em>): el vector de una palabra <strong style="color:var(--c-yellow);">depende de la
+        oración</strong>. Nace el embedding contextual.</div>
+      <div class="step fragment fade-up"><strong>2018 — BERT</strong> (Devlin et al.) y
+        <strong>2019 — Sentence-BERT</strong> (Reimers &amp; Gurevych): representaciones contextuales
+        profundas, y una forma eficiente de comparar <em>oraciones</em> completas.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; color: var(--c-text-dim); margin-top: 0.35em;">
+      Hoy casi todo lo que usarás desciende de esta última rama.
+    </p>
+    <aside class="notes">
+      Papers: Word2Vec (arXiv 1301.3781), GloVe (EMNLP 2014), FastText (arXiv 1607.04606), ELMo
+      (arXiv 1802.05365), BERT (arXiv 1810.04805), Sentence-BERT (arXiv 1908.10084).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Por Qué Importa el Contexto</h2>
+    <div class="comparison">
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Estático (Word2Vec)</h3>
+        <p style="font-size: 0.8em;">"banco" tiene <strong>un solo vector</strong>, sin importar la frase.</p>
+        <pre style="font-size: 0.52em; text-align:left;"><code>"me senté en el banco"
+"el banco me dio un crédito"
+        ↓
+   el MISMO vector</code></pre>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">El vector termina siendo un promedio de todos
+          los sentidos: no representa bien a ninguno.</p>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-green);">Contextual (ELMo, BERT)</h3>
+        <p style="font-size: 0.8em;">El vector se calcula <strong>leyendo la oración completa</strong>.</p>
+        <pre style="font-size: 0.52em; text-align:left;"><code>"me senté en el banco"  → v1
+"el banco me dio un crédito" → v2
+
+     v1 ≠ v2</code></pre>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">Cada aparición tiene su propio vector, acorde
+          al sentido que tiene <em>ahí</em>.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Esto es lo que hace que la búsqueda semántica funcione sobre texto real, donde la
+      <strong>polisemia</strong> está por todas partes.
+    </p>
+    <aside class="notes">Contenido propio. El ejemplo del banco es el clasico en espanol; en ingles se usa "bank" (rio / banco).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Tipos de Embeddings</h2>
+    <table style="font-size: 0.39em; width: 100%;">
+      <tr><th>Tipo</th><th>Qué representa</th><th>Ejemplos</th><th>Uso típico</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">Palabra</strong></td>
+        <td>Un token</td><td>Word2Vec, GloVe, FastText</td><td>Features clásicas de NLP</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">Oración / documento</strong></td>
+        <td>Un texto completo</td><td>Sentence-BERT, E5, BGE</td><td><strong>Búsqueda semántica, RAG</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">Imagen</strong></td>
+        <td>Una imagen</td><td>ResNet/ViT, DINOv2</td><td>Búsqueda visual, duplicados</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-yellow);">Multimodal</strong></td>
+        <td>Texto <em>e</em> imagen en el <strong>mismo</strong> espacio</td><td>CLIP, SigLIP, ImageBind</td>
+        <td>Buscar imágenes con texto</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-purple);">Código</strong></td>
+        <td>Funciones y snippets</td><td>CodeBERT, jina-code</td><td>Búsqueda de código</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-teal);">Grafos / usuarios</strong></td>
+        <td>Nodos, productos, usuarios</td><td>node2vec, embeddings de recomendación</td>
+        <td>Recomendadores</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      Todos comparten la misma idea; lo que cambia es <strong>qué se codifica</strong> y con qué objetivo se
+      entrenó.
+    </p>
+    <aside class="notes">Contenido propio. Recalcar que un embedding solo es comparable con otro del MISMO modelo: no se pueden mezclar espacios.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Multimodales: CLIP</h2>
+    <p style="font-size: 0.46em;">
+      <strong>CLIP</strong> (Radford et al., 2021 — <em>Learning Transferable Visual Models From Natural
+      Language Supervision</em>) entrenó dos codificadores a la vez, uno de imágenes y otro de texto, sobre
+      400 millones de pares imagen-descripción sacados de internet.
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.2em;">
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.44em; color: var(--c-yellow);"><strong>El objetivo: contrastivo</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Acercar la imagen a <strong>su</strong> descripción</li>
+          <li>Alejarla de las descripciones de las <strong>otras</strong> imágenes del batch</li>
+          <li>Resultado: un <strong>espacio compartido</strong> donde la foto de un perro queda cerca del
+            texto "una foto de un perro"</li>
+        </ul>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.44em; color: var(--c-green);"><strong>Qué habilita</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Buscar imágenes escribiendo texto (y al revés)</li>
+          <li><strong>Clasificación zero-shot</strong>: comparar la imagen contra "una foto de un {clase}"
+            sin entrenar nada</li>
+          <li>Es la pieza que conecta texto e imagen en modelos generativos</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      Después vinieron <strong>SigLIP</strong> (2023, cambia la pérdida contrastiva por una sigmoide y
+      entrena mejor) e <strong>ImageBind</strong> (2023, une <em>seis</em> modalidades — imagen, texto,
+      audio, profundidad, térmico y movimiento — en un solo espacio).
+    </blockquote>
+    <aside class="notes">
+      CLIP: arXiv 2103.00020. SigLIP: arXiv 2303.15343. ImageBind: arXiv 2305.05665. El truco de ImageBind
+      es que basta alinear cada modalidad con imagenes para que todas queden alineadas entre si.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Modelos que se Usan Hoy</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-orange);"><strong>Comerciales (API)</strong></p>
+        <table style="font-size: 0.36em; width: 100%;">
+          <tr><th>Modelo</th><th>Nota</th></tr>
+          <tr><td><code>text-embedding-3</code> (OpenAI)</td><td>small y large; dimensión ajustable</td></tr>
+          <tr><td>Cohere <code>embed</code></td><td>fuerte en multilingüe; modo búsqueda/documento</td></tr>
+          <tr><td>Voyage AI</td><td>especializados por dominio (código, legal, finanzas)</td></tr>
+          <tr><td>Gemini embeddings (Google)</td><td>integrado a Vertex AI</td></tr>
+        </table>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+          Pagas por token, no administras nada, y tus datos salen de tu infraestructura.
+        </p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-green);"><strong>Abiertos (corren en tu máquina)</strong></p>
+        <table style="font-size: 0.36em; width: 100%;">
+          <tr><th>Modelo</th><th>Nota</th></tr>
+          <tr><td><code>all-MiniLM-L6-v2</code></td><td>el caballito de batalla: 384 dim, rapidísimo</td></tr>
+          <tr><td><strong>BGE</strong> (BAAI)</td><td>de los mejores open source; versiones multilingües</td></tr>
+          <tr><td><strong>E5</strong> (Microsoft)</td><td>usa prefijos <code>query:</code> / <code>passage:</code></td></tr>
+          <tr><td><strong>GTE</strong> (Alibaba), <strong>Nomic</strong>, <strong>Jina</strong></td>
+            <td>contexto largo, licencias permisivas</td></tr>
+        </table>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.2em;">
+          Gratis, privados y reproducibles; tú pones el cómputo.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      Para comparar: el <strong>MTEB leaderboard</strong> (Massive Text Embedding Benchmark, en Hugging Face)
+      ordena los modelos por tarea e idioma. Ojo: el primero del ranking rara vez es el que te conviene —
+      mira también tamaño, licencia y velocidad.
+    </p>
+    <aside class="notes">
+      El panorama cambia rapido; lo estable es el criterio de eleccion, no la lista. Recalcar que un modelo
+      chico y local suele bastar para un capstone, y que cambiar de modelo obliga a RE-INDEXAR todo.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Calcular Embeddings en Python</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.42em; color: var(--c-green);"><strong>Open source, local</strong></p>
+        <pre style="font-size: 0.35em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">from sentence_transformers import (
+    SentenceTransformer)
+
+modelo = SentenceTransformer(
+    "paraphrase-multilingual-MiniLM-L12-v2")
+
+frases = ["el perro ladra en el jardin",
+          "un gato duerme en el sofa",
+          "el servidor devolvio un error"]
+
+# normalizar => coseno == producto punto
+E = modelo.encode(frases,
+                  normalize_embeddings=True)
+print(E.shape)          # (3, 384)
+
+similitud = E @ E.T     # matriz 3x3
+print(similitud[0, 1])  # perro vs gato</code></pre>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.42em; color: var(--c-orange);"><strong>API comercial</strong></p>
+        <pre style="font-size: 0.35em; max-width:100%; overflow-x:auto; box-sizing:border-box;"><code class="language-python">from openai import OpenAI
+import numpy as np
+
+cliente = OpenAI()
+
+resp = cliente.embeddings.create(
+    model="text-embedding-3-small",
+    input=frases,
+    dimensions=256)   # Matryoshka: recortable
+
+E = np.array([d.embedding for d in resp.data])
+E = E / np.linalg.norm(E, axis=1, keepdims=True)</code></pre>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); margin-top: 0.25em;">
+          <strong>Matryoshka</strong> (Kusupati et al., 2022): el modelo se entrena para que los primeros
+          <em>k</em> componentes ya sirvan solos. Puedes recortar el vector y ahorrar memoria con poca
+          pérdida de calidad.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. Advertir que los modelos E5 y BGE esperan prefijos ("query: ", "passage: ") y que olvidarlos degrada bastante los resultados.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Búsqueda Léxica vs. Semántica</h2>
+    <p style="font-size: 0.48em;">
+      El buscador tradicional (BM25, <code>LIKE '%...%'</code>) compara <strong>palabras</strong>. Si el
+      usuario escribe otras palabras para la misma idea, no encuentra nada — es el
+      <strong style="color: var(--c-red);">problema del vocabulario</strong>.
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side incorrect">
+        <h3>Léxica</h3>
+        <p style="font-size: 0.78em;">Consulta: <em>"cómo cuidar las plantas del huerto"</em></p>
+        <p style="font-size: 0.75em;">Documento: <em>"el riego por goteo ahorra agua en cultivos de maíz"</em></p>
+        <p style="font-size: 0.8em; color: var(--c-red);"><strong>0 palabras en común → no lo encuentra</strong></p>
+      </div>
+      <div class="side correct">
+        <h3>Semántica</h3>
+        <p style="font-size: 0.78em;">Se comparan los <strong>vectores</strong>, no las palabras.</p>
+        <p style="font-size: 0.8em; color: var(--c-green);"><strong>coseno = 0.46 → lo encuentra</strong></p>
+        <p style="font-size: 0.72em; color: var(--c-text-dim);">Entiende que riego, cultivo y huerto son
+          el mismo territorio.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      En la práctica se combinan: <strong>búsqueda híbrida</strong> (BM25 + vectorial) suele ganarle a
+      cualquiera de las dos por separado — lo léxico es imbatible con nombres propios, códigos y siglas.
+    </p>
+    <aside class="notes">Los numeros son reales, medidos con el modelo de la unidad. La busqueda hibrida normalmente fusiona rankings con Reciprocal Rank Fusion.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora: Léxica vs. Semántica</h2>
+    <div class="widget-container">
+      <canvas id="semantic-search-canvas" width="880" height="310" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.4em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn sem-q-btn" data-q="0">cuidar plantas del huerto</button>
+        <button class="widget-btn fi-btn sem-q-btn" data-q="1">rendimiento del servidor</button>
+        <button class="widget-btn fi-btn sem-q-btn" data-q="2">el modelo no generaliza</button>
+        <button class="widget-btn fi-btn sem-q-btn" data-q="3">preparar salsa italiana</button>
+      </div>
+      <div id="semantic-search-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.35em; font-size:0.6em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      Dos de las cuatro consultas <strong>no comparten ni una sola palabra</strong> con ningún documento: la
+      búsqueda léxica devuelve cero. La semántica recupera los correctos igual.
+    </p>
+    <aside class="notes">
+      Widget propio con similitudes reales. Consultas 0 y 3: solapamiento lexico maximo = 0.000. Es el
+      argumento mas contundente de toda la unidad.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>kNN: la Búsqueda por Vecinos</h2>
+    <p style="font-size: 0.46em;">
+      Buscar semánticamente es, literalmente, un problema de <strong>k vecinos más cercanos</strong>:
+      codificar la consulta y devolver los <em>k</em> documentos con mayor similitud.
+    </p>
+    <pre style="font-size: 0.4em; max-width: 82%; margin: 0.2em auto; overflow-x:auto;"><code class="language-python">import numpy as np
+
+E = modelo.encode(documentos, normalize_embeddings=True)   # (N, d) — una sola vez
+q = modelo.encode([consulta], normalize_embeddings=True)   # (1, d)
+
+similitudes = (q @ E.T)[0]          # coseno contra TODOS los documentos
+top_k = np.argsort(-similitudes)[:5]
+
+for i in top_k:
+    print(f"{similitudes[i]:.3f}  {documentos[i]}")</code></pre>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Esto es <strong>búsqueda exacta por fuerza bruta</strong>: compara con los N documentos, así que
+      cuesta <strong>O(N·d)</strong> por consulta. Con 10,000 documentos es instantáneo; con
+      <strong>50 millones</strong> y 1,536 dimensiones son ~75 mil millones de multiplicaciones
+      <em>por consulta</em>. Ahí deja de servir.
+    </blockquote>
+    <aside class="notes">Contenido propio. Para colecciones chicas (hasta ~100k) la fuerza bruta con numpy es perfectamente viable y evita toda la complejidad de una base vectorial.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>ANN: Renunciar a lo Exacto para Ganar Velocidad</h2>
+    <p style="font-size: 0.46em;">
+      La solución es <strong>ANN</strong> (<em>Approximate Nearest Neighbors</em>): estructuras que
+      encuentran <em>casi siempre</em> los vecinos correctos, pero en tiempo
+      <strong>sublineal</strong> en vez de revisar todo.
+    </p>
+    <table style="font-size: 0.38em; width: 100%; max-width: 880px; margin: 0.2em auto;">
+      <tr><th>Técnica</th><th>Idea</th><th>Ventaja</th><th>Costo</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">HNSW</strong></td>
+        <td>Grafo por capas: se navega saltando de vecino en vecino, empezando por saltos largos</td>
+        <td>Muy rápido y con recall alto; el más usado</td><td>Consume bastante RAM</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">IVF</strong></td>
+        <td>Agrupa los vectores en clusters y solo busca en los más prometedores</td>
+        <td>Poca memoria, se escala bien</td><td>Hay que entrenar el índice</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">PQ</strong> / cuantización</td>
+        <td>Comprime cada vector a unos pocos bytes</td>
+        <td>Reduce memoria 10–100×</td><td>Pierde precisión</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      El parámetro que gobierna todo es el <strong style="color: var(--c-yellow);">recall</strong>: qué
+      fracción de los verdaderos <em>k</em> vecinos recupera el índice. Subir el recall cuesta latencia —
+      es la misma clase de compromiso que precision/recall en clasificación.
+    </p>
+    <aside class="notes">
+      HNSW: Malkov & Yashunin, arXiv 1603.09320. En la practica se mide recall@k contra la busqueda exacta
+      sobre una muestra, y se ajustan parametros (ef_search en HNSW, nprobe en IVF) hasta llegar al recall
+      que el producto tolera.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Por Qué una Base de Datos Vectorial?</h2>
+    <p style="font-size: 0.46em;">
+      Podrías guardar los vectores en un array de numpy… hasta que aparecen los requisitos reales:
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.15em;">
+      <div class="col-45">
+        <ul style="font-size: 0.4em;">
+          <li class="fragment fade-up"><strong>Persistencia</strong>: que sobreviva al reinicio</li>
+          <li class="fragment fade-up"><strong>Escala</strong>: millones de vectores que no caben en RAM</li>
+          <li class="fragment fade-up"><strong>Índices ANN</strong> ya implementados y ajustables</li>
+          <li class="fragment fade-up"><strong>Metadata y filtros</strong>: "solo documentos de 2024 del
+            área legal"</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <ul style="font-size: 0.4em;">
+          <li class="fragment fade-up"><strong>Actualizaciones</strong>: insertar y borrar sin reconstruir
+            todo el índice</li>
+          <li class="fragment fade-up"><strong>Concurrencia</strong> y acceso desde varios servicios</li>
+          <li class="fragment fade-up"><strong>Búsqueda híbrida</strong> léxica + vectorial integrada</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🧭 <strong>Criterio honesto:</strong> si tienes <strong>menos de ~100,000 documentos</strong>, numpy o
+      FAISS en memoria te sirven y te ahorran una dependencia entera. La base vectorial se justifica por
+      <em>escala, filtros y operación</em>, no por moda.
+    </blockquote>
+    <aside class="notes">Contenido propio. Este es de los errores mas comunes en capstones: montar Pinecone para 800 documentos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Panorama de Bases Vectoriales</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th>Categoría</th><th>Opciones</th><th>Cuándo encaja</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-green);">Embebidas</strong></td>
+        <td><strong>Chroma</strong>, <strong>LanceDB</strong>, FAISS (librería, no BD)</td>
+        <td>Prototipos, capstones, apps de un solo proceso</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">Extensión de una BD que ya tienes</strong></td>
+        <td><strong>pgvector</strong> (PostgreSQL), Redis, MongoDB Atlas, Elasticsearch / OpenSearch</td>
+        <td>Ya usas esa base: cero infraestructura nueva y <strong>joins con tus tablas</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">Dedicadas, self-hosted</strong></td>
+        <td><strong>Qdrant</strong>, <strong>Weaviate</strong>, <strong>Milvus</strong></td>
+        <td>Escala grande y control de la infraestructura</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-purple);">Gestionadas (SaaS)</strong></td>
+        <td><strong>Pinecone</strong>, y las versiones cloud de las anteriores</td>
+        <td>No quieres operar nada y puedes pagarlo</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      Para el capstone: empieza con <strong>Chroma</strong> (dos líneas y funciona) o con
+      <strong>pgvector</strong> si ya tienes PostgreSQL. Migrar después es fácil — lo caro es recalcular los
+      embeddings, no cambiar de base.
+    </p>
+    <aside class="notes">Contenido propio. Mencionar que FAISS (Meta) es una libreria de indices, no una base de datos: no persiste ni filtra por metadata por si sola.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Búsqueda Semántica con una Base Vectorial</h2>
+    <pre style="font-size: 0.38em; max-width: 90%; margin: 0 auto; overflow-x:auto;"><code class="language-python">import chromadb
+from chromadb.utils import embedding_functions
+
+cliente = chromadb.PersistentClient(path="./vectordb")     # persiste en disco
+
+# la coleccion sabe con que modelo vectorizar: nunca mezcles espacios
+ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+    model_name="paraphrase-multilingual-MiniLM-L12-v2")
+col = cliente.get_or_create_collection("manuales", embedding_function=ef,
+                                       metadata={"hnsw:space": "cosine"})
+
+col.add(
+    ids=["doc1", "doc2", "doc3"],
+    documents=["El riego por goteo ahorra agua en cultivos de maiz",
+               "El servidor devolvio un error 500 en produccion",
+               "Hornear el pan durante cuarenta minutos"],
+    metadatas=[{"area": "agricultura", "anio": 2024},
+               {"area": "infraestructura", "anio": 2023},
+               {"area": "cocina", "anio": 2024}],
+)
+
+res = col.query(query_texts=["como cuidar las plantas del huerto"], n_results=2,
+                where={"anio": {"$gte": 2024}})     # filtro por metadata
+print(res["documents"][0])</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Fíjate en dos cosas: la colección <strong>guarda con qué modelo se vectorizó</strong> (cambiarlo obliga
+      a reindexar todo), y el <code>where</code> filtra por metadata <strong>además</strong> de la búsqueda
+      vectorial.
+    </p>
+    <aside class="notes">Contenido propio. Chroma se instala con pip install chromadb y no requiere servidor.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Filtros y Metadata: el Detalle que Duele</h2>
+    <p style="font-size: 0.46em;">
+      Combinar búsqueda vectorial con filtros no es gratis. Hay dos formas de hacerlo y dan resultados
+      distintos:
+    </p>
+    <div class="comparison" style="margin-top: 0.25em;">
+      <div class="side incorrect">
+        <h3>Post-filtrado</h3>
+        <p style="font-size: 0.78em;">Busca los k vecinos y <strong>después</strong> descarta los que no
+          cumplen el filtro.</p>
+        <p style="font-size: 0.75em; color: var(--c-red);">Si pides 10 y el filtro es selectivo, puedes
+          quedarte con <strong>2 resultados… o ninguno</strong>.</p>
+      </div>
+      <div class="side correct">
+        <h3>Pre-filtrado</h3>
+        <p style="font-size: 0.78em;">Restringe primero al subconjunto que cumple el filtro y busca
+          <strong>solo ahí</strong>.</p>
+        <p style="font-size: 0.75em; color: var(--c-green);">Siempre devuelve k resultados válidos; es lo que
+          hacen hoy las bases serias.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      Por eso importa <strong>qué metadata guardas junto al vector</strong>: fecha, autor, categoría, idioma,
+      permisos. Sin ella no puedes filtrar — y reindexar después para agregarla es caro.
+    </p>
+    <aside class="notes">
+      Contenido propio. El pre-filtrado con indices ANN es tecnicamente dificil (el grafo HNSW se puede
+      desconectar al filtrar), y por eso las implementaciones difieren tanto entre productos.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Límite: Consultas que Mezclan Dos Cosas</h2>
+    <p style="font-size: 0.48em;">
+      Un usuario escribe:
+    </p>
+    <p style="font-size: 0.6em; text-align:center; color: var(--c-yellow); margin: 0.3em 0;">
+      <em>"películas de ciencia ficción sobre viajes en el tiempo, posteriores a 2010 y con más de 8 de
+      calificación"</em>
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.2em;">
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.44em; color: var(--c-green);"><strong>Parte semántica</strong></p>
+        <p style="font-size: 0.42em;">"ciencia ficción sobre viajes en el tiempo" → esto <strong>sí</strong>
+          lo resuelve un embedding.</p>
+      </div>
+      <div class="col-45 fragment fade-up">
+        <p style="font-size: 0.44em; color: var(--c-red);"><strong>Parte estructurada</strong></p>
+        <p style="font-size: 0.42em;">"posteriores a 2010", "más de 8 de calificación" → esto es un
+          <strong>filtro</strong>, y el embedding lo maneja <em>mal</em>: los números no se comparan por
+          similitud.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Si mandas la frase completa al buscador vectorial, "2010" y "8" se convierten en ruido dentro del
+      vector. Puedes recuperar una película de 1995 con calificación 6 porque <em>habla</em> de viajes en el
+      tiempo. <strong>El filtro hay que aplicarlo como filtro.</strong>
+    </blockquote>
+    <aside class="notes">Contenido propio. Es la motivacion directa del self-query retriever.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Self-Query: que el LLM Arme el Filtro</h2>
+    <p style="font-size: 0.46em;">
+      La idea del <strong>self-query retriever</strong>: poner un LLM <em>antes</em> de la búsqueda para que
+      <strong>parta la consulta en dos</strong>.
+    </p>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.7em;">
+      <div class="step fragment fade-up">1. Le describes al LLM <strong>qué campos de metadata existen</strong>
+        (nombre, tipo y descripción de cada uno)</div>
+      <div class="step fragment fade-up">2. El LLM traduce la consulta del usuario a
+        <strong style="color:var(--c-yellow);">query semántica</strong> +
+        <strong style="color:var(--c-yellow);">filtro estructurado</strong></div>
+      <div class="step fragment fade-up">3. La base vectorial busca por similitud <em>solo</em> dentro de lo
+        que pasa el filtro</div>
+    </div>
+    <pre class="fragment fade-up" style="font-size: 0.38em; max-width: 84%; margin: 0.3em auto 0 auto; overflow-x:auto;"><code>consulta: "ciencia ficcion sobre viajes en el tiempo, despues de 2010 y con mas de 8"
+
+        ↓ el LLM la descompone
+
+query : "viajes en el tiempo"                    <- va al embedding
+filter: and(eq("genero","ciencia ficcion"),
+            gt("anio", 2010),
+            gt("calificacion", 8))               <- va como filtro</code></pre>
+    <aside class="notes">Contenido propio, basado en la documentacion de LangChain. Es una aplicacion muy limpia de "usar el LLM para traducir lenguaje natural a algo estructurado".</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Self-Query con LangChain</h2>
+    <pre style="font-size: 0.36em; max-width: 92%; margin: 0 auto; overflow-x:auto;"><code class="language-python">from langchain.chains.query_constructor.schema import AttributeInfo
+from langchain.retrievers.self_query.base import SelfQueryRetriever
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_chroma import Chroma
+
+# 1. le describimos al LLM que campos existen y que significan
+campos = [
+    AttributeInfo(name="genero",
+                  description="Genero de la pelicula. Uno de ['ciencia ficcion', 'drama', 'comedia']",
+                  type="string"),
+    AttributeInfo(name="anio", description="Anio de estreno", type="integer"),
+    AttributeInfo(name="calificacion", description="Calificacion de 1 a 10", type="float"),
+]
+
+vectorstore = Chroma.from_documents(documentos, OpenAIEmbeddings())
+
+retriever = SelfQueryRetriever.from_llm(
+    llm=ChatOpenAI(model="gpt-4o-mini", temperature=0),   # temperature=0: queremos determinismo
+    vectorstore=vectorstore,
+    document_contents="Sinopsis breve de una pelicula",   # de que tratan los documentos
+    metadata_field_info=campos,
+    verbose=True,        # imprime la query y el filtro que genero el LLM
+)
+
+docs = retriever.invoke(
+    "peliculas de ciencia ficcion sobre viajes en el tiempo posteriores a 2010 con mas de 8")</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Con <code>verbose=True</code> ves exactamente qué generó el LLM — imprescindible para depurar, porque
+      cuando falla suele ser por una <strong>descripción ambigua</strong> de un campo.
+    </p>
+    <aside class="notes">
+      Fuente: documentacion de LangChain (SelfQueryRetriever). Requiere que el vectorstore soporte filtros
+      estructurados (Chroma, Qdrant, Weaviate, Pinecone y varios mas los soportan).
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Self-Query: Cuándo Sí y Cuándo No</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-green);"><strong>Encaja bien</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Catálogos con metadata rica (productos, películas, propiedades, expedientes)</li>
+          <li>Usuarios que escriben en lenguaje natural con condiciones ("menos de", "del año", "en zona")</li>
+          <li>Cuando los campos tienen valores <strong>acotados y bien documentados</strong></li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.46em; color: var(--c-red);"><strong>Cuidado</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Agrega <strong>una llamada al LLM</strong> antes de cada búsqueda: latencia y costo</li>
+          <li>El LLM puede <strong>inventar un filtro</strong> que descarte todo y devolver cero resultados</li>
+          <li>Si los usuarios escriben consultas simples, un filtro en la interfaz es más barato y confiable</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🛟 <strong>Salvavidas en producción:</strong> si la búsqueda con filtro devuelve cero resultados,
+      reintenta <strong>sin el filtro</strong> y avísale al usuario. Es preferible a una pantalla vacía por
+      un filtro mal generado.
+    </blockquote>
+    <aside class="notes">Contenido propio. El modo de fallo mas comun es que el LLM invente un valor de categoria que no existe en la metadata; por eso conviene enumerar los valores validos en la description.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Recorrido Completo</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.68em;">
+      <div class="step fragment fade-up">1. <strong>Elegir el modelo</strong> de embeddings (abierto o API) y
+        fijarlo: cambiarlo obliga a reindexar todo</div>
+      <div class="step fragment fade-up">2. <strong>Trocear y vectorizar</strong> los documentos, guardando
+        metadata útil para filtrar después</div>
+      <div class="step fragment fade-up">3. <strong>Indexar</strong> en la base vectorial (o en numpy si son
+        pocos), eligiendo la métrica — normalmente coseno</div>
+      <div class="step fragment fade-up">4. <strong>Buscar</strong>: vectorizar la consulta, kNN/ANN, filtros
+        de metadata, y considerar búsqueda híbrida</div>
+      <div class="step fragment fade-up">5. <strong>Self-query</strong> si las consultas traen condiciones
+        estructuradas en lenguaje natural</div>
+      <div class="step fragment fade-up">6. <strong>Evaluar</strong>: recall@k y precision@k sobre un conjunto
+        de consultas con respuesta conocida — sí, aplica todo lo de la unidad de evaluación</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      El paso 6 es el que más se salta y el que más duele: sin medir, no sabes si tu buscador mejoró o
+      empeoró al cambiar de modelo.
+    </p>
+    <aside class="notes">Contenido propio. Enlaza con la unidad de evaluacion: recall@k es exactamente el mismo recall, restringido a los primeros k resultados.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Papers y Recursos</h2>
+    <div class="resource-grid" style="max-width: 900px; margin: 0 auto; grid-template-columns: 1fr 1fr; font-size: 0.8em;">
+      <a class="resource-card" href="https://arxiv.org/abs/1802.05365" target="_blank" rel="noopener">
+        <div class="resource-icon">📄</div>
+        <h4>ELMo (2018)</h4>
+        <p>Peters et al. — <em>Deep contextualized word representations</em>. El vector de una palabra pasa a
+          depender de su oración.</p>
+        <span class="resource-tag">arxiv.org/abs/1802.05365</span>
+      </a>
+      <a class="resource-card" href="https://arxiv.org/abs/2103.00020" target="_blank" rel="noopener">
+        <div class="resource-icon">🖼️</div>
+        <h4>CLIP (2021)</h4>
+        <p>Radford et al. — texto e imagen en un mismo espacio con entrenamiento contrastivo. La base de lo
+          multimodal.</p>
+        <span class="resource-tag">arxiv.org/abs/2103.00020</span>
+      </a>
+      <a class="resource-card" href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">
+        <div class="resource-icon">📐</div>
+        <h4>Sentence-BERT (2019)</h4>
+        <p>Reimers &amp; Gurevych — cómo comparar oraciones completas de forma eficiente. Es la base de
+          <code>sentence-transformers</code>.</p>
+        <span class="resource-tag">arxiv.org/abs/1908.10084</span>
+      </a>
+      <a class="resource-card" href="https://huggingface.co/spaces/mteb/leaderboard" target="_blank" rel="noopener">
+        <div class="resource-icon">🏆</div>
+        <h4>MTEB Leaderboard</h4>
+        <p>Comparativa viva de modelos de embeddings por tarea e idioma. El lugar para elegir modelo con
+          datos, no por fama.</p>
+        <span class="resource-tag">huggingface.co/spaces/mteb/leaderboard</span>
+      </a>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      También: Word2Vec (<code>arxiv.org/abs/1301.3781</code>), HNSW (<code>arxiv.org/abs/1603.09320</code>)
+      y Matryoshka (<code>arxiv.org/abs/2205.13147</code>).
+    </p>
+    <aside class="notes">Todos los enlaces son clickables.</aside>
+  </section>
+</section>
+
 </div>
 </div>
 
@@ -5031,6 +5806,9 @@ run.log({"ejemplos": wandb.Image(imagen, boxes={
 <script src="js/widgets/early-stopping-widget.js"></script>
 <script src="js/widgets/run-name-widget.js"></script>
 <script src="js/widgets/grid-stuck-widget.js"></script>
+<script src="js/widgets/embeddings-data.js"></script>
+<script src="js/widgets/embedding-space-widget.js"></script>
+<script src="js/widgets/semantic-search-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -5189,6 +5967,18 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initGridStuckWidget === 'function') {
       initGridStuckWidget();
       widgetsInitialized.gridStuck = true;
+    }
+  }
+  if (slide.querySelector('#embedding-space-canvas') && !widgetsInitialized.embeddingSpace) {
+    if (typeof initEmbeddingSpaceWidget === 'function') {
+      initEmbeddingSpaceWidget();
+      widgetsInitialized.embeddingSpace = true;
+    }
+  }
+  if (slide.querySelector('#semantic-search-canvas') && !widgetsInitialized.semanticSearch) {
+    if (typeof initSemanticSearchWidget === 'function') {
+      initSemanticSearchWidget();
+      widgetsInitialized.semanticSearch = true;
     }
   }
 });
