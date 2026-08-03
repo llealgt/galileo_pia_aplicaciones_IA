@@ -67,12 +67,13 @@
         <a class="toc-item" onclick="Reveal.slide(8, 0)"><span class="toc-num">8</span>Callbacks</a>
         <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
         <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
-        <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Large Language Models</a>
-        <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>RAG: Retrieval Augmented Generation</a>
-        <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>Recuperación de Información: los Fundamentos</a>
-        <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación en Producción</a>
-        <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>LLMs y Generación de Texto</a>
-        <a class="toc-item" onclick="Reveal.slide(16, 0)"><span class="toc-num">16</span>RAG en Producción</a>
+        <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Transfer Learning</a>
+        <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>Large Language Models</a>
+        <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>RAG: Retrieval Augmented Generation</a>
+        <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación de Información: los Fundamentos</a>
+        <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>Recuperación en Producción</a>
+        <a class="toc-item" onclick="Reveal.slide(16, 0)"><span class="toc-num">16</span>LLMs y Generación de Texto</a>
+        <a class="toc-item" onclick="Reveal.slide(17, 0)"><span class="toc-num">17</span>RAG en Producción</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -5932,7 +5933,294 @@ docs = retriever.invoke(
 </section>
 
 <!-- ============================================================
-     SECCION 11 — Large Language Models
+     SECCION 11 — Transfer Learning
+     ============================================================ -->
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.5em;">Transfer Learning</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">Aprovechar lo que Otro ya Entrenó</h3>
+    <p style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.7em;">
+      Casi nunca tienes un millón de imágenes etiquetadas ni un mes de GPU.
+      Pero <strong>alguien más sí los tuvo</strong> — y su modelo se puede reutilizar.
+    </p>
+    <aside class="notes">Unidad corta que va antes de LLMs, y a proposito: el fine-tuning de un LLM es exactamente la misma idea aplicada a texto. Los notebooks 13 (Keras) y 14 (PyTorch) acompanan esta unidad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Problema de Siempre</h2>
+    <div class="columns" style="font-size: 0.42em; margin-top: 0.3em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-red);">Lo que hace falta para entrenar desde cero</strong></p>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Millones</strong> de ejemplos etiquetados</li>
+          <li>Días o semanas de <strong>GPU</strong></li>
+          <li>Un equipo que sepa afinar la arquitectura</li>
+        </ul>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-green);">Lo que sueles tener</strong></p>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Cientos</strong> de ejemplos, si acaso</li>
+          <li>Una laptop o unas horas de Colab</li>
+          <li>Una fecha de entrega</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.43em; margin-top: 0.4em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      La salida no es conseguir más datos. Es <strong>partir de un modelo que ya aprendió a ver</strong>,
+      entrenado con las imágenes de otro, y adaptarlo a tu problema con lo poco que tienes.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      A eso se le llama <strong>transfer learning</strong>: transferir lo aprendido en una tarea
+      a otra distinta.
+    </p>
+    <aside class="notes">Conviene enmarcarlo como lo que es: la tecnica que hizo viable el deep learning fuera de las grandes empresas. Antes de que se popularizara, un proyecto de vision por computadora sin millones de imagenes simplemente no despegaba.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Aprende una Red por Capas</h2>
+    <p style="font-size: 0.42em;">
+      Una red convolucional entrenada con ImageNet no aprende "gatos" de golpe: construye una
+      <strong>jerarquía</strong>.
+    </p>
+    <div style="font-size: 0.38em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.32em 0.5em; background: rgba(0,114,178,0.10); border-left: 3px solid var(--c-blue);">
+        <strong>Primeras capas</strong> — bordes, colores, gradientes.
+        <span style="color: var(--c-green);">Universales: sirven para cualquier imagen.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.32em 0.5em; background: rgba(0,158,115,0.10); border-left: 3px solid var(--c-green);">
+        <strong>Capas intermedias</strong> — texturas, esquinas, patrones repetidos.
+        <span style="color: var(--c-green);">Siguen sirviendo casi siempre.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.32em 0.5em; background: rgba(230,159,0,0.10); border-left: 3px solid var(--c-orange);">
+        <strong>Capas profundas</strong> — partes de objetos: ojos, ruedas, patas, alas.
+        <span style="color: var(--c-orange);">Útiles si tu dominio se parece.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.32em 0.5em; background: rgba(213,94,0,0.10); border-left: 3px solid var(--c-red);">
+        <strong>Última capa</strong> — las 1,000 clases concretas de ImageNet.
+        <span style="color: var(--c-red);">Esa sí hay que tirarla y poner la tuya.</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Lo que se transfiere son las <strong>representaciones intermedias</strong>, no las clases.
+      Por eso funciona aunque ImageNet <strong>no tenga</strong> tu categoría.
+    </p>
+    <aside class="notes">La jerarquia se visualizo por primera vez en Zeiler y Fergus (2014). El punto practico: cuanto mas profunda la capa, mas especializada en el dominio original, y por lo tanto menos transferible.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Las Dos Estrategias</h2>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Feature extraction</h4>
+        <p style="margin:0.15em 0;"><strong>Congelar todo</strong> el modelo preentrenado y usarlo
+          como un extractor de características fijo. Solo se entrena una <strong>cabeza nueva</strong>.</p>
+        <ul style="margin:0.2em 0;">
+          <li>Rapidísimo: casi no hay qué entrenar</li>
+          <li>Funciona con <strong>pocos datos</strong></li>
+          <li>Difícil de arruinar</li>
+        </ul>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-orange);">
+        <h4 style="color: var(--c-orange); margin-top:0;">Fine-tuning</h4>
+        <p style="margin:0.15em 0;">Además de la cabeza, <strong>descongelar las capas profundas</strong>
+          y reajustarlas a tus imágenes, con un <strong>learning rate mucho más chico</strong>.</p>
+        <ul style="margin:0.2em 0;">
+          <li>Puede dar más precisión</li>
+          <li>Necesita <strong>más datos</strong></li>
+          <li>Se puede arruinar de varias formas</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      El orden importa: <strong>siempre feature extraction primero</strong>. El fine-tuning se hace
+      <strong>después</strong>, sobre una cabeza ya entrenada — si no, los gradientes de una cabeza
+      aleatoria destrozan lo que el backbone sabía.
+    </p>
+    <aside class="notes">Ese ultimo punto tiene nombre: catastrophic forgetting. Es el error mas caro del fine-tuning y el mas facil de evitar: entrenar la cabeza primero, y solo entonces descongelar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Decisión</h2>
+    <div class="widget-container">
+      <canvas id="transfer-canvas" width="880" height="300" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.45em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn transfer-vista-btn" data-vista="matriz">la decisión</button>
+        <button class="widget-btn fi-btn transfer-vista-btn" data-vista="resultados">lo que medimos</button>
+      </div>
+      <div id="transfer-params" style="display:flex; justify-content:center; align-items:center; gap:1em; margin-top:0.22em; flex-wrap:wrap;">
+        <div class="widget-label" style="font-size:0.68em;">datos <span class="widget-value" id="transfer-datos-value">miles</span>
+          <input type="range" id="transfer-datos" class="widget-slider" min="0" max="3" step="1" value="1" style="width:110px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" style="font-size:0.68em;">dominio <span class="widget-value" id="transfer-sim-value">parecido</span>
+          <input type="range" id="transfer-sim" class="widget-slider" min="0" max="3" step="1" value="2" style="width:110px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div id="transfer-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. La vista "la decisión" es la matriz clasica de transfer learning: mover los dos
+      sliders y ver caer la recomendacion en uno de los cuatro cuadrantes. La vista "lo que medimos"
+      trae los resultados REALES de los notebooks 13 y 14, corridos con 245 imagenes de hormigas y
+      abejas. Guion: hacer notar que feature extraction entreno 1,281 parametros (Keras) frente a los
+      93,377 de la CNN desde cero — MENOS parametros y 27 puntos MAS de accuracy.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Pasó de Verdad</h2>
+    <p style="font-size: 0.42em;">
+      Los notebooks de esta unidad clasifican <strong>hormigas y abejas</strong> con solo
+      <strong>245 imágenes</strong> de entrenamiento, usando MobileNetV2 preentrenada en ImageNet.
+    </p>
+    <table style="font-size: 0.38em; width: 94%; margin: 0.3em auto;">
+      <tr><th>Estrategia</th><th>Keras</th><th>PyTorch</th><th>Parámetros entrenados</th></tr>
+      <tr class="fragment fade-up"><td>CNN desde cero</td>
+        <td style="color: var(--c-red);">67.3%</td><td style="color: var(--c-red);">70.6%</td><td>93,377</td></tr>
+      <tr class="fragment fade-up"><td><strong>Feature extraction</strong></td>
+        <td style="color: var(--c-green);"><strong>94.8%</strong></td>
+        <td style="color: var(--c-green);"><strong>94.1%</strong></td>
+        <td style="color: var(--c-teal);"><strong>1,281</strong></td></tr>
+      <tr class="fragment fade-up"><td>Fine-tuning</td>
+        <td>94.1%</td><td>94.1%</td><td>1,840,897</td></tr>
+    </table>
+    <div class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.32em 0.5em; background: rgba(0,158,115,0.09); border-left: 3px solid var(--c-green);">
+      Lee las dos primeras filas juntas: feature extraction entrenó <strong>73 veces menos
+      parámetros</strong> que la CNN desde cero y acertó <strong>27 puntos más</strong>.
+      Los otros 2.2 millones de parámetros ya venían aprendidos.
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.2em; padding: 0.3em 0.5em; background: rgba(213,94,0,0.08); border-left: 3px solid var(--c-orange);">
+      Y algo honesto: con 245 imágenes el <strong>fine-tuning no aportó nada</strong> — entrenó
+      1,400 veces más parámetros para quedar igual o un poco peor. Su momento llega con
+      <strong>miles</strong> de imágenes.
+    </p>
+    <aside class="notes">Cifras medidas al ejecutar los notebooks 13 y 14, no citadas de ningun lado. Que el fine-tuning no aporte con tan pocos datos es el resultado esperable y conviene decirlo: evita que el estudiante lo aplique por defecto pensando que "siempre es mejor".</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo se Ve en Código</h2>
+    <div class="columns" style="font-size: 0.33em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-blue);">Keras</strong></p>
+        <pre style="margin:0.15em 0; font-size:0.95em;"><code class="language-python">backbone = tf.keras.applications.MobileNetV2(
+    input_shape=(160,160,3),
+    include_top=False,        # sin la capa de ImageNet
+    weights="imagenet")
+backbone.trainable = False    # congelado
+
+x = aumento(entrada)
+x = preprocess_input(x)       # el rango que espera
+x = backbone(x, training=False)   # BN en inferencia
+x = GlobalAveragePooling2D()(x)
+salida = Dense(1, activation="sigmoid")(x)</code></pre>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-orange);">PyTorch</strong></p>
+        <pre style="margin:0.15em 0; font-size:0.95em;"><code class="language-python">m = models.mobilenet_v2(
+    weights=MobileNet_V2_Weights.IMAGENET1K_V1)
+
+for p in m.parameters():
+    p.requires_grad = False   # 1) sin gradientes
+
+m.classifier[1] = nn.Linear(m.last_channel, 2)
+
+# 2) y en cada época de entrenamiento:
+m.train()
+m.features.eval()   # BN NO actualiza sus stats</code></pre>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Fíjate en la diferencia: en Keras <strong>una línea</strong> resuelve las dos cosas
+      (<code>training=False</code>). En PyTorch son <strong>dos decisiones separadas</strong> —
+      y olvidar la segunda es el error más común de la técnica.
+    </p>
+    <aside class="notes">El codigo completo esta en los notebooks 13 y 14. Vale la pena abrirlos en clase y correr la comparacion: son 2 y 4 minutos respectivamente.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Errores que Cuestan Puntos</h2>
+    <table style="font-size: 0.37em; width: 100%;">
+      <tr><th>Error</th><th>Qué pasa</th><th>Cómo se nota</th></tr>
+      <tr class="fragment fade-up"><td><strong>No congelar BatchNorm</strong></td>
+        <td>las estadísticas aprendidas de 1.4 M de imágenes se sobrescriben con las tuyas</td>
+        <td style="color: var(--c-red);"><strong>−5.9 puntos, medido</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong>Olvidar el preprocesamiento</strong></td>
+        <td>el backbone recibe valores fuera del rango con que fue entrenado</td>
+        <td>no da error: solo accuracy mediocre e inexplicable</td></tr>
+      <tr class="fragment fade-up"><td><strong>Learning rate normal en fine-tuning</strong></td>
+        <td>los primeros gradientes borran lo aprendido en ImageNet</td>
+        <td>la accuracy <strong>baja</strong> al empezar el fine-tuning</td></tr>
+      <tr class="fragment fade-up"><td><strong>Fine-tuning desde el principio</strong></td>
+        <td>la cabeza aún es aleatoria: sus gradientes son ruido</td>
+        <td>igual que el anterior</td></tr>
+      <tr class="fragment fade-up"><td><strong>Descongelar todo con pocos datos</strong></td>
+        <td>millones de parámetros para cientos de ejemplos</td>
+        <td>sobreajuste: train sube, validación no</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Los cinco son silenciosos: <strong>ninguno lanza un error</strong>. Por eso conviene
+      conocerlos de antemano.
+    </p>
+    <aside class="notes">El primero se midio en el notebook 14: el mismo entrenamiento con y sin backbone.eval() da 88.2% contra 94.1%. Vale la pena mostrarlo corriendo, porque cuesta creer que una linea valga casi 6 puntos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dónde Encontrar Modelos Preentrenados</h2>
+    <table style="font-size: 0.37em; width: 100%;">
+      <tr><th>Dominio</th><th>Modelos típicos</th><th>Dónde</th></tr>
+      <tr class="fragment fade-up"><td><strong>Imágenes</strong></td>
+        <td>ResNet, EfficientNet, MobileNet, ConvNeXt, ViT</td>
+        <td><code>keras.applications</code>, <code>torchvision.models</code>, <code>timm</code></td></tr>
+      <tr class="fragment fade-up"><td><strong>Texto</strong></td>
+        <td>BERT, RoBERTa, los modelos de embeddings de la unidad anterior</td>
+        <td>Hugging Face, <code>sentence-transformers</code></td></tr>
+      <tr class="fragment fade-up"><td><strong>Audio</strong></td>
+        <td>Whisper, wav2vec 2.0</td><td>Hugging Face</td></tr>
+      <tr class="fragment fade-up"><td><strong>Multimodal</strong></td>
+        <td>CLIP, SigLIP</td><td>Hugging Face, OpenCLIP</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em;">
+      Al elegir uno, mira tres cosas: <strong>con qué datos se entrenó</strong> (¿se parecen a los
+      tuyos?), <strong>cuánto pesa</strong> (¿cabe donde lo vas a correr?) y su
+      <strong>licencia</strong>.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; padding: 0.3em; background: rgba(88,196,221,0.07);">
+      Los modelos de embeddings que usamos en la unidad anterior <strong>ya eran</strong> transfer
+      learning: nadie entrenó ese modelo multilingüe, lo descargamos y lo usamos tal cual.
+    </p>
+    <aside class="notes">Vale la pena hacer explicito que el curso lleva varias unidades usando transfer learning sin llamarlo asi: los embeddings, los cross-encoders del reranking, el GPT-2 de los widgets. Todos son modelos entrenados por alguien mas.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.4em;">
+      <div class="step fragment fade-up">Con <strong>pocos datos</strong>, partir de un modelo
+        preentrenado no es una mejora: es la diferencia entre funcionar y no funcionar.
+        <strong>Medido: de 67% a 95%.</strong></div>
+      <div class="step fragment fade-up">Se transfieren las <strong>representaciones intermedias</strong>,
+        no las clases. Por eso sirve aunque ImageNet no tenga tu categoría.</div>
+      <div class="step fragment fade-up"><strong>Feature extraction</strong> primero: congelar todo y
+        entrenar solo la cabeza. Es rápido, entrena poquísimos parámetros y suele bastar.</div>
+      <div class="step fragment fade-up"><strong>Fine-tuning</strong> después, con learning rate
+        10 a 100 veces menor. Aporta cuando hay <strong>miles</strong> de datos o el dominio está
+        lejos de ImageNet.</div>
+      <div class="step fragment fade-up">Los errores son <strong>silenciosos</strong>: BatchNorm sin
+        congelar, preprocesamiento equivocado, learning rate alto. Ninguno lanza excepción.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Y esto es la antesala de la siguiente unidad:</strong> un LLM es un modelo
+      preentrenado con medio internet. Usarlo con <em>few-shot</em> es feature extraction;
+      hacerle <em>fine-tuning</em> es exactamente lo mismo que acabamos de ver, con texto
+      en vez de imágenes.
+    </p>
+    <aside class="notes">Cierre que enlaza con la unidad de LLMs. Los notebooks 13 (Keras) y 14 (PyTorch) implementan todo lo de esta unidad con datos reales y corren en 2 y 4 minutos.</aside>
+  </section>
+
+</section>
+
+<!-- ============================================================
+     SECCION 12 — Large Language Models
      ============================================================ -->
 <section>
   <section data-transition="fade">
@@ -6882,7 +7170,7 @@ Sentimiento:</code></pre>
 </section>
 
 <!-- ============================================================
-     SECCION 12 — RAG (basada en RAG_M1)
+     SECCION 13 — RAG (basada en RAG_M1)
      ============================================================ -->
 <section>
   <section data-transition="fade">
@@ -9806,7 +10094,7 @@ No expliques.</code></pre>
       <strong>generador</strong>: cómo funciona por dentro, cómo se controla, cómo se le arma
       el prompt, cómo se evita que invente y cómo se mide si respondió bien.
     </p>
-    <aside class="notes">Fuente: RAG_M4 ("LLMs and Text Generation"). Es el modulo 4 del curso de RAG. Complementa la unidad 11 del curso: alli se vio QUE hace un LLM, aqui se ve COMO lo hace por dentro y como se opera en un sistema RAG.</aside>
+    <aside class="notes">Fuente: RAG_M4 ("LLMs and Text Generation"). Es el modulo 4 del curso de RAG. Complementa la unidad 12 del curso: alli se vio QUE hace un LLM, aqui se ve COMO lo hace por dentro y como se opera en un sistema RAG.</aside>
   </section>
 
   <section data-transition="fade">
@@ -9833,7 +10121,7 @@ No expliques.</code></pre>
         encadenar varios LLMs, y cuándo conviene reentrenar en vez de recuperar.
       </div>
     </div>
-    <aside class="notes">Fuente: RAG_M4 ("Module Overview"). Los fundamentos de LLM (tokens, clasificador de siguiente token, bucle de generacion) ya se vieron en la unidad 11; aqui se recuerdan brevemente y el tiempo se invierte en lo nuevo.</aside>
+    <aside class="notes">Fuente: RAG_M4 ("Module Overview"). Los fundamentos de LLM (tokens, clasificador de siguiente token, bucle de generacion) ya se vieron en la unidad 12; aqui se recuerdan brevemente y el tiempo se invierte en lo nuevo.</aside>
   </section>
 
   <section data-transition="fade">
@@ -9926,7 +10214,7 @@ No expliques.</code></pre>
       <em>"el cartero mordió al perro"</em> serían idénticos para el modelo.
       Es el mismo problema de la bolsa de palabras, resuelto de otra forma.
     </p>
-    <aside class="notes">Fuente: RAG_M4 (slide de "Dense Semantic Vector" / "Position Vector"). Los numeros de la tabla son los del original, ilustrativos. La conexion con la bolsa de palabras de la unidad 13 es propia y ayuda a que el punto se entienda de inmediato.</aside>
+    <aside class="notes">Fuente: RAG_M4 (slide de "Dense Semantic Vector" / "Position Vector"). Los numeros de la tabla son los del original, ilustrativos. La conexion con la bolsa de palabras de la unidad 14 es propia y ayuda a que el punto se entienda de inmediato.</aside>
   </section>
 
   <section data-transition="fade">
@@ -10109,7 +10397,7 @@ No expliques.</code></pre>
       desde cero</strong> — atención, feed forward, todas las capas — para el siguiente token.
       Hasta llegar al límite o al token de fin.
     </p>
-    <aside class="notes">Fuente: RAG_M4 (slide de la distribucion sobre el vocabulario y "To generate the next token, the model repeats the entire process from scratch"). El bucle de generacion ya se vio en la unidad 11 con un widget dedicado; aqui lo nuevo es que ya sabemos QUE pasa adentro en cada pasada.</aside>
+    <aside class="notes">Fuente: RAG_M4 (slide de la distribucion sobre el vocabulario y "To generate the next token, the model repeats the entire process from scratch"). El bucle de generacion ya se vio en la unidad 12 con un widget dedicado; aqui lo nuevo es que ya sabemos QUE pasa adentro en cada pasada.</aside>
   </section>
 
   <section data-transition="fade">
@@ -10997,7 +11285,7 @@ Por lo tanto, la capital de Canadá es Ottawa.</code></pre>
       Por eso las métricas de LLM terminan usando <strong>otro LLM como juez</strong> —
       con el sesgo de familia que ya mencionamos.
     </p>
-    <aside class="notes">Fuente: RAG_M4 ("Evaluating your LLM's performance", "LLM Responsibilities"). La cuarta responsabilidad —ignorar el ruido— es la que conecta directo con el compromiso del top-k de la unidad 12: si subes k, le exiges mas al generador.</aside>
+    <aside class="notes">Fuente: RAG_M4 ("Evaluating your LLM's performance", "LLM Responsibilities"). La cuarta responsabilidad —ignorar el ruido— es la que conecta directo con el compromiso del top-k de la unidad 13: si subes k, le exiges mas al generador.</aside>
   </section>
 
   <section data-transition="fade">
@@ -11431,7 +11719,7 @@ print(resultado)
       <strong>responder perfecto y ser inusable</strong>. Hay que mirar las dos familias
       <strong>a la vez</strong>.
     </p>
-    <aside class="notes">Fuente: RAG_M5 ("Key Metrics" y el mapa completo de metricas). Las metricas de retriever se vieron en la unidad 13 y las de RAGAS en la 15; aqui se integran en un solo tablero.</aside>
+    <aside class="notes">Fuente: RAG_M5 ("Key Metrics" y el mapa completo de metricas). Las metricas de retriever se vieron en la unidad 14 y las de RAGAS en la 16; aqui se integran en un solo tablero.</aside>
   </section>
 
   <section data-transition="fade">
@@ -11994,7 +12282,7 @@ print(resultado)
     </div>
     <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
       <strong>Ojo con bajar el <code>top_k</code>:</strong> es lo más fácil de tocar y lo que más
-      barato sale… pero es exactamente el compromiso de la unidad 12. Menos documentos es menos
+      barato sale… pero es exactamente el compromiso de la unidad 13. Menos documentos es menos
       costo <strong>y menos recall</strong>. Mídelo antes de celebrarlo.
     </p>
     <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
@@ -12238,7 +12526,7 @@ print(resultado)
     <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
       La defensa <strong>no</strong> es pedirle al LLM que no lo haga. Es
       <strong>autenticar al usuario y filtrar por permisos antes de recuperar</strong> —
-      exactamente el filtrado por metadata de la unidad 13. Si el documento nunca entra
+      exactamente el filtrado por metadata de la unidad 14. Si el documento nunca entra
       al contexto, no hay prompt que lo saque.
     </p>
     <aside class="notes">Fuente: RAG_M5 ("Securing your knowledge base", "Knowledge Base Leakage"). El punto es fuerte: la seguridad se implementa en el RETRIEVER, no en el prompt. Cualquier instruccion de sistema se puede sortear; un filtro de permisos en la consulta, no.</aside>
@@ -12340,7 +12628,7 @@ print(resultado)
       Requisito: <strong>tanto el retriever como el LLM</strong> tienen que ser multimodales.
       De poco sirve encontrar la imagen si el generador no puede verla.
     </p>
-    <aside class="notes">Fuente: RAG_M5 ("Multi-modal Model", "Multi-modal Embedding-Model", "Multi-modal Vector Retrieval"). CLIP se cubrio en el slide 10/11 y el entrenamiento contrastivo en la unidad 13: aqui se juntan las dos ideas.</aside>
+    <aside class="notes">Fuente: RAG_M5 ("Multi-modal Model", "Multi-modal Embedding-Model", "Multi-modal Vector Retrieval"). CLIP se cubrio en el slide 10/11 y el entrenamiento contrastivo en la unidad 14: aqui se juntan las dos ideas.</aside>
   </section>
 
   <section data-transition="fade">
@@ -12370,7 +12658,7 @@ print(resultado)
         </p>
       </div>
     </div>
-    <aside class="notes">Fuente: RAG_M5 ("Multi-modal Model" con la tokenizacion por parches, "Upgrading RAG System"). El costo en tokens de las imagenes es el que sorprende: conviene conectar con el widget del prompt aumentado de la unidad 15.</aside>
+    <aside class="notes">Fuente: RAG_M5 ("Multi-modal Model" con la tokenizacion por parches, "Upgrading RAG System"). El costo en tokens de las imagenes es el que sorprende: conviene conectar con el widget del prompt aumentado de la unidad 16.</aside>
   </section>
 
   <section data-transition="fade">
@@ -12556,6 +12844,7 @@ print(resultado)
 <script src="js/widgets/embeddings-data.js"></script>
 <script src="js/widgets/embedding-space-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
+<script src="js/widgets/transfer-widget.js"></script>
 <script src="js/widgets/llm-trie-data.js"></script>
 <script src="js/widgets/token-generation-widget.js"></script>
 <script src="js/widgets/training-pairs-widget.js"></script>
@@ -12755,6 +13044,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSemanticSearchWidget === 'function') {
       initSemanticSearchWidget();
       widgetsInitialized.semanticSearch = true;
+    }
+  }
+  if (slide.querySelector('#transfer-canvas') && !widgetsInitialized.transfer) {
+    if (typeof initTransferWidget === 'function') {
+      initTransferWidget();
+      widgetsInitialized.transfer = true;
     }
   }
   if (slide.querySelector('#token-gen-canvas') && !widgetsInitialized.tokenGen) {
