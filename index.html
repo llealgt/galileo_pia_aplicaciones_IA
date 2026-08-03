@@ -68,6 +68,7 @@
         <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
         <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
         <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Large Language Models</a>
+        <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>RAG: Retrieval Augmented Generation</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -6497,6 +6498,536 @@ docs = retriever.invoke(
   </section>
 </section>
 
+<!-- ============================================================
+     SECCION 12 — RAG (basada en RAG_M1)
+     ============================================================ -->
+<section>
+  <section data-transition="fade">
+    <div class="section-title">
+      <h2>RAG: Retrieval Augmented Generation</h2>
+      <p style="color: var(--c-text-dim); font-size: 0.6em; max-width: 780px;">
+        Los LLMs son potentes, pero solo saben lo que había en su entrenamiento. RAG les
+        <strong style="color: var(--c-yellow);">pasa la información que les falta</strong> justo antes de
+        responder — y con eso resuelve lo privado, lo reciente y lo muy específico.
+      </p>
+    </div>
+    <aside class="notes">
+      Unidad basada en el modulo 1 del curso de RAG de DeepLearning.AI (Zain Hasan), ampliada con widgets,
+      codigo y datos reales. Va justo despues de LLMs y se apoya en embeddings y busqueda semantica.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dos Preguntas Muy Distintas</h2>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.2em;">
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-green);"><strong>La sabe de memoria</strong></p>
+        <div style="background: rgba(13,13,26,0.5); border-radius: 8px; padding: 0.45em;">
+          <p style="font-size: 0.44em; margin: 0.1em 0;"><em>"¿Por qué los hoteles son caros los fines de
+            semana?"</em></p>
+          <p style="font-size: 0.4em; color: var(--c-text-dim); margin: 0.3em 0 0 0;">
+            "Viaja más gente el fin de semana, así que hay más competencia por las habitaciones."</p>
+        </div>
+        <p style="font-size: 0.4em; margin-top: 0.3em;">Conocimiento <strong>general y estable</strong>: el
+          modelo lo vio mil veces al entrenarse.</p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-red);"><strong>No puede saberla</strong></p>
+        <div style="background: rgba(13,13,26,0.5); border-radius: 8px; padding: 0.45em;">
+          <p style="font-size: 0.44em; margin: 0.1em 0;"><em>"¿Por qué los hoteles en Vancouver están tan
+            caros <strong>este</strong> fin de semana?"</em></p>
+          <p style="font-size: 0.4em; color: var(--c-text-dim); margin: 0.3em 0 0 0;">
+            La causa real: <strong style="color: var(--c-yellow);">hay un concierto en la ciudad ese
+            fin de semana</strong>.</p>
+        </div>
+        <p style="font-size: 0.4em; margin-top: 0.3em;">Información <strong>concreta y reciente</strong>:
+          no estaba en los datos de entrenamiento.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.35em;">
+      La segunda no se arregla con un modelo más grande ni con mejor prompt: <strong>falta un dato</strong>.
+      Y si no se lo damos, el modelo hará lo que vimos en la unidad anterior — responder algo
+      <em>probable</em> en vez de reconocer que no lo sabe.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1. El ejemplo del concierto en Vancouver recorre toda esta unidad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo Responde una Persona</h2>
+    <p style="font-size: 0.46em;">
+      Fíjate en lo que haces tú al contestar una pregunta. Son siempre <strong>dos pasos</strong>, aunque a
+      veces el primero se salte:
+    </p>
+    <table style="font-size: 0.42em; width: 100%; max-width: 850px; margin: 0.3em auto;">
+      <tr><th>Pregunta</th><th style="color:var(--c-orange);">1. Recuperar información</th>
+        <th style="color:var(--c-green);">2. Razonar y responder</th></tr>
+      <tr class="fragment fade-up">
+        <td>¿Por qué los hoteles son caros el fin de semana?</td>
+        <td>No hace falta buscar nada</td><td>Respondes con lo que ya sabes</td></tr>
+      <tr class="fragment fade-up">
+        <td>¿Por qué Vancouver no tiene más hoteles en el centro?</td>
+        <td><strong>Investigación extensa</strong></td><td>Sintetizas lo investigado</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.35em;">
+      RAG es exactamente eso, automatizado: <strong style="color: var(--c-orange);">Retrieval</strong>
+      (recuperar) + <strong style="color: var(--c-green);">Generation</strong> (generar). El LLM solo hace
+      el segundo paso; hay que darle el primero.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Two Steps for Answering Questions"). La analogia humana es la que mejor funciona en clase.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que un LLM Sabe y lo que No</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-green);"><strong>Responde bien</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Historia y cultura general</li>
+          <li>Cómo se cocina un plato clásico</li>
+          <li>Explicar un concepto de programación</li>
+          <li>Todo lo que está <strong>muy repetido</strong> en internet</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-red);"><strong>Responde mal (pero con seguridad)</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li><strong>Bases de datos privadas</strong>: no puede acceder a información confidencial</li>
+          <li><strong>Información difícil de encontrar</strong>: lo que no está bien representado en la web</li>
+          <li><strong>Datos en tiempo real</strong>: se entrenó con el pasado y no se actualiza solo</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.4em;">
+      Y aquí está la pregunta que da origen a todo: <strong style="color: var(--c-yellow);">¿cómo nos
+      aseguramos de que el LLM conozca esa información útil?</strong>
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Traditional Language Model Usage" y "What LLMs don't know").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Respuesta: ¡Ponlo en el Prompt!</h2>
+    <p style="font-size: 0.48em;">
+      No hace falta reentrenar el modelo ni hacer fine-tuning. Los LLMs son muy buenos usando lo que tienen
+      <strong>delante</strong>: basta con incluir la información en el propio prompt.
+    </p>
+    <div style="text-align:center; margin: 0.4em 0; font-size: 0.5em;">
+      <span style="background: rgba(88,196,221,0.25); padding: 0.3em 0.6em; border-radius: 6px;">Pregunta del usuario</span>
+      <span style="margin: 0 0.4em; color: var(--c-yellow);">+</span>
+      <span style="background: rgba(131,193,103,0.25); padding: 0.3em 0.6em; border-radius: 6px;">Noticias</span>
+      <span style="margin: 0 0.4em; color: var(--c-yellow);">+</span>
+      <span style="background: rgba(131,193,103,0.25); padding: 0.3em 0.6em; border-radius: 6px;">Documentos internos</span>
+      <span style="margin: 0 0.5em; color: var(--c-text-dim);">→</span>
+      <span style="background: rgba(154,114,172,0.3); padding: 0.3em 0.6em; border-radius: 6px;">LLM</span>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.3em;">
+      Pero surge de inmediato la pregunta práctica: si tienes <strong>un millón de documentos</strong>,
+      ¿cuáles metes? No caben todos, y meter los equivocados es peor que no meter nada.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.25em;">
+      Ese "¿cuáles?" es el trabajo del <strong style="color: var(--c-orange);">retriever</strong> — y es la
+      razón por la que la unidad de <strong>embeddings y búsqueda semántica</strong> venía antes que esta.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1 ("Just put it in the prompt!"). Enlazar explicitamente con la unidad 10.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Flujo de RAG</h2>
+    <div class="widget-container">
+      <canvas id="rag-pipeline-canvas" width="880" height="360" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.35em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn rag-modo-btn" data-modo="sin">Sin RAG</button>
+        <button class="widget-btn fi-btn rag-modo-btn" data-modo="con">Con RAG</button>
+        <button class="widget-btn fi-btn" id="rag-pipeline-next">Siguiente etapa</button>
+        <button class="widget-btn fi-btn" id="rag-pipeline-animar">Animar</button>
+        <button class="widget-btn fi-btn" id="rag-pipeline-reset">Reiniciar</button>
+      </div>
+      <div id="rag-pipeline-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.4em; margin-top:0.3em; font-size:0.55em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.37em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      Compara los dos modos: sin RAG el modelo da una respuesta genérica y plausible; con RAG responde con
+      la causa real <strong>y puede citar la fuente</strong>. El precio son las etapas extra de latencia.
+    </p>
+    <aside class="notes">
+      Widget propio. Guion: correr primero "Sin RAG" completo (la respuesta suena bien pero no dice el
+      motivo real), luego "Con RAG" para ver las etapas que se agregan y la respuesta fundamentada.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Prompt Aumentado</h2>
+    <p style="font-size: 0.44em;">
+      Lo que llega al LLM no es la pregunta sola: es una <strong>plantilla</strong> que junta instrucciones,
+      documentos recuperados y la pregunta.
+    </p>
+    <pre style="font-size: 0.36em; max-width: 92%; margin: 0.2em auto; overflow-x:auto;"><code>Eres un asistente que responde SOLO con la información del contexto.
+Si el contexto no alcanza, di "no tengo información suficiente".
+Cita la fuente entre corchetes.
+
+--- CONTEXTO ---
+[1] (reporte, 2024-12-02) La ocupación hotelera en el centro de Vancouver
+    llegó al 97% para el próximo fin de semana.
+[2] (noticia, 2024-11-28) Se esperan 60,000 visitantes en Vancouver por
+    los conciertos de diciembre.
+[3] (análisis) Los hoteles suben tarifas hasta 3 veces cuando hay eventos
+    masivos en la ciudad.
+
+--- PREGUNTA ---
+¿Por qué los hoteles en Vancouver están tan caros este fin de semana?</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      Tres detalles que no son decorativos: la instrucción de <strong>ceñirse al contexto</strong>, el
+      permiso explícito para <strong>decir que no sabe</strong> (sin él, inventará), y los
+      <strong>identificadores</strong> que hacen posible citar.
+    </p>
+    <aside class="notes">
+      Contenido propio. Esta plantilla es el corazon practico de RAG y conviene que la copien tal cual para
+      el capstone. El "di que no sabes" es lo que mas reduce alucinaciones en la practica.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Retriever y la Base de Conocimiento</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-orange);"><strong>El retriever</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Administra una base de conocimiento de información <strong>confiable</strong></li>
+          <li>Encuentra lo más relevante para cada consulta y se lo pasa al LLM</li>
+          <li>Su calidad <strong>determina el techo</strong> de todo el sistema</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-teal);"><strong>La base de conocimiento</strong></p>
+        <ul style="font-size: 0.42em;">
+          <li>Tus documentos: manuales, políticas, tickets, código, expedientes</li>
+          <li>Se puede <strong>actualizar sin reentrenar</strong> el modelo</li>
+          <li>Define qué puede y qué no puede contestar el sistema</li>
+        </ul>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.35em;">
+      🔑 <strong>La división del trabajo:</strong> el retriever se encarga de los
+      <strong style="color: var(--c-orange);">hechos</strong>, el LLM de
+      <strong style="color: var(--c-green);">redactar</strong>. Cada uno hace aquello en lo que es bueno —
+      y por eso RAG funciona tan bien.
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.25em;">
+      <strong style="color: var(--c-red);">R</strong>etrieval
+      <strong style="color: var(--c-yellow);">A</strong>ugmented
+      <strong style="color: var(--c-green);">G</strong>eneration
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Retriever" y "Focuses model on generation").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Analogía de la Biblioteca</h2>
+    <p style="font-size: 0.44em;">
+      <em>"¿Cómo hago pizza estilo Nueva York en casa?"</em> — recuperar información es un problema viejo, y
+      la biblioteca ya lo tenía resuelto:
+    </p>
+    <table style="font-size: 0.4em; width: 100%; max-width: 860px; margin: 0.25em auto;">
+      <tr><th></th><th>Colección</th><th>Organización</th><th>Búsqueda</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-teal);">Biblioteca</strong></td>
+        <td>Libros de muchos temas</td><td>Estantes y secciones</td>
+        <td>El bibliotecario te lleva a los mejores libros</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">Retriever</strong></td>
+        <td>Documentos en una base de datos</td><td>Un <strong>índice</strong> de búsqueda</td>
+        <td>El retriever consulta el índice</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Y lo que hace bien un bibliotecario es justo lo que le pedimos al retriever:
+      <strong>entiende el significado</strong> de tu pregunta (no solo las palabras), identifica
+      <strong>dónde buscar</strong>, y termina encontrando los libros relevantes.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      📚 <strong>Contexto histórico:</strong> la recuperación de información era una disciplina
+      <strong>madura</strong> mucho antes de que existieran los LLMs. RAG no la inventó: la conectó con la
+      generación.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1 (seccion "Introduction to information retrieval"). El bibliotecario entiende el significado: es el puente con embeddings.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Compromiso del Retriever</h2>
+    <div class="widget-container">
+      <canvas id="rag-retriever-canvas" width="880" height="325" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.45em; margin-top:0.35em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn rag-q-btn" data-q="0">hoteles caros</button>
+        <button class="widget-btn fi-btn rag-q-btn" data-q="1">¿cuándo toca Taylor Swift?</button>
+        <button class="widget-btn fi-btn rag-q-btn" data-q="2">¿por qué faltan hoteles?</button>
+        <div class="widget-label" style="font-size:0.78em;">k <span class="widget-value" id="rag-retriever-k-value">3</span>
+          <input type="range" id="rag-retriever-k" class="widget-slider" min="1" max="10" step="1" value="3" style="width:120px; margin-left:0.4em;">
+        </div>
+      </div>
+      <div id="rag-retriever-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.3em; font-size:0.55em;"></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.37em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      Similitudes <strong>reales</strong>. Mueve <strong>k</strong>: con k chico se pierden documentos
+      necesarios; con k grande entra ruido y se gasta ventana de contexto.
+    </p>
+    <aside class="notes">
+      Widget propio con cosenos reales del modelo multilingue. Guion: en "hoteles caros", subir k hasta 10
+      y notar que el documento del concierto — la causa real — es el ULTIMO (0.247, por debajo incluso de
+      "como llegar del aeropuerto"). En "¿cuando toca Taylor Swift?" con k=1 basta (0.736 contra 0.348 del
+      siguiente). En "¿por que faltan hoteles?" con k=3 si aparece el documento correcto, pero acompanado de
+      2 de ruido: precision de 33%. Es la mejor ilustracion de que no hay un k universal.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Compromisos del Retriever</h2>
+    <table style="font-size: 0.4em; width: 100%;">
+      <tr><th>Decisión</th><th>Qué pasa</th></tr>
+      <tr class="fragment fade-up"><td><strong>¿Devolver todos los documentos?</strong></td>
+        <td>Montañas de material irrelevante: se <strong>desperdicia la ventana de contexto</strong> y el
+          modelo se distrae</td></tr>
+      <tr class="fragment fade-up"><td><strong>¿Devolver solo el mejor?</strong></td>
+        <td>Te pierdes información valiosa que estaba en el segundo o el tercero</td></tr>
+      <tr class="fragment fade-up"><td><strong>Relevante vs. irrelevante</strong></td>
+        <td>Hay que traer lo que sirve <em>y</em> dejar fuera lo que no — las dos cosas a la vez</td></tr>
+      <tr class="fragment fade-up"><td><strong>No hay solución perfecta</strong></td>
+        <td>El retriever <strong>no ordena perfectamente</strong>: lo acabas de ver, el documento clave
+          quedó último</td></tr>
+      <tr class="fragment fade-up"><td><strong>Medir y experimentar</strong></td>
+        <td>Ajustar k y la estrategia según tus datos y tus preguntas reales</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      Esto es exactamente el trade-off <strong>precision / recall</strong> de la unidad de evaluación,
+      aplicado a la recuperación: k grande sube el recall del contexto y baja su precisión. Y como allá, la
+      única salida es <strong>medirlo</strong> (recall@k) sobre preguntas con respuesta conocida.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1 ("Retriever Tradeoffs"). Enlazar con evaluacion: recall@k y precision@k.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ventajas de RAG</h2>
+    <ul style="font-size: 0.44em;">
+      <li class="fragment fade-up"><strong style="color: var(--c-green);">Inyecta el conocimiento que falta</strong>
+        — información que no estaba en los datos de entrenamiento (políticas, novedades, datos privados)</li>
+      <li class="fragment fade-up"><strong style="color: var(--c-blue);">Reduce las alucinaciones</strong>
+        — <em>fundamenta</em> la respuesta en contexto relevante en vez de dejar al modelo rellenar huecos</li>
+      <li class="fragment fade-up"><strong style="color: var(--c-yellow);">Mantiene el modelo al día</strong>
+        — para reflejar algo nuevo basta <strong>actualizar la base</strong>, no reentrenar</li>
+      <li class="fragment fade-up"><strong style="color: var(--c-orange);">Permite citar fuentes</strong>
+        — respuestas verificables, que en entornos serios es un requisito y no un lujo</li>
+      <li class="fragment fade-up"><strong style="color: var(--c-purple);">Enfoca al modelo en generar</strong>
+        — el retriever pone los hechos, el LLM los redacta</li>
+    </ul>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      💡 La de <strong>citar fuentes</strong> se subestima: cambia por completo la confianza del usuario.
+      Una respuesta con enlace al documento se puede verificar; una sin él hay que creerla.
+    </blockquote>
+    <aside class="notes">Fuente: RAG_M1 ("Advantages of RAG"). Notar que RAG reduce alucinaciones pero NO las elimina: el modelo puede ignorar el contexto.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Por Qué no Meter Todo?</h2>
+    <div class="comparison">
+      <div class="side">
+        <h3 style="color: var(--c-orange);">Costo de cómputo</h3>
+        <ul style="font-size: 0.72em; text-align:left;">
+          <li>Prompts más largos cuestan más tiempo y más dinero</li>
+          <li>El modelo hace un <strong>barrido de todos los tokens</strong>…</li>
+          <li>…y lo repite <strong>antes de generar cada token nuevo</strong></li>
+        </ul>
+      </div>
+      <div class="side">
+        <h3 style="color: var(--c-blue);">Límite de la ventana de contexto</h3>
+        <ul style="font-size: 0.72em; text-align:left;">
+          <li>Tarde o temprano se alcanza el máximo del modelo</li>
+          <li>Modelos pequeños: unos pocos miles de tokens</li>
+          <li>Los más grandes: cientos de miles o millones</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      Y aunque quepa, ya lo vimos en la unidad anterior: en prompts muy largos los modelos
+      <strong>atienden peor lo que queda en medio</strong>. Más contexto no es automáticamente mejor
+      contexto.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Why not add everything?"). Se repite a proposito desde la unidad de LLMs porque aqui es donde se vuelve una decision de diseno.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Dónde se Guarda la Base de Conocimiento</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-blue);"><strong>Base de datos relacional</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Ya está adoptada en casi cualquier empresa</li>
+          <li>Recupera <strong>tablas y filas</strong> por coincidencia exacta y filtros</li>
+          <li>Con una extensión como <code>pgvector</code> también hace búsqueda por similitud</li>
+        </ul>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-teal);"><strong>Base de datos vectorial</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li><strong>Especializada</strong> en recuperación para RAG</li>
+          <li>Índices ANN, filtros por metadata y búsqueda híbrida integrados</li>
+          <li>Es la unidad anterior: HNSW, coseno, pre-filtrado</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.35em;">
+      También sirve un <strong>buscador web</strong> como retriever: la consulta va al buscador, y las
+      páginas que devuelve son el contexto. Es lo que hacen los resúmenes de IA en los buscadores actuales
+      — <strong>RAG con internet como base de conocimiento</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Practical Implementation" y "Search engines as retrievers"). Recordar el criterio de la unidad 10: con pocos documentos, numpy basta.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Aplicaciones: Código y Empresa</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-blue);"><strong>Generación de código</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>El LLM necesita el <strong>contexto de tu proyecto</strong>: clases, funciones, convenciones
+            y estilo</li>
+          <li>Tu propio <strong>repositorio es la base de conocimiento</strong></li>
+          <li>Las respuestas quedan ajustadas a tu código real, no a un ejemplo genérico de internet</li>
+        </ul>
+        <p style="font-size: 0.38em; color: var(--c-text-dim);">Es lo que hacen los asistentes de código
+          modernos cuando "leen" tu repositorio.</p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-green);"><strong>Chatbots de empresa</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Cada negocio tiene sus <strong>productos, políticas y tono</strong></li>
+          <li>Usa documentos internos: manuales, guías de soporte, FAQs</li>
+          <li>Fundamenta las respuestas en contexto real y reduce las genéricas o incorrectas</li>
+        </ul>
+        <p style="font-size: 0.38em; color: var(--c-text-dim);">Sin RAG, el bot inventa políticas de
+          devolución que tu empresa nunca tuvo.</p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M1 ("Applications of RAG - Code Generation" y "Company Chatbots").</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Aplicaciones: Dominios Especializados y Personales</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-purple);"><strong>Conocimiento especializado</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Dominios de <strong>alto impacto</strong>: legal y médico</li>
+          <li>Documentos especializados: expedientes, revistas científicas, datos privados</li>
+          <li>Permite un uso <strong>preciso y seguro</strong>, respetando la privacidad</li>
+        </ul>
+        <p style="font-size: 0.38em; color: var(--c-text-dim);">Aquí citar la fuente no es opcional: hay que
+          poder rastrear de dónde salió cada afirmación.</p>
+      </div>
+      <div class="col-45">
+        <p style="font-size: 0.44em; color: var(--c-pink);"><strong>RAG personalizado</strong></p>
+        <ul style="font-size: 0.4em;">
+          <li>Cada vez más software incluye asistentes personales</li>
+          <li>Esos asistentes <strong>necesitan tu contexto</strong> para servir de algo</li>
+          <li><strong>Tus datos son la base</strong>: correos, calendario, mensajes, contactos</li>
+        </ul>
+        <p style="font-size: 0.38em; color: var(--c-text-dim);">"¿A qué hora quedé con Ana?" solo tiene
+          respuesta si el asistente puede leer tu calendario.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em;">
+      El patrón se repite siempre: <strong style="color: var(--c-yellow);">LLM + tus datos</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Specialized Knowledge" y "Personalized RAG"). Buen momento para preguntar al grupo que base de conocimiento usaria su capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Un RAG Mínimo, de Principio a Fin</h2>
+    <pre style="font-size: 0.34em; max-width: 94%; margin: 0 auto; overflow-x:auto;"><code class="language-python">from sentence_transformers import SentenceTransformer
+import numpy as np
+
+modelo = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+
+# ---------- 1. INDEXAR (una sola vez) ----------
+documentos = [
+    "La ocupación hotelera en el centro de Vancouver llegó al 97% este fin de semana",
+    "Se esperan 60,000 visitantes por los conciertos de diciembre",
+    "Los hoteles suben tarifas hasta 3 veces cuando hay eventos masivos",
+    # ... miles mas
+]
+E = modelo.encode(documentos, normalize_embeddings=True)     # (N, 384)
+
+# ---------- 2. RECUPERAR ----------
+def recuperar(pregunta, k=3):
+    q = modelo.encode([pregunta], normalize_embeddings=True)
+    sim = (q @ E.T)[0]                       # coseno contra todos
+    idx = np.argsort(-sim)[:k]               # los k mas parecidos
+    return [(documentos[i], float(sim[i])) for i in idx]
+
+# ---------- 3. AUMENTAR ----------
+def construir_prompt(pregunta, recuperados):
+    contexto = "\n".join(f"[{i+1}] {t}" for i, (t, _) in enumerate(recuperados))
+    return (f"Responde SOLO con el contexto. Si no alcanza, di que no sabes.\n"
+            f"Cita la fuente entre corchetes.\n\n"
+            f"--- CONTEXTO ---\n{contexto}\n\n--- PREGUNTA ---\n{pregunta}")
+
+# ---------- 4. GENERAR ----------
+prompt = construir_prompt("¿Por qué los hoteles están tan caros?", recuperar("..."))
+respuesta = cliente.chat.completions.create(model="...", temperature=0,
+                                            messages=[{"role": "user", "content": prompt}])</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      Eso es RAG completo. Todo lo demás — bases vectoriales, chunking, re-ranking — son mejoras sobre
+      estos cuatro pasos. Nota <code>temperature=0</code>: para responder con hechos no queremos creatividad.
+    </p>
+    <aside class="notes">
+      Contenido propio, apoyado en el codigo de la unidad de embeddings. Vale la pena recalcar que con pocos
+      documentos este RAG con numpy es perfectamente valido para un capstone.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Sale Mal en la Práctica</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th>Problema</th><th>Síntoma</th><th>Por dónde empezar</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-red);">El retriever no trae el documento</strong></td>
+        <td>La respuesta es genérica o dice que no sabe, aunque el dato exista</td>
+        <td>Subir k, búsqueda híbrida, reescribir la consulta</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-orange);">Trae el documento pero el LLM lo ignora</strong></td>
+        <td>Contesta con su conocimiento previo, contradiciendo el contexto</td>
+        <td>Instrucción más firme, <code>temperature=0</code>, poner el contexto al final</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-yellow);">Trozos mal cortados</strong></td>
+        <td>Fragmentos que empiezan a media frase y pierden el sujeto</td>
+        <td>Revisar el <em>chunking</em> y agregar solapamiento</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-purple);">Base desactualizada</strong></td>
+        <td>Responde con la política del año pasado, con total seguridad</td>
+        <td>Reindexar y guardar fechas en la metadata</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color:var(--c-blue);">Nadie mide nada</strong></td>
+        <td>"Se siente mejor" como único criterio</td>
+        <td>Un set de preguntas con respuesta conocida y medir recall@k</td></tr>
+    </table>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      ⚠️ Y el más importante: <strong>RAG reduce las alucinaciones, no las elimina</strong>. El modelo
+      todavía puede mezclar el contexto con lo que "recuerda", o resumirlo mal.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio. Cada fila anticipa un modulo posterior del curso de RAG (retriever, base vectorial,
+      LLM, evaluacion), asi que sirve de mapa de lo que viene.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.7em;">
+      <div class="step fragment fade-up">RAG <strong>empareja un LLM con una base de conocimiento</strong></div>
+      <div class="step fragment fade-up">Sirve cuando los datos son <strong>privados, recientes o muy
+        específicos</strong>, y por eso faltan en el entrenamiento del modelo</div>
+      <div class="step fragment fade-up">El <strong>retriever</strong> encuentra los documentos relevantes y
+        los agrega a un <strong>prompt aumentado</strong></div>
+      <div class="step fragment fade-up">El LLM <strong>fundamenta</strong> su respuesta en esa información
+        recuperada — y puede citarla</div>
+      <div class="step fragment fade-up">El precio: <strong>latencia extra</strong> y una decisión de diseño
+        constante sobre <strong>qué y cuánto</strong> recuperar</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.35em;">
+      En los siguientes módulos: el retriever a fondo, bases vectoriales, el LLM generador, y cómo
+      <strong>evaluar y monitorear</strong> un sistema RAG completo.
+    </p>
+    <aside class="notes">Fuente: RAG_M1 ("Key Concepts"). Los modulos 2 a 5 del curso de RAG son la continuacion natural.</aside>
+  </section>
+</section>
+
 </div>
 </div>
 
@@ -6534,6 +7065,9 @@ docs = retriever.invoke(
 <script src="js/widgets/llm-trie-data.js"></script>
 <script src="js/widgets/token-generation-widget.js"></script>
 <script src="js/widgets/training-pairs-widget.js"></script>
+<script src="js/widgets/rag-data.js"></script>
+<script src="js/widgets/rag-pipeline-widget.js"></script>
+<script src="js/widgets/rag-retriever-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -6716,6 +7250,18 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initTrainingPairsWidget === 'function') {
       initTrainingPairsWidget();
       widgetsInitialized.trainingPairs = true;
+    }
+  }
+  if (slide.querySelector('#rag-pipeline-canvas') && !widgetsInitialized.ragPipeline) {
+    if (typeof initRagPipelineWidget === 'function') {
+      initRagPipelineWidget();
+      widgetsInitialized.ragPipeline = true;
+    }
+  }
+  if (slide.querySelector('#rag-retriever-canvas') && !widgetsInitialized.ragRetriever) {
+    if (typeof initRagRetrieverWidget === 'function') {
+      initRagRetrieverWidget();
+      widgetsInitialized.ragRetriever = true;
     }
   }
 });
