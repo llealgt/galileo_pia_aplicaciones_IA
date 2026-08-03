@@ -71,6 +71,7 @@
         <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>RAG: Retrieval Augmented Generation</a>
         <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>Recuperación de Información: los Fundamentos</a>
         <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación en Producción</a>
+        <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>LLMs y Generación de Texto</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -9413,6 +9414,1532 @@ No expliques.</code></pre>
 
 </section>
 
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.45em;">LLMs y Generación de Texto</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">El Otro Lado del RAG</h3>
+    <p style="font-size: 0.44em; color: var(--c-text-dim); margin-top: 0.7em;">
+      Tres unidades dedicadas al <strong>retriever</strong>. Ahora le toca al
+      <strong>generador</strong>: cómo funciona por dentro, cómo se controla, cómo se le arma
+      el prompt, cómo se evita que invente y cómo se mide si respondió bien.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("LLMs and Text Generation"). Es el modulo 4 del curso de RAG. Complementa la unidad 11 del curso: alli se vio QUE hace un LLM, aqui se ve COMO lo hace por dentro y como se opera en un sistema RAG.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Vamos a Ver</h2>
+    <div class="taxonomy" style="font-size: 0.88em;">
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-blue);">
+        <strong style="color: var(--c-blue);">La arquitectura transformer</strong> —
+        atención, capas y refinamiento. <strong>Por qué RAG funciona</strong> se explica aquí.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-green);">
+        <strong style="color: var(--c-green);">Muestreo</strong> —
+        controlar la aleatoriedad: temperatura, top-k, top-p, penalizaciones.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-orange);">
+        <strong style="color: var(--c-orange);">Elegir el modelo y armar el prompt</strong> —
+        benchmarks, formato de mensajes, plantillas, few-shot, chain of thought.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-red);">
+        <strong style="color: var(--c-red);">Alucinaciones y evaluación</strong> —
+        anclar las respuestas, citar fuentes y medir con RAGAS.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-purple);">
+        <strong style="color: var(--c-purple);">RAG agéntico y fine-tuning</strong> —
+        encadenar varios LLMs, y cuándo conviene reentrenar en vez de recuperar.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Module Overview"). Los fundamentos de LLM (tokens, clasificador de siguiente token, bucle de generacion) ya se vieron en la unidad 11; aqui se recuerdan brevemente y el tiempo se invierte en lo nuevo.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>De Dónde Viene el Transformer</h2>
+    <div style="font-size: 0.4em; margin-top: 0.4em;">
+      <div class="flow-row" style="justify-content:space-between; align-items:flex-start;">
+        <div class="flow-node" style="border-color: var(--c-text-dim); flex:1;">
+          <strong>2015</strong><br>Mecanismo de<br><strong>atención</strong><br>
+          <span style="color: var(--c-text-dim);">como accesorio de las RNN</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-yellow); flex:1.3;">
+          <strong>2017</strong><br><strong style="color: var(--c-yellow);">"Attention is All You Need"</strong><br>
+          <span style="color: var(--c-text-dim);">Vaswani et al., Google Brain</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-blue); flex:1;">
+          <strong>2018</strong><br>Modelos<br><strong>preentrenados</strong><br>
+          <span style="color: var(--c-text-dim);">BERT, GPT</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green); flex:1;">
+          <strong>2022</strong><br>LLMs al alcance<br><strong>del público</strong><br>
+          <span style="color: var(--c-text-dim);">ChatGPT</span>
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.45em;">
+      El título del paper es literal: la propuesta fue <strong>tirar todo lo demás</strong>
+      —las redes recurrentes, las convoluciones— y quedarse solo con la atención.
+      Resultó que alcanzaba, y además <strong>se paraleliza</strong>, que es lo que permitió
+      entrenar modelos gigantes.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Origins of the Transformer"). El detalle de la paralelizacion no esta en el original pero es la razon economica de que el transformer ganara: una RNN procesa palabra por palabra, un transformer procesa toda la secuencia a la vez.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Encoder y Decoder</h2>
+    <div class="comparison" style="font-size: 0.41em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-blue);">
+        <h4 style="color: var(--c-blue); margin-top:0;">Encoder</h4>
+        <ul style="margin:0.2em 0;">
+          <li>Procesa el texto de entrada completo</li>
+          <li>Construye una <strong>comprensión profunda</strong> de su significado</li>
+          <li>Ve el texto entero <strong>a la vez</strong>, hacia adelante y hacia atrás</li>
+        </ul>
+        <p style="margin-top:0.3em; padding:0.25em 0.4em; background: rgba(88,196,221,0.1);">
+          Es lo que usan los <strong>modelos de embeddings</strong> de las unidades anteriores.
+        </p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Decoder</h4>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Genera</strong> texto nuevo, token por token</li>
+          <li>Cada token solo puede ver los <strong>anteriores</strong></li>
+          <li>Es el bucle de generación de la unidad de LLMs</li>
+        </ul>
+        <p style="margin-top:0.3em; padding:0.25em 0.4em; background: rgba(131,193,103,0.1);">
+          <strong>La mayoría de los LLMs son solo decoder</strong>: únicamente les interesa generar.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Los dos componentes vienen del mismo paper, pensados para <strong>traducir</strong>
+      (encoder lee alemán, decoder escribe inglés). Hoy se usan por separado:
+      <strong>encoders para buscar, decoders para generar</strong>. Todo tu RAG usa los dos.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 (slide de Encoder / Decoder). Es un buen momento para cerrar el circulo: el bi-encoder de la unidad anterior es un encoder, el LLM que responde es un decoder.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Entra: Significado + Posición</h2>
+    <p style="font-size: 0.42em;">
+      Cada token se convierte en <strong>dos</strong> vectores que viajan juntos:
+    </p>
+    <div style="overflow-x:auto; margin-top: 0.25em;">
+      <table style="font-size: 0.31em; width: 96%; margin: 0 auto; font-family: 'Fira Code', monospace;">
+        <tr><th></th><th style="color: var(--c-blue);">Vector semántico<br><span style="font-weight:normal; color: var(--c-text-dim);">"primera idea" del significado</span></th>
+          <th style="color: var(--c-orange);">Vector de posición<br><span style="font-weight:normal; color: var(--c-text-dim);">dónde está en el prompt</span></th></tr>
+        <tr><td><strong>El</strong></td><td>[0.10, 0.21, 0.05, 0.12, 0.07]</td><td>[0.54, 0.19, 0.03, 0.17, 0.08]</td></tr>
+        <tr><td><strong>perro</strong></td><td>[0.55, 0.32, 0.91, 0.20, 0.44]</td><td>[0.28, 0.36, 0.82, 0.27, 0.51]</td></tr>
+        <tr><td><strong>café</strong></td><td>[0.65, 0.40, 0.87, 0.22, 0.41]</td><td>[0.72, 0.34, 0.80, 0.29, 0.36]</td></tr>
+        <tr><td><strong>se sentó</strong></td><td>[0.11, 0.78, 0.23, 0.91, 0.65]</td><td>[0.33, 0.71, 0.26, 0.84, 0.59]</td></tr>
+        <tr><td style="color: var(--c-text-dim);">…</td><td style="color: var(--c-text-dim);">…</td><td style="color: var(--c-text-dim);">…</td></tr>
+      </table>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em;">
+      <strong>¿Por qué hace falta la posición?</strong> Porque la atención, por sí sola, no tiene
+      noción de orden: sin ese vector, <em>"el perro mordió al cartero"</em> y
+      <em>"el cartero mordió al perro"</em> serían idénticos para el modelo.
+      Es el mismo problema de la bolsa de palabras, resuelto de otra forma.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 (slide de "Dense Semantic Vector" / "Position Vector"). Los numeros de la tabla son los del original, ilustrativos. La conexion con la bolsa de palabras de la unidad 13 es propia y ayuda a que el punto se entienda de inmediato.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Atención: ¿Quién Me Da Significado?</h2>
+    <blockquote style="font-size: 0.46em; margin: 0.3em 0;">
+      La atención es una forma elegante de decir:
+      <strong style="color: var(--c-yellow);">"¿cuáles de los otros tokens deberían tener
+      más impacto sobre mi significado?"</strong>
+    </blockquote>
+    <div style="text-align:center; margin: 0.4em 0; font-size: 0.44em; font-family: 'Fira Code', monospace;">
+      El <span style="background: rgba(131,193,103,0.35); padding:0.1em 0.25em;">perro</span>
+      <span style="background: rgba(88,196,221,0.3); padding:0.1em 0.25em;">café</span>
+      <span style="background: rgba(255,255,0,0.25); padding:0.15em 0.3em; border:1px solid var(--c-yellow);">se sentó</span>
+      junto al zorro rojo
+    </div>
+    <div class="fragment fade-up" style="font-size: 0.4em; text-align:center;">
+      Al procesar <strong style="color: var(--c-yellow);">"se sentó"</strong>, el modelo reparte su atención:
+      <div style="display:flex; justify-content:center; gap:0.8em; margin-top:0.3em;">
+        <span style="padding:0.2em 0.6em; background: rgba(131,193,103,0.25);"><strong>perro</strong> 70%</span>
+        <span style="padding:0.2em 0.6em; background: rgba(88,196,221,0.25);"><strong>café</strong> 20%</span>
+        <span style="padding:0.2em 0.6em; background: rgba(168,162,144,0.15);">el resto 10%</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Cada token mira el <strong>significado</strong> y la <strong>posición</strong> de todos los demás
+      y decide de dónde tomar contexto. En la siguiente diapositiva vemos que esto pasa
+      <strong>de verdad</strong>, con un modelo real.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 (slides de atencion con el 70%/20%/10%). Los porcentajes del original son ilustrativos; el widget siguiente muestra los REALES, medidos sobre gpt2-spanish, y resulta que el patron existe: hay una cabeza donde "sentó" mira a "perro" con 0.889.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora la Atención Real</h2>
+    <div class="widget-container">
+      <canvas id="attention-canvas" width="880" height="290" style="width:100%; max-width:880px; display:block; margin:0 auto; cursor:pointer;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn att-vista-btn" data-vista="matriz">matriz</button>
+        <button class="widget-btn fi-btn att-vista-btn" data-vista="arcos">arcos</button>
+        <div class="widget-label" style="font-size:0.68em;">capa <span class="widget-value" id="att-capa-value">6</span>
+          <input type="range" id="att-capa" class="widget-slider" min="0" max="11" step="1" value="5" style="width:92px; margin-left:0.3em;">
+        </div>
+        <div class="widget-label" style="font-size:0.68em;">cabeza <span class="widget-value" id="att-cabeza-value">11</span>
+          <input type="range" id="att-cabeza" class="widget-slider" min="0" max="11" step="1" value="10" style="width:92px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.35em; margin-top:0.22em; flex-wrap:wrap;">
+        <span style="font-size:0.5em; color: var(--c-text-dim);">patrones encontrados midiendo:</span>
+        <button class="widget-btn fi-btn att-atajo-btn" data-capa="5" data-cabeza="10" data-foco="4" style="font-size:0.72em;">sujeto del verbo</button>
+        <button class="widget-btn fi-btn att-atajo-btn" data-capa="3" data-cabeza="4" style="font-size:0.72em;">token anterior</button>
+        <button class="widget-btn fi-btn att-atajo-btn" data-capa="5" data-cabeza="3" style="font-size:0.72em;">primer token</button>
+        <button class="widget-btn fi-btn att-atajo-btn" data-capa="11" data-cabeza="1" style="font-size:0.72em;">a sí mismo</button>
+      </div>
+      <div id="attention-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio con matrices de atencion REALES de DeepESP/gpt2-spanish (12 capas x 12 cabezas).
+      Los cuatro atajos van a cabezas cuyo patron se encontro MIDIENDO, no a ojo. Guion:
+      (1) empezar en "sujeto del verbo": capa 6 cabeza 11, donde "sentó" mira a "perro" con 0.889 —
+      exactamente lo que el modulo dibuja como 70%, pero medido;
+      (2) "token anterior" (capa 4 cabeza 5): 0.99 de la atencion va siempre al token de atras;
+      (3) "primer token": casi todo va al primero — es el "attention sink", un fenomeno real y conocido;
+      (4) hacer notar la mitad tachada: un decoder solo mira hacia atras.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Muchas Cabezas, Muchos Patrones</h2>
+    <div class="columns" style="font-size: 0.41em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          No hay <em>una</em> atención: hay muchas en paralelo. Cada <strong>cabeza</strong>
+          aprende a fijarse en algo distinto.
+        </p>
+        <p style="margin:0.25em 0;">
+          Modelos pequeños usan <strong>8 o 16</strong> cabezas por capa; los grandes,
+          <strong>más de 100</strong>.
+        </p>
+        <p style="margin:0.3em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+          Nadie programó qué debe mirar cada cabeza. Los patrones
+          <strong>emergen del entrenamiento</strong>, y muchos ni siquiera tienen
+          un nombre humano.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-green);">Medido</strong>
+          en el modelo del widget (144 cabezas):</p>
+        <table style="width:100%; font-size:0.92em; margin-top:0.2em;">
+          <tr><th>Cabeza</th><th>Qué hace</th><th>Fuerza</th></tr>
+          <tr><td>capa 4, cab. 5</td><td>mira al token anterior</td><td style="color: var(--c-green);">0.99</td></tr>
+          <tr><td>capa 6, cab. 4</td><td>mira al primer token</td><td style="color: var(--c-green);">0.98</td></tr>
+          <tr><td>capa 6, cab. 11</td><td>verbo → su sujeto</td><td style="color: var(--c-green);">0.89</td></tr>
+          <tr><td>capa 12, cab. 2</td><td>se mira a sí mismo</td><td>0.53</td></tr>
+        </table>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          La de "primer token" tiene nombre propio: <strong>attention sink</strong>.
+          Las cabezas necesitan mirar <em>a algo</em> aunque no haya nada relevante,
+          y descargan ahí la atención sobrante.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Head 1: Object Relations / Head 2: Spatial Relations", "Each head learns abstract patterns, not human defined rules"). La tabla es medida sobre gpt2-spanish con el codigo del generador de datos. El attention sink es de Xiao et al. (2023), "Efficient Streaming Language Models with Attention Sinks".</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Después de Atender: Pensar</h2>
+    <div class="flow-row" style="justify-content:center; font-size: 0.38em; margin: 0.3em 0;">
+      <div class="flow-node" style="border-color: var(--c-blue);">Embeddings<br>de entrada</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-yellow);"><strong>Atención</strong><br><span style="color: var(--c-text-dim);">mirar a los demás</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);"><strong>Feed forward</strong><br><span style="color: var(--c-text-dim);">procesar lo mirado</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-purple);">Embeddings<br>actualizados</div>
+    </div>
+    <div style="font-size: 0.4em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="margin:0.25em 0; padding:0.3em 0.5em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue);">
+        <strong>Primera idea de "perro":</strong> <span style="font-family: 'Fira Code', monospace;">[0.65, 0.40, 0.87, …]</span><br>
+        <span style="color: var(--c-text-dim);">"perro es un animal"</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding:0.3em 0.5em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+        <strong>Segunda idea:</strong> <span style="font-family: 'Fira Code', monospace;">[0.38, 0.19, 0.26, …]</span><br>
+        <span style="color: var(--c-text-dim);">"perro es un animal café que se sentó cerca de un zorro rojo"</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em;">
+      El bloque <strong>feed forward</strong> es donde vive el <strong>conocimiento del mundo</strong>
+      que el modelo memorizó al entrenarse. La atención trae el contexto;
+      el feed forward decide qué hacer con él.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("The Feed Forward Phase"). Que el conocimiento factual viva sobre todo en las capas feed forward es un resultado de interpretabilidad (Geva et al., 2021, "Transformer Feed-Forward Layers Are Key-Value Memories") y es justo lo que el modulo usa despues para explicar por que RAG funciona.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Refinar, una y Otra Vez</h2>
+    <p style="font-size: 0.42em;">
+      Ese par <strong>atención → feed forward</strong> no ocurre una vez: es una
+      <strong>capa</strong>, y los modelos apilan entre <strong>8 y 64</strong>.
+    </p>
+    <table style="font-size: 0.36em; width: 92%; margin: 0.25em auto;">
+      <tr><th>Pasada</th><th>Representación de "perro"</th><th>Qué entendió</th></tr>
+      <tr class="fragment fade-up"><td>1ª</td><td style="font-family: 'Fira Code', monospace;">[0.65, 0.40, 0.87, 0.22, 0.41]</td><td>un animal</td></tr>
+      <tr class="fragment fade-up"><td>2ª</td><td style="font-family: 'Fira Code', monospace;">[0.38, 0.19, 0.26, 0.41, 0.22]</td><td>el sujeto de la oración</td></tr>
+      <tr class="fragment fade-up"><td>3ª</td><td style="font-family: 'Fira Code', monospace;">[0.38, 0.22, 0.26, 0.41, 0.22]</td><td>conectado con "café" y "se sentó"</td></tr>
+      <tr class="fragment fade-up"><td style="color: var(--c-text-dim);">…</td><td style="color: var(--c-text-dim);">…</td><td style="color: var(--c-text-dim);">…</td></tr>
+      <tr class="fragment fade-up"><td><strong>N-ésima</strong></td><td style="font-family: 'Fira Code', monospace;">[0.38, 0.22, 0.26, 0.58, 0.12]</td><td><strong>representación final refinada</strong></td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      Y eso <strong>concuerda con lo que se ve en el widget</strong>: las capas bajas hacen cosas
+      mecánicas (mirar el token anterior), las intermedias arman relaciones gramaticales
+      (verbo → sujeto) y las últimas ya trabajan sobre la representación consolidada de
+      cada token.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Iterative Refinement", con la nota de que los modelos usan de 8 a 64 capas). La observacion final la sostienen los datos del widget: capa 4 = token anterior, capa 6 = sujeto, capa 12 = a si mismo. Vale la pena volver al widget y recorrer las capas en orden.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Y al Final: la Distribución</h2>
+    <p style="font-size: 0.42em;">
+      La representación refinada del <strong>último</strong> token se proyecta sobre todo el
+      vocabulario, y sale una probabilidad para <strong>cada token posible</strong>.
+    </p>
+    <div style="text-align:center; margin: 0.3em 0; font-size: 0.4em;">
+      <span style="font-family: 'Fira Code', monospace; color: var(--c-text-dim);">[0.38, 0.22, 0.26, 0.58, 0.12]</span>
+      <span style="color: var(--c-yellow);"> → </span>
+      <span>¿qué token sigue?</span>
+    </div>
+    <div style="display:flex; align-items:flex-end; justify-content:center; gap:0.35em; height:5.5em; margin-top:0.3em;">
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:5.5em; background: var(--c-green); opacity:0.8;"></div><strong>y</strong><br>32%</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:4.3em; background: var(--c-blue); opacity:0.7;"></div><strong>en</strong><br>25%</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:3.1em; background: var(--c-blue); opacity:0.55;"></div><strong>sobre</strong><br>18%</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:2.1em; background: var(--c-blue); opacity:0.45;"></div><strong>que</strong><br>12%</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:1.6em; background: var(--c-blue); opacity:0.35;"></div><strong>con</strong><br>9%</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:1.2em; background: var(--c-blue); opacity:0.3;"></div><strong>quien</strong><br>7%</div>
+      <div style="align-self:center; color: var(--c-text-dim); font-size:0.4em;">…</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:0.15em; background: var(--c-red); opacity:0.5;"></div><strong>brasil</strong><br>0.1%</div>
+      <div style="text-align:center; font-size:0.34em;"><div style="width:2.6em; height:0.08em; background: var(--c-red); opacity:0.5;"></div><strong>banana</strong><br>0.01%</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Se muestrea uno, se pega al final del prompt y <strong>todo el proceso vuelve a empezar
+      desde cero</strong> — atención, feed forward, todas las capas — para el siguiente token.
+      Hasta llegar al límite o al token de fin.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 (slide de la distribucion sobre el vocabulario y "To generate the next token, the model repeats the entire process from scratch"). El bucle de generacion ya se vio en la unidad 11 con un widget dedicado; aqui lo nuevo es que ya sabemos QUE pasa adentro en cada pasada.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Por Qué RAG Funciona</h2>
+    <p style="font-size: 0.43em;">
+      Ahora se puede responder con precisión la pregunta de la primera unidad:
+      <strong>¿por qué basta con meter los documentos en el prompt?</strong>
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.32em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+        <strong style="color: var(--c-green);">1. La atención no distingue el origen.</strong>
+        Un token recuperado de tu base de datos entra al mismo mecanismo que cualquier otro.
+        El modelo <strong>puede</strong> mirarlo y usarlo igual que si lo hubiera memorizado.
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.32em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+        <strong style="color: var(--c-blue);">2. El conocimiento del mundo sigue ahí.</strong>
+        Las capas feed forward aportan gramática, sentido común y capacidad de redactar;
+        tus documentos aportan los <strong>hechos</strong>. Se combinan.
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.32em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+        <strong style="color: var(--c-red);">3. Pero la aleatoriedad no desaparece.</strong>
+        El modelo <strong>puede ignorar</strong> lo que le pasaste. Nada lo obliga a usarlo.
+        Hay que <strong>controlar el muestreo</strong> y <strong>verificar</strong> que la respuesta
+        se apoye en los documentos.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Y el punto 3 es el que ocupa la segunda mitad de esta unidad.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Conclusion" del bloque de transformers: why RAG works, inherent randomness remains). Este slide es la bisagra de toda la unidad de RAG: explica el mecanismo por el que funciona lo que llevamos tres unidades construyendo.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Lo que Cuesta Generar</h2>
+    <div style="font-size: 0.41em;">
+      <div class="fragment fade-up" style="margin:0.25em 0;">
+        ● Producir <strong>un solo token</strong> exige pasar por <strong>todas</strong> las capas,
+        con todas sus cabezas.
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0;">
+        ● Cada token debe <strong>mirar a todos los demás</strong>: el costo de la atención crece
+        con el <strong>cuadrado</strong> del largo del prompt.
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0;">
+        ● El costo sube con el prompt <strong>y</strong> con el largo de la respuesta.
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+        ● <strong>La mayor parte del costo de un sistema RAG está aquí</strong>, en correr el
+        transformer — no en el retriever, que es comparativamente baratísimo.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em;">
+      Consecuencia directa para el diseño: <strong>cada token que agregas al prompt lo pagas
+      en cada consulta</strong>. Por eso importaba tanto el <em>top-k</em> del retriever, y por eso
+      importa el chunking. Todo se conecta aquí.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Computational expense"). El crecimiento cuadratico es la razon de que existan FlashAttention, atencion con ventana deslizante y modelos de espacio de estados; no hace falta entrar en eso, pero conviene nombrarlo si alguien pregunta por que las ventanas largas son caras.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Picuda o Plana: la Forma Importa</h2>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.25em;">
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">Distribución picuda</h4>
+        <p style="margin:0.1em 0; font-family: 'Fira Code', monospace; font-size:0.9em;">"El presidente vive en la Casa ___"</p>
+        <p style="margin:0.2em 0;"><strong style="color: var(--c-green);">Blanca 83%</strong>, de 6%, del 2%…</p>
+        <p style="margin:0.2em 0;">El modelo está <strong>seguro</strong>. Da igual cómo muestrees:
+          casi siempre saldrá lo mismo.</p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-orange);">
+        <h4 style="color: var(--c-orange); margin-top:0;">Distribución plana</h4>
+        <p style="margin:0.1em 0; font-family: 'Fira Code', monospace; font-size:0.9em;">"Y entonces, de repente, ___"</p>
+        <p style="margin:0.2em 0;"><strong style="color: var(--c-orange);">se 13%</strong>, el 5%, la 4%, un 3%…</p>
+        <p style="margin:0.2em 0;">El modelo <strong>duda</strong>. Aquí los parámetros de muestreo
+          deciden de verdad qué sale.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Ambas son <strong>medidas</strong> sobre el mismo modelo. Para acumular el 85% de la
+      probabilidad, la picuda necesita <strong style="color: var(--c-green);">2 tokens</strong>;
+      la plana, <strong style="color: var(--c-red);">más de 40</strong>.
+      Guarda ese contraste: es la clave de top-p.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("The sky is..." con distribucion picuda vs plana). Las dos distribuciones de aqui son reales, medidas con DeepESP/gpt2-spanish, y se eligieron comparando la entropia de 9 prompts candidatos.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Greedy: Siempre el Más Probable</h2>
+    <div class="columns" style="font-size: 0.41em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          La estrategia más simple: en cada paso, tomar <strong>siempre</strong> el token de mayor
+          probabilidad. Equivale a <code>temperature = 0</code>.
+        </p>
+        <ul style="margin:0.25em 0;">
+          <li class="fragment fade-up"><strong style="color: var(--c-green);">Determinista</strong>: el mismo prompt da siempre la misma salida</li>
+          <li class="fragment fade-up">Texto <strong>genérico</strong>, sin chispa</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-red);">Se puede atorar en bucles</strong></li>
+          <li class="fragment fade-up">Útil en <strong>código</strong>, extracción de datos y depuración</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div style="padding: 0.4em 0.6em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red); font-style: italic;">
+          "…lo cual los datos confirman, lo cual los datos confirman, lo cual los datos
+          confirman, lo cual los datos confirman…"
+        </div>
+        <p style="margin-top:0.35em; color: var(--c-text-dim);">
+          Si la continuación más probable de una frase es la misma frase, greedy entra en un
+          ciclo del que no sale solo. Es el modo de fallo clásico.
+        </p>
+        <p class="fragment fade-up" style="margin-top:0.3em; padding: 0.25em 0.45em; background: rgba(131,193,103,0.08);">
+          <strong>En RAG</strong>, para responder con hechos, casi siempre quieres
+          <strong>temperatura baja</strong>. No queremos creatividad: queremos fidelidad.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Greedy Decoding"), incluido el ejemplo del bucle. Notar que temperature=0 y greedy son lo mismo, y que es lo que se uso en el codigo del RAG minimo de la primera unidad.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora los Parámetros de Muestreo</h2>
+    <div class="widget-container">
+      <canvas id="sampling-canvas" width="880" height="235" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn samp-dist-btn" data-d="0">picuda</button>
+        <button class="widget-btn fi-btn samp-dist-btn" data-d="1">intermedia</button>
+        <button class="widget-btn fi-btn samp-dist-btn" data-d="2">plana</button>
+      </div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.8em; margin-top:0.22em; flex-wrap:wrap;">
+        <div class="widget-label" style="font-size:0.66em;">temp <span class="widget-value" id="samp-temp-value">1.00</span>
+          <input type="range" id="samp-temp" class="widget-slider" min="0" max="250" step="5" value="100" style="width:84px; margin-left:0.25em;">
+        </div>
+        <div class="widget-label" style="font-size:0.66em;">top-k <span class="widget-value" id="samp-topk-value">40</span>
+          <input type="range" id="samp-topk" class="widget-slider" min="1" max="40" step="1" value="40" style="width:84px; margin-left:0.25em;">
+        </div>
+        <div class="widget-label" style="font-size:0.66em;">top-p <span class="widget-value" id="samp-topp-value">1.00</span>
+          <input type="range" id="samp-topp" class="widget-slider" min="10" max="100" step="5" value="100" style="width:84px; margin-left:0.25em;">
+        </div>
+        <div class="widget-label" style="font-size:0.66em;">rep. <span class="widget-value" id="samp-penal-value">1.00</span>
+          <input type="range" id="samp-penal" class="widget-slider" min="100" max="250" step="10" value="100" style="width:84px; margin-left:0.25em;">
+        </div>
+      </div>
+      <div id="sampling-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio con distribuciones REALES de gpt2-spanish. Guion: (1) poner top-p en 0.85 y
+      alternar entre "picuda" y "plana": el indicador "tokens candidatos" pasa de 2 a mas de 40 SOLO
+      cambiando el prompt — eso es la adaptatividad; (2) hacer lo mismo con top-k = 5: siempre 5,
+      demasiados para la picuda y muy pocos para la plana; (3) subir la temperatura y ver como las
+      barras se emparejan; bajarla a 0 y ver greedy; (4) subir la penalizacion de repeticion y ver
+      en naranja los tokens que ya aparecian en el prompt.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Top-k y Top-p, Lado a Lado</h2>
+    <table style="font-size: 0.38em; width: 100%;">
+      <tr><th></th><th>Top-k</th><th>Top-p (nucleus)</th></tr>
+      <tr class="fragment fade-up"><td><strong>Regla</strong></td>
+        <td>los <strong>k</strong> más probables</td>
+        <td>los que acumulen probabilidad <strong>p</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong>Cuántos tokens admite</strong></td>
+        <td style="color: var(--c-red);">siempre los mismos</td>
+        <td style="color: var(--c-green);">depende de la forma de la distribución</td></tr>
+      <tr class="fragment fade-up"><td><strong>Si el modelo está seguro</strong></td>
+        <td>deja pasar basura innecesaria</td>
+        <td style="color: var(--c-green);">se cierra: solo los buenos</td></tr>
+      <tr class="fragment fade-up"><td><strong>Si el modelo duda</strong></td>
+        <td>corta opciones legítimas</td>
+        <td style="color: var(--c-green);">se abre: da espacio</td></tr>
+    </table>
+    <div class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.35em; padding: 0.35em 0.55em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <strong>Medido en el widget, con top-p = 0.85:</strong> la distribución picuda admite
+      <strong style="color: var(--c-green);">2</strong> tokens y la plana
+      <strong style="color: var(--c-orange);">más de 40</strong>.
+      Con top-k = 5, ambas admiten 5 — <strong>demasiados</strong> para la primera y
+      <strong>demasiado pocos</strong> para la segunda.
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; color: var(--c-text-dim);">
+      Por eso top-p es hoy el valor por omisión en casi todas las APIs. Se pueden usar los dos
+      a la vez: top-k pone un techo duro y top-p ajusta dentro de él.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Top-k vs. Top-p", con el ejemplo de la suma acumulada 32% → 57% → 75% → 87%). Las cifras del recuadro son medidas sobre las distribuciones reales del widget.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Penalizaciones y Sesgos</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <h4 style="color: var(--c-orange); margin-bottom:0.15em;">Penalización de repetición</h4>
+        <p style="margin:0.1em 0;">
+          Baja la probabilidad de los tokens <strong>que ya salieron</strong>.
+        </p>
+        <p style="margin:0.2em 0;">Sirve para evitar:</p>
+        <ul style="margin:0.15em 0;">
+          <li>Bucles ("creo que, creo que…")</li>
+          <li>Estructuras de oración repetidas</li>
+          <li>Abuso de una palabra concreta</li>
+        </ul>
+        <p style="margin:0.25em 0; padding: 0.25em 0.45em; background: rgba(252,98,85,0.08);">
+          <strong>Cuidado en RAG:</strong> si la respuesta correcta necesita repetir un término
+          técnico o un nombre propio, penalizarlo <strong>estorba</strong>. Valores por encima
+          de 1.2 suelen hacer más daño que bien.
+        </p>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-purple); margin-bottom:0.15em;">Sesgo de logits</h4>
+        <p style="margin:0.1em 0;">
+          Sumar o restar un valor fijo a tokens concretos, <strong>antes</strong> del softmax.
+          Control quirúrgico.
+        </p>
+        <ul style="margin:0.15em 0;">
+          <li>Bloquear palabras (filtro de groserías)</li>
+          <li>Forzar un formato: si el LLM debe clasificar, se <strong>hunden todos</strong>
+            los tokens menos las etiquetas válidas</li>
+        </ul>
+        <p style="margin:0.25em 0; padding: 0.25em 0.45em; background: rgba(154,114,172,0.08);">
+          Un sesgo de <strong>−100</strong> equivale a prohibir el token; uno de
+          <strong>+100</strong>, a forzarlo.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Token Specific Strategies", los dos slides de repetition penalties y logit biases). El truco de usar logit_bias para forzar etiquetas en un LLM clasificador es propio y es muy util en sistemas agenticos, donde el router debe devolver una de N opciones.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>En la Práctica</h2>
+    <pre style="font-size: 0.33em; max-width: 90%; margin: 0 auto; overflow-x:auto;"><code class="language-python"># --- Responder con hechos sobre documentos recuperados (RAG) ---
+respuesta = cliente.chat.completions.create(
+    model="...",
+    messages=mensajes,
+    temperature=0.0,      # sin creatividad: queremos fidelidad, no estilo
+    top_p=1.0,            # con temperature=0 el top_p ya no hace nada
+    max_tokens=500,
+)
+
+# --- Generar variantes de un texto de marketing ---
+respuesta = cliente.chat.completions.create(
+    model="...",
+    messages=mensajes,
+    temperature=0.9,             # dejar que explore
+    top_p=0.9,                   # pero sin tocar la cola absurda
+    frequency_penalty=0.3,       # que no repita las mismas frases
+)</code></pre>
+    <div class="roadmap" style="font-size: 0.38em; margin-top: 0.3em;">
+      <div class="step fragment fade-up">Fija <strong>temperatura y top-p</strong> según el dominio: código y hechos → bajos; creatividad → altos.</div>
+      <div class="step fragment fade-up">Agrega penalizaciones y sesgos <strong>solo si aparece el problema</strong> que resuelven.</div>
+      <div class="step fragment fade-up">Y <strong>regístralos</strong> con la corrida: son hiperparámetros, igual que en la unidad de experiment tracking.</div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 (el payload de ejemplo con temperature 0.8, top_p 0.9 y repetition_penalty 1.2, y "Using Sampling Strategies"). El ultimo paso conecta con la unidad 9: los parametros de muestreo cambian el resultado y por lo tanto pertenecen a la configuration string de la corrida.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Elegir el Modelo: las Cinco Variables</h2>
+    <table style="font-size: 0.37em; width: 100%;">
+      <tr><th>Variable</th><th>Qué mirar</th><th>Impacto en RAG</th></tr>
+      <tr class="fragment fade-up"><td><strong>Tamaño</strong></td>
+        <td>pequeños: 1–10 mil millones de parámetros; grandes: 100–500 mil millones y más</td>
+        <td>más grande suele ser más capaz, y <strong>siempre</strong> más caro</td></tr>
+      <tr class="fragment fade-up"><td><strong>Costo</strong></td>
+        <td>precio por millón de tokens, distinto para entrada y salida</td>
+        <td>en RAG el prompt es largo: <strong>domina el costo de entrada</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong>Ventana de contexto</strong></td>
+        <td>máximo de tokens entre prompt y respuesta</td>
+        <td>limita cuántos chunks puedes mandar</td></tr>
+      <tr class="fragment fade-up"><td><strong>Latencia</strong></td>
+        <td>tiempo al primer token y tokens por segundo</td>
+        <td>el usuario la siente; el RAG ya sumó la del retriever</td></tr>
+      <tr class="fragment fade-up"><td><strong>Fecha de corte</strong></td>
+        <td>hasta cuándo llegan sus datos de entrenamiento</td>
+        <td style="color: var(--c-green);">menos crítica en RAG: <strong>tú le das lo actual</strong></td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em;">
+      Fíjate en la última fila: RAG <strong>compensa</strong> una fecha de corte vieja.
+      Es uno de sus argumentos más fuertes frente a reentrenar.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Important LLM Characteristics"). La columna de impacto en RAG es propia. Ojo con la ventana de contexto: pagar por tokens que el modelo no aprovecha bien (el problema del "lost in the middle") es un desperdicio doble.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Tres Formas de Medir la Calidad</h2>
+    <div style="font-size: 0.39em;">
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.32em 0.5em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue);">
+        <strong style="color: var(--c-blue);">Automáticos</strong> — se evalúan con código, normalmente
+        exámenes de opción múltiple. <strong>MMLU</strong> cubre 57 materias, de STEM a humanidades.
+        <span style="color: var(--c-text-dim);">Baratos y reproducibles… y fáciles de contaminar.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.32em 0.5em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+        <strong style="color: var(--c-green);">Evaluados por humanos</strong> — dos modelos anónimos
+        responden y una persona elige. Con el algoritmo <strong>ELO</strong> (el del ajedrez) sale un
+        ranking. Ejemplo: <strong>LLM Arena</strong>.
+        <span style="color: var(--c-text-dim);">Captura matices que ningún examen mide.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.25em 0; padding: 0.32em 0.5em; background: rgba(154,114,172,0.07); border-left: 3px solid var(--c-purple);">
+        <strong style="color: var(--c-purple);">LLM como juez</strong> — un modelo califica las
+        respuestas de otro contra respuestas de referencia, y sale una <strong>tasa de victoria</strong>.
+        <span style="color: var(--c-text-dim);">Barato y flexible, pero los jueces
+        <strong>prefieren a los de su propia familia</strong>.</span>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em;">
+      No existe una lista autoritativa. Hay muchas clases de "calidad" y muchos benchmarks
+      que intentan medirlas.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("LLM Quality Metrics", "Automated Benchmarks", "Human Evaluated Benchmarks", "LLM-as-a-judge Benchmarks"). El sesgo de familia del juez es importante: si evalúas tu RAG con un juez de la misma familia que el generador, los numeros salen inflados.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cómo Leer un Benchmark</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <h4 style="color: var(--c-green); margin-bottom:0.15em;">Un buen benchmark es…</h4>
+        <ul style="margin:0.15em 0;">
+          <li class="fragment fade-up"><strong>Relevante</strong> para tu proyecto (no para el promedio de internet)</li>
+          <li class="fragment fade-up"><strong>Difícil</strong>, para que distinga entre modelos buenos y malos</li>
+          <li class="fragment fade-up"><strong>Reproducible</strong>: mismo resultado al repetirlo, y verificable</li>
+          <li class="fragment fade-up"><strong>Alineado</strong> con el desempeño real, no solo con el examen</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-red); margin-bottom:0.15em;">Y cuidado con…</h4>
+        <p class="fragment fade-up" style="margin:0.15em 0; padding: 0.28em 0.45em; background: rgba(252,98,85,0.08);">
+          <strong>Contaminación de datos</strong> — si el examen estaba en internet, pudo entrar
+          al entrenamiento. El modelo no razona: <strong>recuerda</strong>.
+        </p>
+        <p class="fragment fade-up" style="margin:0.15em 0; padding: 0.28em 0.45em; background: rgba(255,134,47,0.08);">
+          <strong>Saturación</strong> — los puntajes arrancan bajos, suben hasta el nivel humano
+          y ahí el benchmark <strong>deja de diferenciar</strong>. Por eso salen nuevos todo el tiempo.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Lo que sí puedes llevarte:</strong> los modelos nuevos suelen superar a los viejos.
+      Y para tu capstone, <strong>el único benchmark que importa de verdad</strong> es el conjunto
+      de preguntas de <em>tu</em> dominio que armaste en la unidad anterior.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Good Benchmark Qualities", "Benchmarks Over Time"). El cierre es propio y es el mensaje practico: el ranking publico sirve para preseleccionar 2 o 3 modelos, la decision final se toma con datos propios.</aside>
+  </section>
+
+<section data-transition="fade">
+    <h2>El Formato de Mensajes</h2>
+    <div class="columns" style="font-size: 0.38em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">Un prompt moderno no es un texto suelto: es una <strong>lista de mensajes</strong>,
+          cada uno con <strong>contenido</strong> y <strong>rol</strong>.</p>
+        <ul style="margin:0.25em 0;">
+          <li><strong style="color: var(--c-purple);">system</strong> — instrucciones de alto nivel que
+            gobiernan el comportamiento</li>
+          <li><strong style="color: var(--c-yellow);">user</strong> — lo que escribió la persona</li>
+          <li><strong style="color: var(--c-green);">assistant</strong> — lo que el modelo respondió antes</li>
+        </ul>
+        <p style="margin:0.3em 0; padding: 0.28em 0.45em; background: rgba(88,196,221,0.08);">
+          El historial se manda <strong>completo</strong> en cada llamada.
+          El modelo <strong>no recuerda nada</strong> entre llamadas: la "memoria" del chat
+          eres tú, reenviándole la conversación.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.86em;"><code class="language-json">{
+  "messages": [
+    { "role": "system",
+      "content": "Eres un asistente útil que
+                  responde preguntas. Sé factual
+                  y educativo." },
+    { "role": "user",
+      "content": "¿Cuál es la capital de Canadá?" },
+    { "role": "assistant",
+      "content": "Ottawa — conocida por su
+                  Parlamento y su patrimonio." },
+    { "role": "user",
+      "content": "¿Y por qué la eligieron?" }
+  ]
+}</code></pre>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Messages Format" y el ejemplo de "My Chatbot"). El punto de que el modelo no recuerda nada entre llamadas es propio y sorprende a mucha gente: explica por que el costo crece a lo largo de una conversacion.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Debajo: Todo es un Solo Texto</h2>
+    <p style="font-size: 0.41em;">
+      El JSON de mensajes es una comodidad de la API. Antes de entrar al modelo se
+      <strong>aplana</strong> en una sola cadena con <strong>tokens especiales</strong>
+      que marcan dónde empieza y termina cada rol:
+    </p>
+    <pre style="font-size: 0.31em; max-width: 92%; margin: 0.25em auto; overflow-x:auto;"><code class="language-text">&lt;|begin_of_text|&gt;&lt;|start_header_id|&gt;system&lt;|end_header_id|&gt;
+Eres un asistente que da datos precisos sobre países.&lt;|eot_id|&gt;
+
+&lt;|start_header_id|&gt;user&lt;|end_header_id|&gt;
+¿Cuál es la capital de Canadá?&lt;|eot_id|&gt;
+
+&lt;|start_header_id|&gt;assistant&lt;|end_header_id|&gt;
+Ottawa — conocida por la Colina del Parlamento y su cultura bilingüe.&lt;|eot_id|&gt;</code></pre>
+    <div style="font-size: 0.39em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Cada familia de modelos tiene <strong>su propio formato</strong>. Usar el equivocado
+        degrada la calidad sin dar ningún error.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Esos tokens especiales <strong>también cuentan</strong> para la ventana de contexto y para la factura.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Y son la razón de que un usuario no pueda "hacerse pasar por system":
+        no puede escribir esos tokens, están <strong>reservados</strong>.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 (el slide con los tokens especiales de Llama). Si se usa Hugging Face, `tokenizer.apply_chat_template(mensajes)` hace esta conversion automaticamente y es la forma correcta de no equivocarse de formato.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El System Prompt</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">Define <strong>cómo se comporta</strong> el modelo: tono, límites,
+          procedimientos, qué hacer cuando no sabe.</p>
+        <p style="margin:0.25em 0;">Los de los asistentes comerciales son largos de verdad:
+          el de Claude ronda las <strong>2,100 palabras</strong> — unas 4 o 5 páginas.</p>
+        <p style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+          Y se manda <strong>en cada llamada</strong>. Cada palabra que agregas se paga
+          en todas las consultas, para siempre.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong>Qué suele llevar dentro</strong></p>
+        <div style="margin:0.2em 0; padding:0.25em 0.4em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue);">
+          <strong>Comportamiento y conocimiento</strong><br>
+          <span style="color: var(--c-text-dim); font-style:italic;">"Tu base de conocimiento se actualizó
+          por última vez en octubre de 2024…"</span>
+        </div>
+        <div style="margin:0.2em 0; padding:0.25em 0.4em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+          <strong>Tono y personalidad</strong><br>
+          <span style="color: var(--c-text-dim); font-style:italic;">"Razona paso a paso. Responde en
+          markdown. No ayuda con solicitudes dañinas."</span>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("System Prompt", "High-Level Instructions", "Tone & Personality", con el ejemplo del system prompt de Claude). Que se cobre en cada llamada es el argumento para no meter ahi cosas que solo hacen falta a veces.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El System Prompt de un RAG</h2>
+    <p style="font-size: 0.42em;">
+      Para RAG hay tres instrucciones que casi siempre deben estar:
+    </p>
+    <div style="font-size: 0.4em; margin-top: 0.25em;">
+      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+        <strong>1. Responder SOLO con los documentos recuperados</strong> — y decir explícitamente
+        que no lo sabe si no está ahí. Sin esto, el modelo rellena con lo que memorizó.
+      </div>
+      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+        <strong>2. Juzgar si un documento es relevante</strong> — el retriever manda ruido a propósito
+        (top-k alto). El modelo debe poder descartarlo en vez de intentar usarlo todo.
+      </div>
+      <div class="fragment fade-up" style="margin:0.22em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.08); border-left: 3px solid var(--c-yellow);">
+        <strong>3. Citar las fuentes</strong> — permite verificar, y además
+        <strong>mejora la fidelidad</strong> por sí solo: obligarlo a señalar de dónde sacó cada
+        afirmación lo empuja a apoyarse en el texto.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em;">
+      Además: decidir si quieres respuestas <strong>detalladas o breves</strong>.
+      El modelo tiende a extenderse; si quieres concisión, hay que pedirla.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Your own system prompt"). El punto 3 se retoma en el bloque de alucinaciones: citar no es solo para el usuario, es una tecnica de anclaje.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Plantilla del Prompt Aumentado</h2>
+    <pre style="font-size: 0.3em; max-width: 94%; margin: 0 auto; overflow-x:auto;"><code class="language-text"># INSTRUCCIONES DE SISTEMA
+Eres un asistente de información geográfica. Responde solo con los documentos.
+- Usa únicamente los documentos recuperados
+- Cita las fuentes como [DOC X]
+- Admite cuando la información no esté
+
+# HISTORIAL DE LA CONVERSACIÓN
+Usuario:  ¿Cuál es la ciudad más grande de Canadá?
+Asistente: Toronto, con 2.9 millones de habitantes [DOC 1]
+
+# DOCUMENTOS RECUPERADOS
+[DOC 1] Ottawa es la capital de Canadá, en la provincia de Ontario.
+[DOC 2] Ottawa se convirtió en capital cuando la reina Victoria la eligió en 1857.
+[DOC 3] El Parlamento de Canadá está en Ottawa, en la Colina del Parlamento.
+
+# CONSULTA ACTUAL
+¿Cuál es la capital de Canadá?</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.25em;">
+      Usa una <strong>plantilla pensada</strong>: el prompt lleva muchas piezas de origen distinto
+      y hay que decidir <strong>dónde se inyecta cada una</strong>. El orden importa —
+      los modelos prestan más atención al principio y al final que al medio.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Prompt Templates" y el ejemplo completo). El efecto de "lost in the middle" es de Liu et al. (2023) y es la razon practica de poner la consulta al final y los documentos mas relevantes en los extremos del bloque.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Prompt Aumentado</h2>
+    <div class="widget-container">
+      <canvas id="prompt-canvas" width="880" height="255" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.35em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn prompt-pieza-btn" data-k="ejemplos" style="font-size:0.76em;">ejemplos</button>
+        <button class="widget-btn fi-btn prompt-pieza-btn" data-k="historial" style="font-size:0.76em;">+ historial</button>
+        <button class="widget-btn fi-btn prompt-pieza-btn" data-k="documento" style="font-size:0.76em;">+ documento</button>
+        <button class="widget-btn fi-btn prompt-pieza-btn" data-k="razonamiento" style="font-size:0.76em;">razonamiento</button>
+        <button class="widget-btn fi-btn" id="prompt-reset" style="font-size:0.76em;">Reiniciar</button>
+        <div class="widget-label" style="font-size:0.66em;">ventana <span class="widget-value" id="prompt-ventana-value">2k</span>
+          <input type="range" id="prompt-ventana" class="widget-slider" min="0" max="5" step="1" value="2" style="width:92px; margin-left:0.3em;">
+        </div>
+      </div>
+      <div id="prompt-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. Los conteos de tokens son REALES sobre los textos que se muestran (tokenizador de
+      gpt2-spanish; otra familia daria cifras parecidas). Guion: (1) notar que la consulta del usuario son
+      11 tokens y todo lo demas lo puso el ingeniero; (2) subir documentos hasta que aparezca "¡NO CABE!"
+      con ventana de 512; (3) activar ejemplos y razonamiento y ver cuanto se come cada uno; (4) mover la
+      ventana a 32k y ver que el problema deja de ser el limite y pasa a ser el costo.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Aprendizaje en Contexto</h2>
+    <div class="columns" style="font-size: 0.38em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          Meter <strong>pares pregunta–respuesta de ejemplo</strong> dentro del prompt para que el
+          modelo aprenda la <strong>estructura y el tono</strong> que quieres.
+        </p>
+        <ul style="margin:0.25em 0;">
+          <li><strong>Varios ejemplos</strong> → <em>few-shot</em></li>
+          <li><strong>Un ejemplo</strong> → <em>one-shot</em></li>
+          <li><strong>Ninguno</strong> → <em>zero-shot</em></li>
+        </ul>
+        <p style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(255,255,0,0.06);">
+          No cambia lo que el modelo <strong>sabe</strong>: cambia <strong>cómo lo dice</strong>.
+          Para un bot de soporte, dos ejemplos bien elegidos hacen más por la consistencia
+          que tres párrafos de instrucciones.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.84em;"><code class="language-text"># INSTRUCCIONES
+Eres un asistente de soporte.
+
+# Ejemplo 1
+Cliente: ¿Cómo restablezco mi contraseña?
+Agente: Entra a "Olvidé mi contraseña" en la
+        pantalla de inicio.
+
+# Ejemplo 2
+Cliente: ¿Puedo cancelar mi suscripción?
+Agente: Sí, desde la configuración de tu cuenta.
+
+# Consulta
+Cliente: ¿Cómo devuelvo un artículo?</code></pre>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("In Context Learning", los dos slides). La forma mas comun de implementarlo es dejar los ejemplos escritos a mano en la plantilla; el siguiente slide muestra la version dinamica.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Ejemplos Recuperados, no Fijos</h2>
+    <p style="font-size: 0.41em;">
+      Si tienes historial de conversaciones buenas, no hace falta elegir los ejemplos a mano:
+      <strong>recupéralos</strong> como cualquier otro documento.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.36em; margin: 0.35em 0; flex-wrap:wrap;">
+      <div class="flow-node" style="border-color: var(--c-blue);">Indexar los chats<br>que salieron bien</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">Buscar los <strong>parecidos</strong><br>a la consulta actual</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-yellow);">Inyectarlos como<br>ejemplos del prompt</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      Es <strong>el mismo RAG</strong>, aplicado a otra cosa: en vez de recuperar hechos, recupera
+      <strong>ejemplos de cómo responder</strong>. Y mejora solo, a medida que se acumulan
+      buenas conversaciones.
+    </p>
+    <pre style="font-size: 0.29em; max-width: 92%; margin: 0.25em auto; overflow-x:auto;"><code class="language-json">{"messages": [
+  {"role": "system", "content": "Eres un asistente de servicio al cliente."},
+  {"role": "system", "name": "example_user",      "content": "¿Cómo rastreo mi pedido?"},
+  {"role": "system", "name": "example_assistant", "content": "Entra a 'Estado del pedido' en tu panel."},
+  {"role": "system", "content": "POLÍTICA DE REEMBOLSOS: tardan 5 a 7 días. Estado en la pestaña 'Reembolsos'."},
+  {"role": "user",   "content": "¿Cómo rastreo el reembolso de un pedido cancelado?"}
+]}</code></pre>
+    <aside class="notes">Fuente: RAG_M4 (el slide de indexar chats exitosos y la plantilla con example_user / example_assistant). El rol "system" con name=example_* es una convencion de la API de OpenAI para marcar que son ejemplos y no conversacion real.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Pedirle que Piense Antes</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          <strong>Chain of thought</strong>: pedirle al modelo que razone <strong>paso a paso</strong>
+          antes de dar la respuesta final.
+        </p>
+        <p style="margin:0.25em 0;">
+          Funciona por una razón mecánica: cada token generado <strong>vuelve a entrar</strong> como
+          contexto. Escribir los pasos le da al modelo <strong>más pasadas de cómputo</strong>
+          sobre el problema.
+        </p>
+        <p style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(88,196,221,0.08);">
+          Un truco útil: pedirle que razone dentro de etiquetas
+          <code>&lt;pensamiento&gt;…&lt;/pensamiento&gt;</code> y luego responda. Así puedes
+          <strong>quitar el razonamiento</strong> antes de mostrárselo al usuario.
+        </p>
+      </div>
+      <div class="col">
+        <pre style="margin:0; font-size:0.8em;"><code class="language-text">Usuario: ¿Cuál es la capital de Canadá?
+         Piensa paso a paso.
+
+Modelo:
+1. Necesito identificar la capital de Canadá
+2. Canadá es un país de América del Norte
+3. La capital está en la provincia de Ontario
+4. Ottawa es la capital de Canadá
+
+Por lo tanto, la capital de Canadá es Ottawa.</code></pre>
+        <p style="margin-top:0.3em; color: var(--c-text-dim);">
+          En RAG sirve especialmente para que <strong>revise los documentos uno por uno</strong>
+          antes de responder, en vez de saltar a la conclusión.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Encouraging Reasoning" con el scratchpad, y "Chain Of Thought"). La explicacion mecanica (mas tokens = mas computo) es propia y es la razon real por la que CoT funciona; ayuda a que no parezca magia.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Modelos de Razonamiento</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          El paso siguiente: modelos <strong>entrenados</strong> para razonar antes de responder,
+          sin que haya que pedírselo. Generan <strong>tokens de razonamiento</strong> que
+          normalmente no se muestran.
+        </p>
+        <div style="margin:0.25em 0; padding:0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple); font-size:0.94em;">
+          <strong>¿Por qué usamos lentes de sol en la nieve?</strong><br>
+          <span style="color: var(--c-text-dim);">
+            nieve = blanca → refleja la luz<br>
+            luz solar = intensa → incluye rayos UV<br>
+            luz reflejada = muy fuerte para los ojos<br>
+            lentes → reducen el reflejo y el UV</span><br>
+          <strong style="color: var(--c-green);">→ Para proteger los ojos de la luz solar
+          reflejada, que es muy intensa.</strong>
+        </div>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-red);">Y hay que saber operarlos:</strong></p>
+        <ul style="margin:0.2em 0;">
+          <li class="fragment fade-up">Los tokens de razonamiento <strong>se pagan</strong> y
+            <strong>consumen ventana</strong>, aunque no se vean</li>
+          <li class="fragment fade-up">Son más <strong>lentos</strong> y más <strong>caros</strong></li>
+          <li class="fragment fade-up"><strong>Muchas técnicas de prompting dejan de funcionar</strong>:
+            se llevan mal con los ejemplos few-shot</li>
+          <li class="fragment fade-up">Rinden mejor con <strong>objetivos claros y formatos estrictos</strong>,
+            dándoles todo el contexto y guía de alto nivel</li>
+        </ul>
+        <p class="fragment fade-up" style="margin:0.25em 0; color: var(--c-text-dim);">
+          En RAG suelen valer la pena: eligen mejor qué documentos son relevantes y los integran
+          mejor. Cada proveedor publica cómo se le habla al suyo — <strong>hay que leerlo</strong>.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Reasoning Models" y "Reasoning Models Warnings"). Lo de que few-shot puede EMPEORAR un modelo de razonamiento es contraintuitivo y vale decirlo explicito, porque es justo lo contrario de lo que se acaba de ensenar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Ventana se Llena Rápido</h2>
+    <div style="font-size: 0.37em; margin-top: 0.25em;">
+      <p style="margin:0.15em 0;"><strong>Uso normal de un LLM</strong></p>
+      <div style="display:flex; height:1.9em; border-radius:4px; overflow:hidden; border:1px solid rgba(168,162,144,0.3);">
+        <div style="flex:3; background: rgba(88,196,221,0.45); display:flex; align-items:center; justify-content:center;">prompt inicial</div>
+        <div style="flex:2; background: rgba(131,193,103,0.4); display:flex; align-items:center; justify-content:center;">respuesta</div>
+        <div style="flex:6; background: rgba(168,162,144,0.10); display:flex; align-items:center; justify-content:center; color: var(--c-text-dim);">espacio libre</div>
+      </div>
+      <p class="fragment fade-up" style="margin:0.45em 0 0.15em 0;"><strong>Modelo de razonamiento + RAG</strong></p>
+      <div class="fragment fade-up" style="display:flex; height:1.9em; border-radius:4px; overflow:hidden; border:1px solid rgba(252,98,85,0.5);">
+        <div style="flex:3; background: rgba(88,196,221,0.45); display:flex; align-items:center; justify-content:center;">prompt</div>
+        <div style="flex:3.5; background: rgba(154,114,172,0.45); display:flex; align-items:center; justify-content:center;">razonamiento</div>
+        <div style="flex:3.5; background: rgba(255,134,47,0.45); display:flex; align-items:center; justify-content:center;">documentos RAG</div>
+        <div style="flex:2; background: rgba(131,193,103,0.4); display:flex; align-items:center; justify-content:center;">respuesta</div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.4em;">
+      Las técnicas avanzadas <strong>se acumulan</strong>: cada una consume contexto.
+      Un prompt con system largo, ejemplos few-shot, historial, chunks y razonamiento
+      llena una ventana modesta <strong>sin haber respondido todavía</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Context Window Management"). Es el momento de volver al widget del prompt aumentado y mostrar la barra llenandose: es exactamente este diagrama, pero con tokens reales.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Podar el Contexto</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <div class="roadmap" style="font-size:1.02em;">
+          <div class="step fragment fade-up">Si la conversación es de <strong>un solo turno</strong>,
+            sáltate las técnicas que no aporten nada. No pagues por lo que no usas.</div>
+          <div class="step fragment fade-up">En conversaciones largas, <strong>descarta los mensajes
+            viejos</strong>: conserva los últimos N y, si hace falta, un resumen de lo anterior.</div>
+          <div class="step fragment fade-up">Con modelos de razonamiento, <strong>tira los tokens de
+            razonamiento</strong> del historial: sirvieron para esa respuesta, no para las siguientes.</div>
+          <div class="step fragment fade-up">Incluye solo los chunks relevantes para la
+            <strong>última</strong> pregunta, no los de todo el hilo.</div>
+        </div>
+      </div>
+      <div class="col">
+        <div style="font-size:0.92em; font-family: 'Fira Code', monospace;">
+          <div style="opacity:0.35; text-decoration: line-through;">Usuario · Asistente</div>
+          <div style="opacity:0.35; text-decoration: line-through;">Usuario · Asistente</div>
+          <div style="opacity:0.35; text-decoration: line-through;">Usuario · Asistente</div>
+          <div style="color: var(--c-red); font-size:0.9em; margin:0.2em 0;">❌ se descartan</div>
+          <div style="color: var(--c-green);">Usuario · Asistente</div>
+          <div style="color: var(--c-green);">Usuario · Asistente</div>
+          <div style="color: var(--c-green);">Usuario · Asistente</div>
+          <div style="color: var(--c-green);">Usuario · Asistente</div>
+          <div style="color: var(--c-green);">Usuario · Asistente</div>
+          <div style="color: var(--c-yellow); font-size:0.9em; margin-top:0.2em;">↑ se conservan los últimos 5</div>
+        </div>
+        <p style="margin-top:0.35em;">
+          Y aunque tengas una ventana enorme: <strong>mantén el prompt eficiente</strong>.
+          Cabe ≠ conviene.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Management Strategies - Context Pruning" y "Management Strategies"). La regla de "cabe no es lo mismo que conviene" resume las dos razones: costo y el efecto de perderse en el medio.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cuando el Modelo se lo Inventa</h2>
+    <div style="font-size: 0.37em;">
+      <div class="flow-row" style="justify-content:center; margin:0.25em 0; flex-wrap:wrap;">
+        <div class="flow-node" style="border-color: var(--c-yellow); max-width:9em;">Usuario<br><em>"¿Tienen descuento<br>para estudiantes?"</em></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-blue); max-width:11em;">Documentos recuperados<br>
+          <span style="color: var(--c-text-dim);">"Descuento adultos mayores: 10%"<br>"Descuento nuevos clientes: 10%"</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-purple);">LLM</div>
+      </div>
+      <div class="fragment fade-up" style="margin: 0.35em auto; max-width: 80%; padding: 0.4em 0.6em; background: rgba(252,98,85,0.09); border-left: 3px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Respuesta:</strong>
+        <em>"¡Claro! Puedes obtener un 10% de descuento con tu carné de estudiante vigente,
+        el mismo gran descuento que ofrecemos a adultos mayores y clientes nuevos."</em>
+      </div>
+      <p class="fragment fade-up" style="text-align:center; font-size:1.15em; margin-top:0.3em;">
+        <strong style="color: var(--c-red);">Ningún documento mencionaba descuentos para estudiantes.</strong>
+        El modelo <strong>completó el patrón</strong>: si hay para dos grupos, suena razonable que haya para un tercero.
+      </p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Y fíjate en lo peligroso: la respuesta es <strong>coherente, útil y bien escrita</strong>.
+      No parece un error.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 (el ejemplo del descuento de estudiantes). Es el mejor ejemplo del modulo porque la alucinacion nace de una generalizacion RAZONABLE, no de un disparate — y por eso es dificil de detectar.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Por Qué Pasa y Por Qué Importa</h2>
+    <div class="columns" style="font-size: 0.39em;">
+      <div class="col">
+        <h4 style="color: var(--c-orange); margin-bottom:0.15em;">Por qué pasa</h4>
+        <p style="margin:0.15em 0;">
+          Un LLM produce <strong>secuencias probables</strong>. Y lo probable no siempre es
+          lo cierto.
+        </p>
+        <p style="margin:0.2em 0; padding: 0.28em 0.45em; background: rgba(252,98,85,0.08);">
+          El modelo <strong>no puede distinguir</strong> entre lo que es verdad y lo que
+          simplemente suena bien. Para él son la misma operación.
+        </p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">
+          Ya lo vimos en la unidad de LLMs; aquí lo importante es qué hacer al respecto.
+        </p>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-red); margin-bottom:0.15em;">Por qué importa</h4>
+        <ul style="margin:0.15em 0;">
+          <li class="fragment fade-up"><strong>Información falsa</strong>, que ya es malo de por sí</li>
+          <li class="fragment fade-up"><strong>Difícil de detectar</strong>: suena más plausible que un disparate</li>
+          <li class="fragment fade-up"><strong>Erosiona la confianza</strong>: unas pocas alucinaciones
+            arruinan un sistema que acierta el 95% de las veces</li>
+        </ul>
+        <p class="fragment fade-up" style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(255,255,0,0.06);">
+          Hay dos clases: a veces <strong>cambia un detalle</strong> (5% en vez de 10%) y a veces
+          <strong>inventa el hecho completo</strong>. La primera es más difícil de cazar.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Why LLMs Hallucinate", "Why Hallucinations Matter", "Types of Hallucinations"). El punto de la erosion de confianza es el argumento de negocio: un asistente que miente de vez en cuando puede ser peor que no tener asistente.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Qué Sí se Puede Hacer</h2>
+    <p style="font-size: 0.42em; text-align:center; padding: 0.3em; background: rgba(252,98,85,0.07); border-left: 3px solid var(--c-red);">
+      <strong>No hay solución perfecta.</strong> Hay medidas que reducen la frecuencia y facilitan
+      detectarlas. Ninguna las elimina.
+    </p>
+    <div style="font-size: 0.38em; margin-top: 0.3em;">
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+        <strong>1. Anclar con RAG</strong> — es lo que llevamos tres unidades construyendo.
+        Inyectar los hechos y pedir en el system prompt que <strong>solo</strong> se afirme lo que
+        está en ellos.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.08); border-left: 3px solid var(--c-yellow);">
+        <strong>2. Exigir citas</strong> — obligarlo a poner <code>[1]</code>, <code>[2]</code>
+        después de cada afirmación. Sube la fidelidad y hace que un humano pueda verificar.
+        <span style="color: var(--c-red);">Ojo: también puede alucinar la cita.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+        <strong>3. Autoconsistencia</strong> — generar la misma respuesta varias veces y comparar.
+        Si en una dice 10% y en otra 5%, algo está inventando.
+        <span style="color: var(--c-text-dim);">En la práctica: caro y poco confiable.</span>
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple);">
+        <strong>4. Atribución automática</strong> — herramientas como <strong>ContextCite</strong>
+        que marcan qué documento sostiene <strong>cada oración</strong> de la respuesta.
+        Sirve para citar y también para evaluar.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("There's no perfect solution", "Self-Consistency Methods", "Reducing Hallucinations with RAG", "Citation Generation", "ContextCite"). ContextCite es de gradientscience.org; mide cuanto cambia la respuesta al quitar cada documento, que es una forma de atribucion causal.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Citas en el Prompt y en la Respuesta</h2>
+    <div class="columns" style="font-size: 0.37em;">
+      <div class="col">
+        <div style="padding:0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple);">
+          <strong>System prompt</strong><br>
+          <span style="font-style:italic; color: var(--c-text-dim);">"Cita tus fuentes al final de cada
+          oración usando [1], [2], etc. Si una afirmación no está respaldada por ningún documento,
+          no la hagas."</span>
+        </div>
+        <div style="margin-top:0.3em; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong>Respuesta</strong><br>
+          Messi ganó un récord de 8 Balones de Oro <strong style="color: var(--c-yellow);">[1]</strong>.
+          Marcó 672 goles con el Barcelona <strong style="color: var(--c-yellow);">[2]</strong>.
+          Ganó el Mundial con Argentina en 2022 <strong style="color: var(--c-yellow);">[3]</strong>.
+          <div style="margin-top:0.25em; color: var(--c-text-dim); font-size:0.92em;">
+            [1] FIFA.com, "Historia del Balón de Oro"<br>
+            [2] FCBarcelona.com, "Récords del club"<br>
+            [3] FIFA.com, "Mundial 2022"
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong>Cómo se evalúa la calidad de las citas</strong></p>
+        <p style="margin:0.2em 0;">El benchmark <strong>ALCE</strong> trae bases de conocimiento
+          y preguntas ya preparadas, y mide tres cosas:</p>
+        <table style="width:100%; font-size:0.95em; margin-top:0.2em;">
+          <tr><th>Métrica</th><th>Pregunta que responde</th></tr>
+          <tr><td><strong>Fluidez</strong></td><td>¿está bien escrito?</td></tr>
+          <tr><td><strong>Corrección</strong></td><td>¿es factualmente cierto?</td></tr>
+          <tr><td><strong>Calidad de cita</strong></td><td>¿la cita <strong>respalda de verdad</strong>
+            lo que dice la oración?</td></tr>
+        </table>
+        <p style="margin-top:0.3em; padding: 0.25em 0.45em; background: rgba(252,98,85,0.08);">
+          La tercera es la que importa: una cita que apunta a un documento que
+          <strong>no dice eso</strong> es peor que no citar, porque aparenta rigor.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Citation Generation", "Evaluating Citation Quality in LLMs" con el benchmark ALCE). ALCE es de Gao et al. (2023), "Enabling Large Language Models to Generate Text with Citations".</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Evaluar al Generador, no al Retriever</h2>
+    <div class="flow-row" style="justify-content:center; font-size: 0.4em; margin: 0.3em 0;">
+      <div class="flow-node" style="border-color: var(--c-blue);"><strong>Retriever</strong><br><span style="color: var(--c-text-dim);">encuentra la información</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);"><strong>LLM</strong><br><span style="color: var(--c-text-dim);">construye la respuesta</span></div>
+    </div>
+    <p style="font-size: 0.41em; text-align:center; margin-top:0.2em;">
+      Ya medimos el primero (recall, MAP, MRR). Las métricas del LLM tienen que mirar
+      <strong>su</strong> trabajo, suponiendo que el retriever hizo el suyo.
+    </p>
+    <div style="font-size: 0.39em; margin-top: 0.3em;">
+      <p style="margin:0.15em 0;"><strong>Lo que se le pide al LLM:</strong></p>
+      <div class="fragment fade-up" style="margin:0.15em 0;">● Responder <strong>con claridad</strong> a lo que se preguntó</div>
+      <div class="fragment fade-up" style="margin:0.15em 0;">● <strong>Incorporar</strong> la información relevante que recibió</div>
+      <div class="fragment fade-up" style="margin:0.15em 0;">● <strong>Citar</strong> las fuentes</div>
+      <div class="fragment fade-up" style="margin:0.15em 0;">● <strong>Ignorar</strong> los documentos irrelevantes que se colaron</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Todas son <strong>subjetivas</strong>: no hay una fórmula como la precisión@k.
+      Por eso las métricas de LLM terminan usando <strong>otro LLM como juez</strong> —
+      con el sesgo de familia que ya mencionamos.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Evaluating your LLM's performance", "LLM Responsibilities"). La cuarta responsabilidad —ignorar el ruido— es la que conecta directo con el compromiso del top-k de la unidad 12: si subes k, le exiges mas al generador.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Las Dos Métricas de RAGAS</h2>
+    <div class="columns" style="font-size: 0.37em;">
+      <div class="col">
+        <h4 style="color: var(--c-blue); margin-bottom:0.15em;">Relevancia de la respuesta</h4>
+        <p style="margin:0.1em 0;">¿La respuesta <strong>contesta lo que se preguntó</strong>?
+          (sin importar si es cierta)</p>
+        <div class="roadmap" style="font-size:0.95em; margin-top:0.2em;">
+          <div class="step">Un LLM lee la respuesta y <strong>inventa las preguntas</strong> que
+            podrían haberla generado</div>
+          <div class="step">Se embeben esas preguntas y la original</div>
+          <div class="step">Se promedia el <strong>coseno</strong> entre ellas</div>
+        </div>
+        <p style="margin-top:0.25em; color: var(--c-text-dim);">
+          Es "trabajar hacia atrás": si desde la respuesta no se puede reconstruir la pregunta,
+          la respuesta se fue por otro lado.
+        </p>
+      </div>
+      <div class="col">
+        <h4 style="color: var(--c-green); margin-bottom:0.15em;">Fidelidad <em>(faithfulness)</em></h4>
+        <p style="margin:0.1em 0;">¿La respuesta es <strong>consistente con los documentos</strong>
+          que se recuperaron?</p>
+        <div class="roadmap" style="font-size:0.95em; margin-top:0.2em;">
+          <div class="step">Un LLM extrae <strong>todas las afirmaciones</strong> de la respuesta</div>
+          <div class="step">Para cada una, revisa si el contexto la <strong>respalda</strong></div>
+          <div class="step">Fidelidad = <strong>% de afirmaciones respaldadas</strong></div>
+        </div>
+        <p style="margin-top:0.25em; padding: 0.25em 0.4em; background: rgba(131,193,103,0.08);">
+          <strong>Esta es la métrica anti-alucinación.</strong> En el ejemplo del descuento
+          estudiantil, la afirmación inventada no está respaldada: la fidelidad baja y lo delata.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Response Relevancy", "Faithfulness", "Other RAGAS metrics"). RAGAS tiene mas metricas (sensibilidad al ruido, uso de las citas), pero estas dos son las que hay que entender primero. Todas usan LLM-as-a-judge en algun punto.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>RAGAS en Código</h2>
+    <pre style="font-size: 0.31em; max-width: 94%; margin: 0 auto; overflow-x:auto;"><code class="language-python">from ragas import evaluate
+from ragas.metrics import Faithfulness, ResponseRelevancy, ContextPrecision
+from datasets import Dataset
+
+# Cada fila es una consulta que ya paso por TODO el pipeline de RAG.
+datos = Dataset.from_dict({
+    "question":   ["¿Ofrecen descuento para estudiantes?"],
+    "answer":     ["Sí, ofrecemos 10% con carné de estudiante vigente."],
+    "contexts":   [["Descuento adultos mayores: 10% con identificación.",
+                    "Descuento nuevos clientes: 10% en la primera compra."]],
+    "ground_truth": ["No hay descuento para estudiantes."],
+})
+
+resultado = evaluate(datos, metrics=[
+    Faithfulness(),        # ¿cada afirmacion esta respaldada por el contexto?
+    ResponseRelevancy(),   # ¿la respuesta contesta la pregunta?
+    ContextPrecision(),    # ¿el retriever trajo lo relevante arriba? (mide al RETRIEVER)
+])
+print(resultado)
+# {'faithfulness': 0.0, ...}  <- la afirmacion del descuento estudiantil
+#                                NO esta en el contexto: alucinacion detectada</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.25em;">
+      Nota que <code>ContextPrecision</code> evalúa al <strong>retriever</strong> y las otras dos al
+      <strong>generador</strong>. RAGAS cubre las dos mitades del sistema, y conviene
+      <strong>reportarlas por separado</strong>: si baja la nota, quieres saber cuál de las dos falló.
+    </p>
+    <aside class="notes">Contenido propio, con la API de RAGAS. Advertencia practica: cada metrica hace varias llamadas a un LLM juez, asi que evaluar 200 preguntas cuesta dinero de verdad. Conviene un set pequeno y estable, corrido en cada cambio, como una prueba de regresion.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Medir sin Métricas: el Sistema Completo</h2>
+    <div class="columns" style="font-size: 0.4em;">
+      <div class="col">
+        <p style="margin:0.1em 0;">
+          La otra vía: no medir al LLM directamente, sino <strong>el resultado del sistema</strong>.
+        </p>
+        <ul style="margin:0.25em 0;">
+          <li>Pulgar arriba / abajo en cada respuesta</li>
+          <li>¿El usuario tuvo que reformular la pregunta?</li>
+          <li>¿Escaló a un humano?</li>
+          <li><strong>Pruebas A/B</strong> entre dos configuraciones</li>
+        </ul>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+          <strong>La condición imprescindible:</strong> aislar el cambio.
+          Si a la vez tocas el modelo, el chunking y el top-k, la señal no te dice
+          <strong>cuál</strong> de los tres sirvió.
+        </p>
+        <p style="margin:0.3em 0;">
+          Es exactamente la disciplina de la unidad de <strong>experiment tracking</strong>:
+          un cambio a la vez, registrado, comparable.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em;">
+      En la práctica se usan las dos: <strong>RAGAS</strong> como prueba de regresión rápida
+      antes de desplegar, y <strong>señales de usuarios reales</strong> para saber si de verdad mejoró.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Measuring LLM Performance Indirectly"). El vinculo con la unidad 9 es directo: sin registrar configuraciones no se puede atribuir una mejora a nada.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>RAG Agéntico</h2>
+    <p style="font-size: 0.42em;">
+      Hasta ahora: <strong>una</strong> llamada al LLM al final del pipeline.
+      La idea agéntica es partir la tarea en varios pasos y usar
+      <strong>un LLM para cada uno</strong>.
+    </p>
+    <div style="font-size: 0.35em; margin-top: 0.3em;">
+      <div class="flow-row" style="justify-content:center; flex-wrap:wrap;">
+        <div class="flow-node" style="border-color: var(--c-yellow);">Consulta<br><em>"¿tienen descuento<br>para estudiantes?"</em></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-purple);"><strong>Router</strong><br><span style="color: var(--c-text-dim);">¿necesita datos?</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-blue);">Retriever<br>+ base</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-orange);"><strong>Evaluador</strong><br><span style="color: var(--c-text-dim);">¿sirven estos docs?</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color: var(--c-green);">Generador<br>+ citador</div>
+      </div>
+    </div>
+    <div style="font-size: 0.39em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● Cada LLM hace <strong>una sola tarea</strong>: entra texto, sale texto. Es un diagrama de flujo.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● <strong>Modelos distintos para tareas distintas</strong>: uno chico y barato para enrutar
+        y evaluar; uno grande solo para redactar la respuesta.
+      </div>
+      <div class="fragment fade-up" style="margin:0.2em 0;">
+        ● El router puede decidir que <strong>ni siquiera hace falta recuperar</strong>
+        (un saludo no necesita RAG) y ahorrarse todo el pipeline.
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Agentic RAG", "Example Agentic RAG System", "Agentic Systems As Flowcharts"). El ahorro del router es real y grande: en un bot de soporte, buena parte del trafico son saludos y despedidas que no necesitan tocar la base.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora los Flujos Agénticos</h2>
+    <div class="widget-container">
+      <canvas id="agentic-canvas" width="880" height="245" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.4em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn agentic-flujo-btn" data-flujo="secuencial">secuencial</button>
+        <button class="widget-btn fi-btn agentic-flujo-btn" data-flujo="condicional">condicional</button>
+        <button class="widget-btn fi-btn agentic-flujo-btn" data-flujo="iterativo">iterativo</button>
+        <button class="widget-btn fi-btn agentic-flujo-btn" data-flujo="paralelo">paralelo</button>
+        <span style="width:0.6em;"></span>
+        <button class="widget-btn fi-btn" id="agentic-next">Siguiente etapa</button>
+        <button class="widget-btn fi-btn" id="agentic-animar">Animar</button>
+        <button class="widget-btn fi-btn" id="agentic-reset">Reiniciar</button>
+      </div>
+      <div id="agentic-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio. Los tiempos y precios son de REFERENCIA (modelo chico 0.4 s y $0.0002; grande 1.8 s y
+      $0.003), no medidos: sirven para comparar las formas entre si. Guion: recorrer los cuatro flujos y
+      hacer notar que el paralelo hace 5 llamadas pero su latencia NO es la suma —los tres agentes corren a
+      la vez, asi que solo cuenta el mas lento. Es la razon de elegir paralelo cuando las subtareas son
+      independientes.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Los Cuatro Patrones</h2>
+    <table style="font-size: 0.37em; width: 100%;">
+      <tr><th>Patrón</th><th>Forma</th><th>Cuándo usarlo en RAG</th></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-blue);">Secuencial</strong></td>
+        <td>cadena: cada llamada alimenta la siguiente</td>
+        <td>parsear → reescribir → generar → citar</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-purple);">Condicional</strong></td>
+        <td>un router elige la rama</td>
+        <td>saludo → responder directo; pregunta de datos → RAG completo</td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-orange);">Iterativo</strong></td>
+        <td>escritor ↔ evaluador, en bucle</td>
+        <td>si el evaluador dice que faltó información, <strong>buscar otra vez</strong></td></tr>
+      <tr class="fragment fade-up"><td><strong style="color: var(--c-green);">Paralelo</strong></td>
+        <td>varios a la vez y un sintetizador</td>
+        <td>consultar tres fuentes distintas y juntar la respuesta</td></tr>
+    </table>
+    <div class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.35em; padding: 0.32em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>El costo de todo esto:</strong> cada etapa suma latencia, dinero y
+      <strong>una oportunidad más de equivocarse</strong>. Cinco llamadas con 95% de acierto
+      cada una dan <strong>77%</strong> de acierto de punta a punta.
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Para sistemas simples, escribe tú la lógica del flujo. Cuando crezca, usa una
+      librería o plataforma que la gestione.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Sequential / Conditional / Iterative / Parallel Workflow", "Implementing Agentic Systems"). El calculo del 77% (0.95^5) es propio y es el argumento mas fuerte contra encadenar etapas por gusto: la fiabilidad se multiplica, no se promedia.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>La Otra Opción: Fine-Tuning</h2>
+    <p style="font-size: 0.42em;">
+      Reentrenar el modelo con <strong>tus datos</strong> para cambiar sus parámetros internos.
+      Se hace con <strong>fine-tuning supervisado</strong>: el mismo bucle de siempre.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.37em; margin: 0.3em 0;">
+      <div class="flow-node" style="border-color: var(--c-blue);">Darle ejemplos<br>etiquetados</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-orange);">Comparar su salida<br>con la correcta</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">Ajustar los<br>parámetros</div>
+      <div class="flow-arrow">↻</div>
+    </div>
+    <div class="comparison" style="font-size: 0.35em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Antes</strong><br>
+        <em>"Tengo dolor articular, erupción en la piel y sensibilidad al sol. ¿Qué puede ser?"</em>
+        <div style="margin-top:0.2em; color: var(--c-text-dim);">
+          "Son síntomas bastante comunes. El dolor articular puede ser de hacer mucho ejercicio.
+          Las erupciones pasan todo el tiempo. ¡Y la sensibilidad al sol quizá solo signifique
+          que necesitas mejor bloqueador!"
+        </div>
+      </div>
+      <div class="side correct">
+        <strong style="color: var(--c-green);">Después</strong><br>
+        <em>(la misma pregunta)</em>
+        <div style="margin-top:0.2em; color: var(--c-text-dim);">
+          "Esta combinación de síntomas puede sugerir enfermedades autoinmunes como el lupus
+          eritematoso sistémico (LES). Ameritan evaluación médica para una valoración adecuada."
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Fuente: RAG_M4 ("Understanding Fine-Tuning", "Fine-Tuning Example"). Notar que el cambio es de REGISTRO y de criterio, no de datos nuevos: el modelo ya conocia el lupus, lo que cambio es que ahora responde como un profesional.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>RAG o Fine-Tuning</h2>
+    <div class="comparison" style="font-size: 0.4em;">
+      <div class="side" style="border: 1px solid var(--c-green);">
+        <h4 style="color: var(--c-green); margin-top:0;">RAG</h4>
+        <p style="margin:0.15em 0;">Mejor cuando el modelo necesita
+          <strong>información que no tiene</strong>.</p>
+        <ul style="margin:0.2em 0;">
+          <li>Inyectas contexto y el modelo lo usa</li>
+          <li>Datos <strong>actuales</strong>, sin reentrenar</li>
+          <li>Se puede <strong>auditar y citar</strong></li>
+          <li>Actualizar = cambiar un documento</li>
+        </ul>
+        <p style="margin-top:0.2em; padding:0.2em 0.4em; background: rgba(131,193,103,0.1);">
+          <strong>= inyección de conocimiento</strong>
+        </p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-purple);">
+        <h4 style="color: var(--c-purple); margin-top:0;">Fine-tuning</h4>
+        <p style="margin:0.15em 0;">Mejor para <strong>especializar</strong> en una tarea o un dominio.</p>
+        <ul style="margin:0.2em 0;">
+          <li>Ideal para <strong>una</strong> tarea clara y acotada</li>
+          <li>Permite que un modelo <strong>chico</strong> haga bien algo puntual</li>
+          <li>Mejora en el dominio objetivo… y <strong>puede empeorar en los demás</strong></li>
+        </ul>
+        <p style="margin-top:0.2em; padding:0.2em 0.4em; background: rgba(154,114,172,0.1);">
+          <strong>= adaptación de dominio</strong>
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em; padding: 0.3em; background: rgba(252,98,85,0.08);">
+      <strong style="color: var(--c-red);">El malentendido más común:</strong>
+      el fine-tuning <strong>no enseña hechos nuevos</strong> de forma confiable.
+      Cambia sobre todo <strong>cómo habla</strong> el modelo, no <strong>qué sabe</strong>.
+      Si lo que necesitas son datos, es RAG.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("When Fine-Tuning Works Well", "RAG vs Fine-Tuning"). El olvido catastrofico —mejorar en el dominio objetivo y empeorar en el resto— es real y es la razon de que casi nadie haga fine-tuning de un modelo generalista para un capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>¿Y Por Qué Elegir?</h2>
+    <p style="font-size: 0.43em;">
+      Se combinan bien: hacer <strong>fine-tuning para que el modelo use mejor
+      la información recuperada</strong>.
+    </p>
+    <div class="columns" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong>RAG</strong> aporta información actual y verificable.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding: 0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple);">
+          <strong>Fine-tuning</strong> optimiza <em>cómo</em> el modelo integra esa información:
+          que cite bien, que respete el formato, que admita cuando no sabe.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.4em;">
+      Para empezar: usa modelos <strong>ya afinados</strong> para tu dominio si existen,
+      antes de afinar uno tú. Y si vas a afinar en serio,
+      <strong>es tema de un curso completo</strong>.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Orden recomendado para el capstone:</strong> primero un RAG bien hecho.
+      Si algo sigue fallando <em>después</em> de eso, ahí se evalúa el fine-tuning —
+      casi nunca es el primer paso.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Why Choose?", "Getting Started with Fine-Tuning"). El orden recomendado es propio y es el consejo mas practico del modulo: el fine-tuning es caro en tiempo y datos, y la mayoria de los problemas se resuelven mejorando el retriever o el prompt.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="font-size: 0.375em;">
+      <div class="step fragment fade-up"><strong style="color: var(--c-blue);">Transformer</strong> —
+        atención (de dónde tomo contexto) + feed forward (qué sé del mundo), repetido en decenas de capas.
+        <strong>RAG funciona porque la atención no distingue</strong> entre lo memorizado y lo inyectado.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-green);">Muestreo</strong> —
+        temperatura, top-k, top-p y penalizaciones. Top-p se adapta a la confianza del modelo;
+        top-k no. Para RAG: <strong>temperatura baja</strong>.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-orange);">Elegir y promptear</strong> —
+        tamaño, costo, ventana y latencia; benchmarks con cuidado (contaminación y saturación).
+        Mensajes con roles, plantilla pensada, few-shot y chain of thought — todo consume ventana.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-red);">Alucinaciones</strong> —
+        no hay solución perfecta. Anclar con RAG, exigir citas y medir la
+        <strong>fidelidad</strong> con RAGAS.</div>
+      <div class="step fragment fade-up"><strong style="color: var(--c-purple);">Agéntico y fine-tuning</strong> —
+        varios LLMs encadenados multiplican capacidad <em>y</em> errores.
+        RAG inyecta conocimiento; el fine-tuning adapta el estilo. <strong>No son sustitutos.</strong></div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Con esto el pipeline está completo: <strong>chunking → índice → recuperación → fusión →
+      reranking → prompt → generación → evaluación</strong>.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Conclusion"). Buen momento para volver al diagrama del pipeline completo de la unidad anterior y marcar que ya se cubrieron todas las piezas.</aside>
+  </section>
+
+</section>
+
 </div>
 </div>
 
@@ -9463,6 +10990,11 @@ No expliques.</code></pre>
 <script src="js/widgets/chunking-widget.js"></script>
 <script src="js/widgets/colbert-widget.js"></script>
 <script src="js/widgets/rerank-widget.js"></script>
+<script src="js/widgets/llm4-data.js"></script>
+<script src="js/widgets/attention-widget.js"></script>
+<script src="js/widgets/sampling-widget.js"></script>
+<script src="js/widgets/prompt-builder-widget.js"></script>
+<script src="js/widgets/agentic-widget.js"></script>
 
 <script>
 Reveal.initialize({
@@ -9705,6 +11237,30 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initRerankWidget === 'function') {
       initRerankWidget();
       widgetsInitialized.rerank = true;
+    }
+  }
+  if (slide.querySelector('#attention-canvas') && !widgetsInitialized.attention) {
+    if (typeof initAttentionWidget === 'function') {
+      initAttentionWidget();
+      widgetsInitialized.attention = true;
+    }
+  }
+  if (slide.querySelector('#sampling-canvas') && !widgetsInitialized.sampling) {
+    if (typeof initSamplingWidget === 'function') {
+      initSamplingWidget();
+      widgetsInitialized.sampling = true;
+    }
+  }
+  if (slide.querySelector('#prompt-canvas') && !widgetsInitialized.promptBuilder) {
+    if (typeof initPromptBuilderWidget === 'function') {
+      initPromptBuilderWidget();
+      widgetsInitialized.promptBuilder = true;
+    }
+  }
+  if (slide.querySelector('#agentic-canvas') && !widgetsInitialized.agentic) {
+    if (typeof initAgenticWidget === 'function') {
+      initAgenticWidget();
+      widgetsInitialized.agentic = true;
     }
   }
 });
