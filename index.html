@@ -6483,6 +6483,379 @@ docs = retriever.invoke(
   </section>
 
   <section data-transition="fade">
+    <h2>Para Qué se Usa un LLM en la Práctica</h2>
+    <p style="font-size: 0.43em;">
+      Casi todo lo que se le pide a un LLM en producción cae en cinco familias.
+      Ninguna requiere entrenar nada: solo <strong>escribir bien la instrucción</strong>.
+    </p>
+    <div class="taxonomy" style="font-size: 0.88em; margin-top: 0.3em;">
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-blue);">
+        <strong style="color: var(--c-blue);">Resumir</strong> — texto largo → texto corto.
+        Actas, tickets, expedientes, artículos.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-green);">
+        <strong style="color: var(--c-green);">Clasificar</strong> — texto → una etiqueta de un
+        conjunto cerrado. Sentimiento, urgencia, área que debe atender.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-orange);">
+        <strong style="color: var(--c-orange);">Extraer datos estructurados</strong> — texto libre
+        → JSON. Facturas, correos, formularios escaneados.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-purple);">
+        <strong style="color: var(--c-purple);">Corregir</strong> — ortografía, gramática, coherencia.
+      </div>
+      <div class="branch fragment fade-up" style="border-left-color: var(--c-pink);">
+        <strong style="color: var(--c-pink);">Cambiar el estilo</strong> — el mismo contenido,
+        otro tono, otro registro, otro idioma.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
+      Fíjate en algo: <strong>las cinco son transformaciones de texto en texto</strong>.
+      Ahí está la razón de que un solo modelo las haga todas.
+    </p>
+    <aside class="notes">Contenido propio. Estas cinco familias son las que aparecen una y otra vez en proyectos reales, y las cuatro primeras se resolvian antes con un modelo entrenado a proposito por cada tarea. Buen momento para preguntarle al grupo cual de las cinco necesita su capstone.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Resumir</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre style="margin:0; font-size:0.94em;"><code class="language-text">Resume el siguiente ticket de soporte en
+una sola frase, indicando el problema y
+lo que pide el cliente.
+
+TICKET:
+Buenas tardes, compré una licuadora el
+12 de marzo con el pedido #A-4471 y desde
+la segunda semana hace un ruido muy fuerte
+y huele a quemado. Ya intenté con menos
+carga y sigue igual. Todavía está en
+garantía. Quisiera saber si me la pueden
+cambiar o si tengo que llevarla a algún
+taller.</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);">Licuadora del pedido #A-4471 con ruido
+          y olor a quemado dentro del período de garantía; el cliente pide cambio o
+          indicación de a dónde llevarla.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que controlas con la instrucción:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Longitud</strong>: "en una frase", "en 3 viñetas", "máximo 50 palabras"</li>
+          <li><strong>Foco</strong>: "resalta solo las fechas y montos"</li>
+          <li><strong>Formato</strong>: prosa, viñetas, tabla</li>
+          <li><strong>Fidelidad</strong>: "no agregues nada que no esté en el texto"</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>El riesgo propio de resumir:</strong> el modelo puede <strong>agregar</strong> cosas
+      que no estaban. Por eso la última instrucción no es opcional en contextos serios.
+    </p>
+    <aside class="notes">Contenido propio. Las salidas de estas cinco diapositivas son EJEMPLOS ilustrativos escritos a mano, no salidas medidas de un modelo — el gpt2 en espanol que usamos en los widgets es demasiado pequeno para seguir instrucciones. Distincion util: resumen extractivo (copia frases del original, mas seguro) vs abstractivo (redacta de nuevo, mas legible y mas riesgoso).</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Clasificar</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre style="margin:0; font-size:0.94em;"><code class="language-text">Clasifica el ticket en UNA de estas
+categorías, y responde solo con la
+categoría:
+
+garantia | envio | facturacion | otro
+
+TICKET: {texto del ticket}
+CATEGORÍA:</code></pre>
+        <p style="margin-top:0.4em;">
+          Nota los tres detalles que hacen que esto funcione en producción:
+        </p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Conjunto cerrado</strong> de etiquetas, escrito explícitamente</li>
+          <li><strong>"responde solo con la categoría"</strong> — si no, redacta un párrafo</li>
+          <li>El prompt <strong>termina</strong> en <code>CATEGORÍA:</code>, así la
+            continuación natural es la etiqueta</li>
+        </ul>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.35em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+          <strong style="color: var(--c-blue);">Por qué esto funciona</strong><br>
+          <span style="color: var(--c-text-dim);">Un LLM ya <em>es</em> un clasificador sobre el
+          siguiente token. Al terminar el prompt en <code>CATEGORÍA:</code>, la clasificación que
+          hace de forma natural coincide con la que tú quieres.</span>
+        </div>
+        <div class="fragment fade-up" style="margin-top:0.4em; padding:0.35em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+          <strong>El truco de producción</strong><br>
+          En vez de dejarlo escribir, se mira la <strong>probabilidad de cada etiqueta</strong> y se
+          toma la mayor. Así <strong>nunca</strong> devuelve algo fuera del conjunto…
+          y de paso obtienes una <strong>confianza</strong> con la que decidir si escalas a un humano.
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. El truco de leer las probabilidades de las etiquetas en vez de generar texto es lo que hace un clasificador con LLM fiable, y conecta directo con el slide "La Idea Central: es un Clasificador" de esta misma unidad. En la unidad de LLMs y generacion (RAG_M4) esto reaparece como logit_bias.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Extraer Datos Estructurados</h2>
+    <div class="columns" style="font-size: 0.35em;">
+      <div class="col-55">
+        <pre style="margin:0; font-size:0.94em;"><code class="language-text">Extrae los datos del correo en JSON con
+EXACTAMENTE este esquema. Si un dato no
+aparece, usa null. No inventes valores.
+
+{"cliente": str, "pedido": str,
+ "fecha_compra": "AAAA-MM-DD",
+ "monto": number, "en_garantia": bool}
+
+CORREO:
+Buenas, soy Marta Solís. El 12/03/2026
+compré la licuadora del pedido A-4471,
+pagué Q. 899.00 y sigue en garantía.
+
+JSON:</code></pre>
+      </div>
+      <div class="col-40">
+        <pre style="margin:0; font-size:0.94em;"><code class="language-json">{
+  "cliente": "Marta Solís",
+  "pedido": "A-4471",
+  "fecha_compra": "2026-03-12",
+  "monto": 899.0,
+  "en_garantia": true
+}</code></pre>
+        <p style="margin-top:0.4em;">
+          Es probablemente <strong>el caso de uso con mejor retorno</strong>: convierte texto
+          libre en algo que tu base de datos puede consultar.
+        </p>
+        <p class="fragment fade-up" style="margin-top:0.3em; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          Fíjate en <strong>"12/03/2026" → "2026-03-12"</strong>: no solo extrae, también
+          <strong>normaliza</strong>. Eso es lo que antes costaba un montón de expresiones regulares.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.25em; text-align:center;">
+      En producción no se confía en que el JSON salga bien: las APIs traen
+      <strong>salida estructurada</strong> (structured outputs / JSON mode) que
+      <strong>garantiza</strong> que la respuesta cumpla el esquema.
+    </p>
+    <aside class="notes">Contenido propio. Las dos instrucciones criticas son "usa null si no aparece" y "no inventes valores": sin ellas el modelo rellena huecos con datos plausibles, que es la alucinacion mas peligrosa aqui porque entra directo a la base de datos. La salida estructurada con esquema (function calling / JSON schema) es lo que se usa hoy en produccion.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Corregir y Cambiar el Estilo</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-purple);">Corregir</strong></p>
+        <div style="padding:0.3em 0.5em; background: rgba(252,98,85,0.07); border-left: 3px solid var(--c-red); margin-bottom:0.25em;">
+          <span style="color: var(--c-text-dim);">"aser el pedido fue muy dificil, la pagina
+          nunca cargo y ademas nadie contesto el telefono"</span>
+        </div>
+        <div style="padding:0.3em 0.5em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+          "Hacer el pedido fue muy difícil: la página nunca cargó y además nadie contestó
+          el teléfono."
+        </div>
+        <p style="margin-top:0.3em; color: var(--c-text-dim);">
+          Instrucción típica: <em>"corrige ortografía y puntuación, <strong>sin cambiar
+          el significado ni el tono</strong>"</em>.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-pink);">Cambiar el estilo</strong></p>
+        <div style="padding:0.3em 0.5em; background: rgba(228,139,176,0.07); border-left: 3px solid var(--c-pink); margin-bottom:0.25em;">
+          <strong>→ formal:</strong> "Estimado cliente: lamentamos los inconvenientes presentados
+          durante su proceso de compra."
+        </div>
+        <div style="padding:0.3em 0.5em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue); margin-bottom:0.25em;">
+          <strong>→ cercano:</strong> "¡Qué pena que te costara tanto! Ya estamos viendo qué pasó
+          con la página."
+        </div>
+        <div style="padding:0.3em 0.5em; background: rgba(255,134,47,0.07); border-left: 3px solid var(--c-orange);">
+          <strong>→ técnico:</strong> "Se reporta fallo de carga en el frontend de pedidos
+          y falta de respuesta en el canal telefónico."
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Las dos son la misma operación con distinta instrucción. Y en las dos hay que decir
+      <strong>qué NO debe cambiar</strong> — si no, el modelo "mejora" cosas que no le pediste.
+    </p>
+    <aside class="notes">Contenido propio. El cambio de estilo es lo que mas se subestima: permite escribir una sola vez el contenido y adaptarlo a cada canal (correo, chat, resumen ejecutivo). Y la advertencia de decir que NO cambiar aplica a las cinco familias.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Patrón Detrás de las Cinco</h2>
+    <div class="flow-row" style="justify-content:center; font-size: 0.4em; margin: 0.35em 0;">
+      <div class="flow-node" style="border-color: var(--c-yellow);"><strong>Instrucción</strong><br><span style="color: var(--c-text-dim);">qué hacer</span></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-node" style="border-color: var(--c-blue);"><strong>Entrada</strong><br><span style="color: var(--c-text-dim);">el texto a procesar</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);"><strong>Salida</strong><br><span style="color: var(--c-text-dim);">el texto transformado</span></div>
+    </div>
+    <p style="font-size: 0.42em; text-align:center;">
+      Un LLM es, en la práctica, una <strong>función de texto a texto configurable con lenguaje</strong>.
+      Cambias la instrucción y tienes otra función.
+    </p>
+    <div style="font-size: 0.39em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● Antes, cada una de las cinco tareas exigía <strong>entrenar un modelo distinto</strong>,
+        con sus datos etiquetados y su despliegue.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● Hoy es <strong>el mismo modelo</strong> con cinco instrucciones distintas. Eso es lo que
+        cambió de verdad.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+        ● Y por eso <strong>escribir la instrucción se volvió una habilidad técnica</strong>:
+        es literalmente la programación de esa función.
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. Este slide es la bisagra hacia el bloque de prompting: si la instruccion define la funcion, entonces vale la pena estudiar como escribirla. Conecta tambien con el capstone: muchos problemas que parecen necesitar entrenar un modelo se resuelven con una instruccion bien escrita.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Zero-shot: Pedirlo sin Ejemplos</h2>
+    <div class="columns" style="font-size: 0.37em;">
+      <div class="col-55">
+        <pre style="margin:0; font-size:0.95em;"><code class="language-text">Clasifica el sentimiento de la reseña
+como positivo, negativo o neutro.
+
+Reseña: El envío llegó tarde pero el
+producto está impecable.
+Sentimiento:</code></pre>
+        <p style="margin-top:0.35em;">
+          <strong>Cero ejemplos.</strong> Solo la instrucción y la entrada.
+          Funciona porque el modelo ya vio millones de textos parecidos al entrenarse.
+        </p>
+      </div>
+      <div class="col-40">
+        <p style="margin:0.1em 0; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Empieza siempre por aquí.</strong>
+          Es lo más barato: menos tokens, menos latencia, menos que mantener.
+        </p>
+        <p style="margin:0.3em 0; padding:0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong style="color: var(--c-red);">Dónde falla:</strong> cuando la salida tiene que
+          seguir un <strong>formato particular</strong> que no puedes describir bien con palabras,
+          o cuando tu criterio de etiquetado es <strong>propio</strong> y no el sentido común.
+        </p>
+        <p style="margin:0.3em 0; color: var(--c-text-dim);">
+          Ejemplo de eso último: "urgente" significa algo distinto en tu empresa que en el diccionario.
+        </p>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. El nombre viene de "zero-shot learning" en vision por computadora: reconocer una clase que nunca se vio en el entrenamiento. Aqui significa simplemente "sin ejemplos en el prompt". Nota importante: zero-shot NO quiere decir sin instrucciones — la instruccion sigue siendo esencial.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>One-shot y Few-shot</h2>
+    <div class="columns" style="font-size: 0.35em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-blue);">One-shot — un ejemplo</strong></p>
+        <pre style="margin:0.15em 0; font-size:0.95em;"><code class="language-text">Clasifica el sentimiento.
+
+Reseña: Todo perfecto, muy recomendable.
+Sentimiento: positivo
+
+Reseña: El envío llegó tarde pero el
+producto está impecable.
+Sentimiento:</code></pre>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-green);">Few-shot — varios</strong></p>
+        <pre style="margin:0.15em 0; font-size:0.95em;"><code class="language-text">Reseña: Todo perfecto, muy recomendable.
+Sentimiento: positivo
+
+Reseña: Nunca llegó y nadie respondió.
+Sentimiento: negativo
+
+Reseña: Cumple, sin más.
+Sentimiento: neutro
+
+Reseña: El envío llegó tarde pero el
+producto está impecable.
+Sentimiento:</code></pre>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Lo importante: <strong>no se está entrenando nada</strong>. Los pesos del modelo no cambian.
+      Los ejemplos son solo <strong>texto en el prompt</strong>, y el modelo continúa el patrón
+      porque continuar patrones es exactamente lo que sabe hacer.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      Se le llama <strong>aprendizaje en contexto</strong> (<em>in-context learning</em>),
+      y "aprendizaje" está entre comillas: dura lo que dura la llamada.
+    </p>
+    <aside class="notes">Contenido propio. El punto de que no se entrena nada es el que mas confusion causa: mucha gente cree que few-shot "ensena" al modelo de forma permanente. Se olvida todo en cuanto termina la llamada. Lo que si cambia los pesos es el fine-tuning, que se ve en la unidad de LLMs y generacion de texto.</aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Explora el Aprendizaje en Contexto</h2>
+    <div class="widget-container">
+      <canvas id="icl-canvas" width="880" height="290" style="width:100%; max-width:880px; display:block; margin:0 auto;"></canvas>
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.5em; margin-top:0.28em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn icl-tarea-btn" data-tarea="formato">aprender un formato</button>
+        <button class="widget-btn fi-btn icl-tarea-btn" data-tarea="sentimiento">clasificar sentimiento</button>
+        <div class="widget-label" style="font-size:0.7em;">ejemplos <span class="widget-value" id="icl-k-value">0</span>
+          <input type="range" id="icl-k" class="widget-slider" min="0" max="4" step="1" value="0" style="width:130px; margin-left:0.35em;">
+        </div>
+      </div>
+      <div id="icl-info" style="display:grid; grid-template-columns:1fr 1fr; gap:0 1.2em; margin-top:0.22em; font-size:0.5em;"></div>
+    </div>
+    <aside class="notes">
+      Widget propio, con medidas REALES sobre DeepESP/gpt2-spanish. Guion: (1) en "aprender un formato",
+      mover el slider de 0 a 4 y ver que la salida correcta pasa de -4.262 a -2.460 de log-probabilidad,
+      o sea 6.1 veces mas probable; mirar tambien el panel de la derecha: SIN ejemplos el modelo quiere
+      escribir un salto de linea, CON ejemplos escribe la inicial de un apellido en mayuscula. Eso es
+      aprendizaje en contexto, visible. (2) Cambiar a "clasificar sentimiento" y ver lo contrario: los
+      aciertos bajan de 4/4 a 2/4. Es un limite real de los modelos pequenos, no un error de la medicion,
+      y se explica en la diapositiva siguiente.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>Cuándo Sirve y Cuándo No</h2>
+    <div class="columns" style="font-size: 0.37em;">
+      <div class="col">
+        <p style="margin:0.1em 0; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Los ejemplos ayudan mucho cuando…</strong>
+        </p>
+        <ul style="margin:0.2em 0;">
+          <li>La salida tiene un <strong>formato</strong> difícil de describir con palabras</li>
+          <li>Tu criterio de etiquetado es <strong>propio</strong> y no el del sentido común</li>
+          <li>Quieres un <strong>tono</strong> consistente en todas las respuestas</li>
+          <li>Hay <strong>casos borde</strong> que conviene mostrar en vez de explicar</li>
+        </ul>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0; padding:0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+          <strong style="color: var(--c-red);">Y hay que tener cuidado con…</strong>
+        </p>
+        <ul style="margin:0.2em 0;">
+          <li><strong>Sesgo de recencia</strong>: el modelo tiende a repetir la <strong>última</strong>
+            etiqueta que vio. Mezcla el orden.</li>
+          <li><strong>Etiquetas desbalanceadas</strong>: si 4 de 5 ejemplos son "positivo",
+            eso solo ya inclina la respuesta</li>
+          <li><strong>Costo</strong>: los ejemplos se pagan en <strong>cada</strong> llamada</li>
+          <li>Modelos pequeños: pueden <strong>empeorar</strong> con ejemplos</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.3em; padding: 0.32em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      <strong>Medido en el widget:</strong> para aprender un formato, cuatro ejemplos hacen la salida
+      correcta <strong style="color: var(--c-green);">6.1× más probable</strong>. Para clasificar
+      sentimiento con ese mismo modelo pequeño, los aciertos <strong style="color: var(--c-red);">bajan
+      de 4/4 a 2/4</strong> y aparece el sesgo hacia la última etiqueta.
+      <span style="color: var(--c-text-dim);">Con modelos grandes el few-shot sí ayuda también en
+      semántica: es una capacidad que aparece con la escala.</span>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.2em;">
+      La regla práctica: <strong>empieza en zero-shot</strong>, agrega ejemplos solo si midiendo
+      mejora, y <strong>mide siempre con tu modelo</strong> — no con el del vecino.
+    </p>
+    <aside class="notes">Contenido propio, con las cifras medidas del widget. El sesgo de recencia y el de etiquetas desbalanceadas estan documentados en Zhao et al. (2021), "Calibrate Before Use: Improving Few-Shot Performance of Language Models". La emergencia del aprendizaje en contexto con la escala es de Brown et al. (2020), el paper de GPT-3, que es justamente donde se popularizo el termino few-shot.</aside>
+  </section>
+
+  <section data-transition="fade">
     <h2>Lo que Hay que Llevarse</h2>
     <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.68em;">
       <div class="step fragment fade-up">Un LLM es un <strong>clasificador del siguiente token</strong>:
@@ -6495,10 +6868,16 @@ docs = retriever.invoke(
         pregunta con otra pregunta le resulta más natural que responderla</div>
       <div class="step fragment fade-up">Produce texto <strong>probable</strong>, no
         <strong>verdadero</strong>: por eso alucina con total seguridad</div>
+      <div class="step fragment fade-up">En la práctica se usa como una <strong>función de texto a
+        texto</strong>: resumir, clasificar, extraer datos, corregir y cambiar el estilo — el mismo
+        modelo, distinta instrucción</div>
+      <div class="step fragment fade-up">Meter <strong>ejemplos</strong> en el prompt
+        (<em>few-shot</em>) enseña el formato sin entrenar nada… pero se paga en cada llamada
+        y no siempre ayuda: <strong>hay que medirlo</strong></div>
       <div class="step fragment fade-up">No sabe lo privado, lo reciente ni lo raro → hay que
         <strong>darle el contexto</strong>, y ahí entra RAG</div>
     </div>
-    <aside class="notes">Cierre de la unidad. Conecta hacia adelante con RAG y hacia atras con embeddings y busqueda semantica, que son las piezas del retriever.</aside>
+    <aside class="notes">Cierre de la unidad. Conecta hacia adelante con RAG y hacia atras con embeddings y busqueda semantica, que son las piezas del retriever. Los dos puntos nuevos resumen el bloque de aplicaciones y el de prompting.</aside>
   </section>
 </section>
 
@@ -10260,11 +10639,11 @@ Asistente: Toronto, con 2.9 millones de habitantes [DOC 1]
           Meter <strong>pares pregunta–respuesta de ejemplo</strong> dentro del prompt para que el
           modelo aprenda la <strong>estructura y el tono</strong> que quieres.
         </p>
-        <ul style="margin:0.25em 0;">
-          <li><strong>Varios ejemplos</strong> → <em>few-shot</em></li>
-          <li><strong>Un ejemplo</strong> → <em>one-shot</em></li>
-          <li><strong>Ninguno</strong> → <em>zero-shot</em></li>
-        </ul>
+        <p style="margin:0.2em 0; padding:0.25em 0.45em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+          <strong>Zero-shot, one-shot y few-shot</strong> los vimos a fondo en la
+          <strong>unidad de LLMs</strong>, con la medición de cuánto ayudan.
+          Aquí interesa cómo se aplican <strong>dentro de un RAG</strong>.
+        </p>
         <p style="margin:0.25em 0; padding: 0.28em 0.45em; background: rgba(255,255,0,0.06);">
           No cambia lo que el modelo <strong>sabe</strong>: cambia <strong>cómo lo dice</strong>.
           Para un bot de soporte, dos ejemplos bien elegidos hacen más por la consistencia
@@ -12180,6 +12559,8 @@ print(resultado)
 <script src="js/widgets/llm-trie-data.js"></script>
 <script src="js/widgets/token-generation-widget.js"></script>
 <script src="js/widgets/training-pairs-widget.js"></script>
+<script src="js/widgets/icl-data.js"></script>
+<script src="js/widgets/icl-widget.js"></script>
 <script src="js/widgets/rag-data.js"></script>
 <script src="js/widgets/rag-pipeline-widget.js"></script>
 <script src="js/widgets/rag-retriever-widget.js"></script>
@@ -12386,6 +12767,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initTrainingPairsWidget === 'function') {
       initTrainingPairsWidget();
       widgetsInitialized.trainingPairs = true;
+    }
+  }
+  if (slide.querySelector('#icl-canvas') && !widgetsInitialized.icl) {
+    if (typeof initIclWidget === 'function') {
+      initIclWidget();
+      widgetsInitialized.icl = true;
     }
   }
   if (slide.querySelector('#rag-pipeline-canvas') && !widgetsInitialized.ragPipeline) {
