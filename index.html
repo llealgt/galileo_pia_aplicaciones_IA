@@ -7408,7 +7408,7 @@ Sentimiento:</code></pre>
     <aside class="notes">
       Unidad basada en el modulo 1 del curso de RAG de DeepLearning.AI (Zain Hasan), ampliada con widgets,
       codigo y datos reales. Va justo despues de LLMs y se apoya en embeddings y busqueda semantica.
-    </aside>
+     NOTEBOOK ASOCIADO: 2025/notebooks/18_rag_minimo_de_principio_a_fin.ipynb, que arma este mismo pipeline sin librerias de RAG.</aside>
   </section>
 
   <section data-transition="fade">
@@ -7951,7 +7951,7 @@ respuesta = cliente.chat.completions.create(model="...", temperature=0,
       cuáles son las tres técnicas que se usan en producción, cómo se combinan y
       <strong>cómo se mide</strong> si funciona.
     </p>
-    <aside class="notes">Fuente: RAG_M2 ("Information Retrieval Foundations"). Esta unidad es el modulo 2 del curso de RAG y abre la caja negra que en el modulo 1 se llamo simplemente "retriever".</aside>
+    <aside class="notes">Fuente: RAG_M2 ("Information Retrieval Foundations"). Esta unidad es el modulo 2 del curso de RAG y abre la caja negra que en el modulo 1 se llamo simplemente "retriever". NOTEBOOK ASOCIADO: 2025/notebooks/19_recuperacion_lexica_semantica_e_hibrida.ipynb, con BM25 desde la formula y las cuatro metricas medidas.</aside>
   </section>
 
   <section data-transition="fade">
@@ -9066,7 +9066,7 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
       Falta lo que separa un prototipo de un sistema real: buscar entre millones de vectores,
       partir los documentos, arreglar la consulta del usuario y reordenar los resultados.
     </p>
-    <aside class="notes">Fuente: RAG_M3 ("Information Retrieval in Production"). Es el modulo 3 del curso de RAG. Todo lo de esta unidad son cosas que NO hacen falta con 100 documentos y son obligatorias con 10 millones.</aside>
+    <aside class="notes">Fuente: RAG_M3 ("Information Retrieval in Production"). Es el modulo 3 del curso de RAG. Todo lo de esta unidad son cosas que NO hacen falta con 100 documentos y son obligatorias con 10 millones. NOTEBOOKS ASOCIADOS: 2025/notebooks/20_chunking_y_base_de_datos_vectorial.ipynb (las cuatro estrategias de chunking medidas y ChromaDB) y 21_query_rewriting_y_reranking.ipynb (reescritura, HyDE y el techo del reranking).</aside>
   </section>
 
   <section data-transition="fade">
@@ -10336,7 +10336,7 @@ No expliques.</code></pre>
       <strong>generador</strong>: cómo funciona por dentro, cómo se controla, cómo se le arma
       el prompt, cómo se evita que invente y cómo se mide si respondió bien.
     </p>
-    <aside class="notes">Fuente: RAG_M4 ("LLMs and Text Generation"). Es el modulo 4 del curso de RAG. Complementa la unidad 12 del curso: alli se vio QUE hace un LLM, aqui se ve COMO lo hace por dentro y como se opera en un sistema RAG.</aside>
+    <aside class="notes">Fuente: RAG_M4 ("LLMs and Text Generation"). Es el modulo 4 del curso de RAG. Complementa la unidad 12 del curso: alli se vio QUE hace un LLM, aqui se ve COMO lo hace por dentro y como se opera en un sistema RAG. NOTEBOOK ASOCIADO: 2025/notebooks/22_generacion_prompting_y_evaluacion.ipynb, con los parametros de muestreo calculados y las dos metricas del generador implementadas a mano.</aside>
   </section>
 
   <section data-transition="fade">
@@ -11865,7 +11865,7 @@ print(resultado)
       <strong>usuarios reales</strong>: medirlo, vigilarlo, abaratarlo, acelerarlo,
       protegerlo, y hacerlo funcionar con PDFs e imágenes.
     </p>
-    <aside class="notes">Fuente: RAG_M5 ("RAG Systems in Production"). Ultimo modulo del curso de RAG. El cambio de mentalidad: hasta ahora se optimizaba la calidad; en produccion hay tres variables a la vez —calidad, costo y latencia— y mejorar una empeora las otras.</aside>
+    <aside class="notes">Fuente: RAG_M5 ("RAG Systems in Production"). Ultimo modulo del curso de RAG. El cambio de mentalidad: hasta ahora se optimizaba la calidad; en produccion hay tres variables a la vez —calidad, costo y latencia— y mejorar una empeora las otras. NOTEBOOK ASOCIADO: 2025/notebooks/23_rag_en_produccion.ipynb, con trazas, cuantizacion medida y el caso del cache semantico que no tiene umbral seguro. La unidad cierra con la tarea 24_tarea_rag_completo.ipynb.</aside>
   </section>
 
   <section data-transition="fade">
