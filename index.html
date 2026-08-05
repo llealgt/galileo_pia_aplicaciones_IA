@@ -3295,6 +3295,82 @@ X_train, X_cv, y_train, y_cv = train_test_split(
     </aside>
   </section>
 
+  <section data-transition="fade" id="slide-metodo-cientifico">
+    <h2>Antes de Buscar: Trabaja Como Científico</h2>
+    <p style="font-size: 0.5em;">
+      Ajustar hyper-parámetros no es apretar botones hasta que suba el número. Es un
+      <strong style="color: var(--c-yellow);">ciclo experimental</strong>: cada corrida debe responder
+      una pregunta que tú formulaste antes de correrla.
+    </p>
+    <div class="columns" style="align-items: stretch; margin-top: 0.2em;">
+      <div class="col-40">
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align: left; font-size: 0.62em;">
+          <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-blue);">1. Hipótesis</strong> —
+            una afirmación concreta y <em>falsable</em>: "escalar las features sube el f1"</div>
+          <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-orange);">2. Experimento</strong> —
+            cambia <strong>una sola cosa</strong>; todo lo demás igual (mismos folds, misma semilla)</div>
+          <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-yellow);">3. Medición</strong> —
+            la métrica que elegiste, sobre el cross-validation set, <strong>con su dispersión</strong></div>
+          <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-teal);">4. Análisis</strong> —
+            ¿confirmada o refutada? ¿la diferencia es mayor que el ruido? ¿por qué?</div>
+          <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-purple);">5. Nueva hipótesis</strong> —
+            el análisis te dice qué preguntar después. <strong>Y vuelta a empezar.</strong></div>
+        </div>
+      </div>
+      <div class="col-55">
+        <ul style="font-size: 0.5em;">
+          <li class="fragment fade-up">Sin hipótesis previa no hay experimento, hay <strong>tanteo</strong>:
+            si pruebas 50 configuraciones al azar y una sale bien, no sabes <em>por qué</em> — y no
+            puedes repetirlo en el siguiente proyecto.</li>
+          <li class="fragment fade-up">Cambiar dos cosas a la vez hace la medición
+            <strong>ininterpretable</strong>: si mejora, ¿fue el escalado o el kernel?</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-red);">Una hipótesis refutada es un
+            resultado</strong>, no un fracaso: descarta una rama del espacio de búsqueda y te ahorra
+            todo el tiempo que ibas a gastar ahí.</li>
+          <li class="fragment fade-up">La <strong>bitácora</strong> es el cuaderno de laboratorio: sin ella
+            el ciclo no se cierra, porque en la vuelta 12 ya no recuerdas qué probaste en la 3.</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">
+      Contenido propio. Es la bisagra entre "selección de modelos" y las estrategias de búsqueda
+      automática que siguen. Insistir en el control de variables: el "mismos folds, misma semilla" es lo
+      que hace comparables dos filas de la bitácora. Enlazar con la diapositiva "Un Proceso Iterativo"
+      de la sección anterior: aquí se le pone método al bucle. El punto de la hipótesis refutada suele
+      ser el que más le cuesta al estudiante, que tiende a esconder los experimentos que salieron mal.
+    </aside>
+  </section>
+
+  <section data-transition="fade">
+    <h2>El Ciclo con Datos Reales</h2>
+    <div class="widget-container">
+      <canvas id="sci-cycle-canvas" width="900" height="400"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.3em;">
+        <button class="widget-btn fi-btn" id="sci-cycle-play">⏸ Pausar</button>
+        <button class="widget-btn fi-btn" id="sci-cycle-step">Siguiente etapa</button>
+        <button class="widget-btn fi-btn" id="sci-cycle-reset">Reiniciar</button>
+      </div>
+    </div>
+    <p style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.25em;">
+      Cuatro vueltas del ciclo sobre <code>breast cancer</code> con SVM — el mismo setup del notebook 09
+      (split 80/20, <code>StratifiedKFold(5)</code>, <code>scoring="f1"</code>). Los cuatro valores están medidos.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/scientific-cycle-widget.js). Los cuatro f1 y sus desviaciones se midieron
+      de verdad con el setup del notebook 09; no son ilustrativos. Guion: dejarlo correr una vuelta
+      completa, luego pausar y usar "Siguiente etapa" para comentar cada vuelta.
+      Vuelta 1: el error clásico, kernel RBF sobre features con escalas de 0.1 a 2500.
+      Vuelta 2: la hipótesis se confirma y además baja la varianza — subrayar que la estabilidad también
+      es un resultado.
+      Vuelta 3: se REFUTA a propósito. Preguntar a la clase qué harían con este resultado; la respuesta
+      es que ya no hay que volver a probar kernels lineales.
+      Vuelta 4: la mejora (+0.006) es menor que la desviación entre folds — se ve en las barras de error
+      del panel inferior, que se traslapan con las de la vuelta 2. Ese es el gancho para la siguiente
+      diapositiva: buscar a ojo no escala ni da certeza, y de ahí sale grid search.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Estrategia 1: Grid Search</h2>
     <div class="columns">
@@ -12835,6 +12911,7 @@ print(resultado)
 <script src="js/widgets/metric-table-widget.js"></script>
 <script src="js/widgets/feature-importance-widget.js"></script>
 <script src="js/widgets/kfold-widget.js"></script>
+<script src="js/widgets/scientific-cycle-widget.js"></script>
 <script src="js/widgets/search-strategy-widget.js"></script>
 <script src="js/widgets/batchnorm-experiments-widget.js"></script>
 <script src="js/widgets/callback-lifecycle-widget.js"></script>
@@ -12996,6 +13073,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initKFoldWidget === 'function') {
       initKFoldWidget();
       widgetsInitialized.kfold = true;
+    }
+  }
+  if (slide.querySelector('#sci-cycle-canvas') && !widgetsInitialized.sciCycle) {
+    if (typeof initScientificCycleWidget === 'function') {
+      initScientificCycleWidget();
+      widgetsInitialized.sciCycle = true;
     }
   }
   if (slide.querySelector('#search-strategy-canvas') && !widgetsInitialized.searchStrategy) {
