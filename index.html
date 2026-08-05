@@ -6664,14 +6664,14 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     <aside class="notes">Los porcentajes salen de aplicar p^(1/T) renormalizado sobre los 4 candidatos reales del arbol.</aside>
   </section>
 
-  <section data-transition="fade">
+  <section data-transition="fade" id="sl-patrones">
     <h2>Patrones Estadísticos, no Conocimiento</h2>
     <p style="font-size: 0.46em;">
       El modelo aprende <strong>qué texto suele seguir a qué texto</strong> en internet. Eso no siempre
       coincide con "responder la pregunta". Mira lo que un GPT-2 en español predice después de
       <code>¿Cuándo nació Einstein?</code>:
     </p>
-    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em 0.7em; margin-top: 0.3em;">
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em 0.7em; margin-top: 0.3em; text-align: left;">
       <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
         <span style="display:inline-block; width:5.5em; color:var(--c-red);">68.7%</span>
         <span style="display:inline-block; background:var(--c-red); height:0.7em; width:11em; vertical-align:middle; opacity:0.75;"></span>
@@ -6773,6 +6773,153 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     <aside class="notes">
       Fuente: RAG_M1 (slides "How LLMs Learn"). Es aprendizaje auto-supervisado: la supervision sale del
       propio texto. No entramos en la funcion de perdida, pero es cross-entropy sobre el vocabulario.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-verdad">
+    <h2>Nada en el Entrenamiento Premia la Verdad</h2>
+    <p style="font-size: 0.46em;">
+      Mira otra vez el paso 3 de ese bucle: <em>"comparar con el token verdadero"</em>. La función de
+      pérdida que se minimiza es exactamente esta:
+    </p>
+    <p class="katex-block" style="font-size: 0.8em;">\mathcal{L} = -\sum_{i} \log P_\theta\!\left(t_i \mid t_1, \dots, t_{i-1}\right)</p>
+    <p style="font-size: 0.44em; text-align:center; color: var(--c-text-dim); margin-top: -0.2em;">
+      donde <code>t<sub>i</sub></code> es <strong>el token que venía después en el corpus</strong>.
+    </p>
+    <ul style="font-size: 0.44em; margin-top: 0.4em;">
+      <li class="fragment fade-up" style="text-align:left;">El gradiente solo compara la predicción contra
+        <strong>lo que decía el texto</strong>. No hay ningún término que mida si eso era cierto.</li>
+      <li class="fragment fade-up" style="text-align:left;">El modelo es premiado por
+        <strong style="color: var(--c-yellow);">reproducir el corpus</strong> — incluidos sus errores.</li>
+      <li class="fragment fade-up" style="text-align:left;">La verdad entra solo de forma
+        <strong>indirecta</strong>: internet acierta la mayoría de las veces en las cosas comunes, así que
+        imitar el corpus se <em>parece</em> a saber.</li>
+    </ul>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Si el corpus dijera que la capital de Italia es París, el modelo lo diría con la misma seguridad —
+      y su pérdida sería <strong style="color: var(--c-red);">menor</strong>, no mayor. Un LLM es un
+      <strong>predictor del siguiente token</strong>: eso es todo lo que la optimización le pide.
+    </blockquote>
+    <aside class="notes">
+      Contenido propio, encadenado con "Como Aprenden". Es el punto que hay que dejar clavado: la
+      correccion no es un objetivo del entrenamiento, es un efecto colateral de que el corpus suele
+      tener razon. El instruction tuning y el RLHF que vienen despues alinean el ESTILO de respuesta y
+      castigan algunos errores conocidos, pero tampoco introducen un verificador de hechos.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-suma">
+    <h2>¿Cuánto es 1 + 1?</h2>
+    <p style="font-size: 0.45em;">
+      Parece la pregunta más segura del mundo. Esto es lo que el mismo GPT-2 en español predice
+      justo después de <code>1 + 1 =</code>:
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.5em 0.7em; margin-top: 0.3em; text-align: left;">
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5em; color:var(--c-red);">25.95%</span>
+        <span style="display:inline-block; background:var(--c-red); height:0.7em; width:10.4em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;"><strong>"1"</strong></span></p>
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5em; color:var(--c-orange);">10.47%</span>
+        <span style="display:inline-block; background:var(--c-orange); height:0.7em; width:4.2em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;"><strong>"0"</strong></span></p>
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5em; color:var(--c-green);">9.02%</span>
+        <span style="display:inline-block; background:var(--c-green); height:0.7em; width:3.6em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;"><strong>"2"</strong> — la respuesta correcta, en tercer lugar</span></p>
+      <p style="font-size: 0.4em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:5em; color:var(--c-text-dim);">8.09%</span>
+        <span style="display:inline-block; background:var(--c-text-dim); height:0.7em; width:3.2em; vertical-align:middle; opacity:0.75;"></span>
+        <span style="margin-left:0.6em;">"4"</span></p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.35em;">
+      Y si lo dejamos generar tomando siempre el token más probable, escribe literalmente:
+      <code style="color: var(--c-red);">1 + 1 = 1 = 1 =</code>
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.43em;">
+      <strong>El modelo no está sumando.</strong> Está recuperando qué token solía seguir a esa secuencia
+      de caracteres. Si en su corpus ese token no era <code>2</code>, no dice <code>2</code>.
+    </p>
+    <aside class="notes">
+      Medido con DeepESP/gpt2-spanish al preparar la unidad, el mismo modelo de las diapositivas
+      anteriores. Vale la pena correrlo en vivo: son cuatro lineas con transformers. El punto no es
+      burlarse de un modelo chico — es que la aritmetica NUNCA fue parte del objetivo, y en un modelo
+      pequeno se ve sin filtros.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-corpus">
+    <h2>Por Qué el Corpus No Siempre Dice "2"</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-40">
+        <h3 style="font-size: 0.62em; color: var(--c-teal);">Contextos legítimos donde 1 + 1 ≠ 2</h3>
+        <ul style="font-size: 0.38em;">
+          <li>Un blog explicando <strong>base binaria</strong>: 1 + 1 = <strong style="color:var(--c-yellow);">10</strong></li>
+          <li><strong>Álgebra booleana</strong>: 1 + 1 = <strong style="color:var(--c-yellow);">1</strong></li>
+          <li><strong>Concatenar cadenas</strong>: "1" + "1" = <strong style="color:var(--c-yellow);">"11"</strong></li>
+          <li>Un texto de negocios sobre <strong>sinergia</strong>: 1 + 1 = <strong style="color:var(--c-yellow);">3</strong></li>
+        </ul>
+        <p style="font-size: 0.36em; color: var(--c-text-dim); text-align: left;">
+          Todos son <em>correctos</em> en su contexto. El modelo los vio todos y no sabe en cuál estás tú.
+        </p>
+      </div>
+      <div class="col-55">
+        <h3 style="font-size: 0.62em; color: var(--c-orange);">Y además, corpus sucio</h3>
+        <ul style="font-size: 0.38em;">
+          <li class="fragment fade-up"><strong>Errores de buena fe</strong>: erratas, foros con respuestas
+            equivocadas y muy votadas, páginas desactualizadas que nadie corrigió</li>
+          <li class="fragment fade-up"><strong style="color: var(--c-red);">Contaminación deliberada</strong>
+            (<em>data poisoning</em>): páginas publicadas con el único fin de que un modelo las absorba y
+            repita. No hace falta mucho volumen: basta con estar donde se raspa</li>
+          <li class="fragment fade-up"><strong>Realimentación</strong>: texto generado por LLMs que vuelve a
+            la web y entra al siguiente entrenamiento — el error se cita a sí mismo</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      No es teórico: en la distribución medida arriba, el token <code>10</code> aparece con
+      <strong>2.78%</strong> cuando el prompt empieza con <em>"En binario,"</em>. El corpus binario
+      <strong>está ahí adentro</strong>, mezclado con todo lo demás.
+    </p>
+    <aside class="notes">
+      Contenido propio. El caso del blog de binario es el mas util en clase porque no hay nadie
+      mintiendo: el dato es correcto y aun asi contamina. Sobre data poisoning, mencionar que se ha
+      demostrado con fracciones minusculas del corpus, y que por eso importa de donde salen los datos.
+      Sobre realimentacion, el termino de la literatura es "model collapse".
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-moderno">
+    <h2>Un Modelo Moderno Acierta Más, no Distinto</h2>
+    <p style="font-size: 0.45em;">
+      Lo justo es probarlo con un modelo actual. Qwen2.5-1.5B-Instruct, en modo determinista:
+    </p>
+    <table style="font-size: 0.42em; width: 100%; max-width: 800px; margin: 0.3em auto;">
+      <tr><th style="text-align:left;">Pregunta</th><th>Respuesta</th><th>Correcto</th><th></th></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>1 + 1</code></td>
+        <td><code>2</code></td><td><code>2</code></td><td style="color:var(--c-green);">✔</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>4831 × 7</code></td>
+        <td><code>33,817</code></td><td><code>33,817</code></td><td style="color:var(--c-green);">✔</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>128 × 256</code></td>
+        <td><code>32,768</code></td><td><code>32,768</code></td><td style="color:var(--c-green);">✔</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>3947 × 6213</code></td>
+        <td><code style="color:var(--c-red);">24,508,511</code></td><td><code>24,522,711</code></td>
+        <td style="color:var(--c-red);">✘</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em;">
+      El error no <em>parece</em> un error: tiene la misma cantidad de dígitos, empieza igual
+      (<code>24,5…</code>) y se afirma con total seguridad. Falla por <strong>14,200</strong> y no avisa.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.2em;">
+      Escalar el modelo mueve <strong>dónde</strong> está la frontera del error, no <strong>por qué</strong>
+      existe. La salida no se arregla pidiéndole que "no se equivoque": se arregla
+      <strong style="color: var(--c-yellow);">dándole el dato</strong> (RAG) o
+      <strong style="color: var(--c-yellow);">dándole la herramienta</strong> (una calculadora, una API).
+    </blockquote>
+    <aside class="notes">
+      Medido de verdad con Qwen2.5-1.5B-Instruct en greedy, el mismo modelo del notebook 17. Notar que
+      128x256 sale bien porque es potencia de dos y aparece en cualquier texto tecnico: eso refuerza el
+      argumento de que esta recuperando, no calculando. Este es el gancho directo a la unidad de RAG.
     </aside>
   </section>
 
@@ -7428,6 +7575,25 @@ Cita la fuente entre corchetes.
     <aside class="notes">
       Contenido propio. Esta plantilla es el corazon practico de RAG y conviene que la copien tal cual para
       el capstone. El "di que no sabes" es lo que mas reduce alucinaciones en la practica.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-prompts">
+    <h2>Prompts para Correr en Vivo</h2>
+    <p style="font-size: 0.36em; margin-bottom: 0.25em;">
+      Cinco preguntas que un LLM <strong>no puede</strong> contestar solo, cada una con su versión aumentada.
+      Corre los dos prompts en <strong style="color: var(--c-yellow);">chats separados</strong>: en el mismo
+      chat el modelo ya vio la respuesta.
+    </p>
+    <div id="rag-prompts" class="widget-container" style="padding: 0.5em 0.6em;"></div>
+    <aside class="notes">
+      Widget propio (js/widgets/rag-prompts-widget.js). Esta hecho para correrse EN VIVO: el texto es
+      seleccionable y cada caja tiene boton de copiar. Guion sugerido: empezar por el tipo de cambio
+      (el mas visual, porque el modelo inventa un numero con dos decimales), seguir con vacaciones (el
+      mas cercano al capstone) y cerrar con el contrato, donde el dato recuperado CONTRADICE la
+      respuesta promedio. En los casos de tipo de cambio y version de libreria el contexto tiene un
+      hueco a proposito: hay que ir a buscar el dato en el momento, y ese acto es literalmente el paso
+      de retrieval. Recordar correr los pares en chats distintos.
     </aside>
   </section>
 
@@ -12912,6 +13078,7 @@ print(resultado)
 <script src="js/widgets/feature-importance-widget.js"></script>
 <script src="js/widgets/kfold-widget.js"></script>
 <script src="js/widgets/scientific-cycle-widget.js"></script>
+<script src="js/widgets/rag-prompts-widget.js"></script>
 <script src="js/widgets/search-strategy-widget.js"></script>
 <script src="js/widgets/batchnorm-experiments-widget.js"></script>
 <script src="js/widgets/callback-lifecycle-widget.js"></script>
@@ -13073,6 +13240,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initKFoldWidget === 'function') {
       initKFoldWidget();
       widgetsInitialized.kfold = true;
+    }
+  }
+  if (slide.querySelector('#rag-prompts') && !widgetsInitialized.ragPrompts) {
+    if (typeof initRagPromptsWidget === 'function') {
+      initRagPromptsWidget();
+      widgetsInitialized.ragPrompts = true;
     }
   }
   if (slide.querySelector('#sci-cycle-canvas') && !widgetsInitialized.sciCycle) {
