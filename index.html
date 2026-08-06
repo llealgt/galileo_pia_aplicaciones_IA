@@ -74,6 +74,8 @@
         <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>Recuperación en Producción</a>
         <a class="toc-item" onclick="Reveal.slide(16, 0)"><span class="toc-num">16</span>LLMs y Generación de Texto</a>
         <a class="toc-item" onclick="Reveal.slide(17, 0)"><span class="toc-num">17</span>RAG en Producción</a>
+        <a class="toc-item" onclick="Reveal.slide(18, 0)"><span class="toc-num">18</span>Componer y Orquestar: Chains y LangChain</a>
+        <a class="toc-item" onclick="Reveal.slide(19, 0)"><span class="toc-num">19</span>Agentes y RAG Agéntico</a>
       </div>
     </div>
     <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
@@ -478,7 +480,7 @@
       Un <strong style="color: var(--c-purple);">agente</strong> combina memoria, herramientas y metas: observa su entorno,
       razona con un LLM, y ejecuta acciones — en loop.
     </p>
-    <aside class="notes">Fuente: Clase_01_01.pptx, slide 14. Puente hacia LangChain/LangGraph, que se ven en la sección de herramientas.</aside>
+    <aside class="notes">Fuente: Clase_01_01.pptx, slide 14. Puente hacia las unidades 18 (LangChain y composicion) y 19 (agentes, ReAct y RAG agentico), que cierran el curso. Los notebooks son el 27 y el 28.</aside>
   </section>
 
   <section data-transition="fade">
@@ -12213,6 +12215,11 @@ print(resultado)
       Para sistemas simples, escribe tú la lógica del flujo. Cuando crezca, usa una
       librería o plataforma que la gestione.
     </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Estos cuatro patrones aplicados a RAG son un caso particular de algo más general. La
+      <strong>unidad 18</strong> los construye desde cero fuera de RAG y mide lo que cuestan; la
+      <strong>19</strong> da el paso siguiente, cuando es el modelo el que decide el flujo.
+    </p>
     <aside class="notes">Fuente: RAG_M4 ("Sequential / Conditional / Iterative / Parallel Workflow", "Implementing Agentic Systems"). El calculo del 77% (0.95^5) es propio y es el argumento mas fuerte contra encadenar etapas por gusto: la fiabilidad se multiplica, no se promedia.</aside>
   </section>
 
@@ -13554,6 +13561,555 @@ print(resultado)
   </section>
 
 </section>
+
+<!-- ============================================================
+     SECCION 18 — Componer y Orquestar
+     ============================================================ -->
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.5em;">Componer y Orquestar</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">Chains, Routing, Paralelismo y LangChain</h3>
+    <p style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.7em;">
+      Hasta aquí, cada uso de un LLM fue <strong>una llamada</strong>. Los sistemas reales se parten
+      en pasos — y ahí empiezan los problemas interesantes.
+    </p>
+    <aside class="notes">Unidad nueva, despues de RAG y a proposito: el estudiante ya construyo todo a mano en los notebooks 18-24, asi que ahora el framework se presenta como "la libreria que empaqueta lo que ya sabes". Notebooks 26 (a mano) y 27 (LangChain).</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-problema">
+    <h2>Una Llamada no Alcanza</h2>
+    <p style="font-size: 0.46em;">
+      Un ticket de soporte no se resuelve con un prompt. Hay que clasificarlo, decidir su prioridad y
+      redactar la respuesta — y cada cosa se hace mejor <strong>por separado</strong>, con su propio
+      prompt corto.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.38em; margin: 0.45em 0;">
+      <div class="flow-node" style="border-color: var(--c-blue);">Clasificar</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-orange);">Priorizar</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">Redactar</div>
+    </div>
+    <div style="font-size: 0.42em;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.25em 0;">
+        ● Cada prompt hace <strong>una sola cosa</strong>, así que es corto, se prueba solo y se
+        corrige solo.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.25em 0;">
+        ● Y cada paso puede usar <strong>un modelo distinto</strong>: uno barato para clasificar, uno
+        bueno para redactar.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.25em 0;">
+        ● Suena a puras ventajas. La factura llega en la diapositiva siguiente.
+      </div>
+    </div>
+    <aside class="notes">Contenido propio, del notebook 26. Insistir en que partir en pasos es la practica estandar y que el precio casi nunca se menciona.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-fiabilidad">
+    <h2>La Factura: la Fiabilidad se Multiplica</h2>
+    <p style="font-size: 0.44em;">
+      Para que la cadena acierte tienen que acertar <strong>todos</strong> sus pasos. Medido en el
+      notebook 26, con seis tickets etiquetados:
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.9em; margin: 0.35em auto; max-width: 78%; text-align:left;">
+      <p style="font-size: 0.44em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        paso 1 · clasificar &nbsp;&nbsp;<strong style="color:var(--c-blue);">50%</strong></p>
+      <p style="font-size: 0.44em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        paso 2 · priorizar &nbsp;&nbsp;&nbsp;<strong style="color:var(--c-blue);">67%</strong></p>
+      <p style="font-size: 0.44em; margin: 0.35em 0 0.15em 0; font-family:'Fira Code',monospace; border-top:1px solid rgba(168,162,144,0.3); padding-top:0.3em;">
+        la cadena completa &nbsp;<strong style="color:var(--c-orange);">50%</strong></p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em;">
+      Si los fallos fueran <strong>independientes</strong>, la cuenta sería multiplicar: cinco etapas
+      al 95% dan <strong style="color: var(--c-red);">77%</strong>, y diez dan 60%.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em;">
+      ⚠️ Pero en la medición real la cadena acertó <strong>más</strong> que el producto de sus pasos
+      (50% contra 33%), porque los fallos <strong>están correlacionados</strong>: los casos difíciles
+      fallan en todos los pasos. La multiplicación es una <strong style="color: var(--c-yellow);">cota
+      pesimista</strong>, no una predicción — para saber cuánto pierdes de verdad, mide la cadena
+      entera.
+    </blockquote>
+    <aside class="notes">Numeros medidos en el notebook 26. El matiz de la correlacion salio de la propia medicion y corrigio lo que estaba escrito antes: conviene contarlo asi en clase, como ejemplo de que el modelo mental hay que confrontarlo con datos.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-routing">
+    <h2>Routing: no Gastar el Pipeline Completo</h2>
+    <p style="font-size: 0.45em;">
+      Un saludo no necesita clasificarse ni priorizarse. Un <strong>router</strong> es un primer paso
+      barato —un prompt de una línea que devuelve una palabra— que decide qué rama tomar.
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.36em; margin: 0.4em 0; flex-wrap:wrap;">
+      <div class="flow-node" style="border-color: var(--c-yellow);">Mensaje</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-purple);"><strong>Router</strong></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);">respuesta corta<br><span style="color:var(--c-text-dim);">1 llamada</span></div>
+      <div class="flow-node" style="border-color: var(--c-blue); margin-left:0.4em;">pipeline completo<br><span style="color:var(--c-text-dim);">3 llamadas</span></div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🧭 En la medición acertó <strong>4 de 6</strong>… y los dos fallos fueron mandar conversación al
+      pipeline completo. Falló <strong style="color: var(--c-yellow);">hacia el lado caro, no hacia el
+      peligroso</strong>: gastó llamadas de más, pero no dejó pasar ningún problema real sin atender.
+    </blockquote>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.25em;">
+      Esa asimetría es una <strong>decisión de diseño</strong>. Cuando escribas un router, decide de
+      antemano hacia qué lado prefieres que falle y redacta el prompt para empujarlo ahí.
+    </p>
+    <aside class="notes">Medido en el notebook 26. El punto del "lado seguro" es el mas util para el capstone: un router que manda todo al pipeline cuesta dinero, uno que descarta problemas reales cuesta clientes.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-paralelo">
+    <h2>Paralelismo: Bajar la Espera, no el Trabajo</h2>
+    <p style="font-size: 0.45em;">
+      Cuando los pasos <strong>no dependen unos de otros</strong> se pueden lanzar a la vez. Del mismo
+      ticket queremos el producto, el sentimiento y si menciona dinero: tres preguntas independientes.
+    </p>
+    <div class="comparison" style="font-size: 0.38em; margin-top: 0.35em;">
+      <div class="side">
+        <strong style="color: var(--c-orange);">Un modelo, una máquina</strong><br>
+        Las tres llamadas van <strong>en fila</strong>, compartiendo la misma GPU. Medido:
+        <strong>5.3 s</strong>. No hay nada que paralelizar.
+      </div>
+      <div class="side correct">
+        <strong style="color: var(--c-green);">Contra una API</strong><br>
+        Las tres salen a la vez y tardas lo que <strong>la más lenta</strong>: unos
+        <strong>1.8 s</strong>.
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      💰 Y en los dos casos pagas <strong>los mismos tokens</strong>. El paralelismo compra
+      <strong style="color: var(--c-yellow);">latencia</strong>; no compra dinero.
+    </blockquote>
+    <aside class="notes">Medido en el notebook 26. Vale la pena ser honesto en clase con que en el notebook las tres llamadas van en serie: con un modelo local no hay ganancia, y decirlo evita que el estudiante crea que basta con escribirlo "en paralelo".</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-cuando">
+    <h2>Antes de Agregar una Etapa</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.56em;">
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Empieza con una sola llamada.</strong>
+        Sorprende cuánto resuelve un prompt bien escrito, y no tiene nada que se pueda romper en medio.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Agrega un router antes que una
+        cadena.</strong> Es la pieza con mejor relación beneficio/costo: una llamada corta que evita gastar
+        el resto.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Cada etapa nueva se gana su
+        sitio con una medición.</strong> Si no mejora el resultado más de lo que le resta a la fiabilidad,
+        sobra.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Y mide la cadena completa</strong>,
+        no cada paso por separado. Los dos números casi nunca cuentan la misma historia.</div>
+    </div>
+    <aside class="notes">Cierre de la primera mitad de la unidad. Enlaza con "Los Cuatro Patrones" de la unidad 16, que aplica estos mismos patrones al caso concreto de RAG.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-langchain">
+    <h2>Entra LangChain</h2>
+    <p style="font-size: 0.45em;">
+      Todo lo anterior lo escribiste tú, a mano, en unas cien líneas. <strong>LangChain</strong> es la
+      librería que empaqueta exactamente eso — y ahora que sabes qué hay dentro, puedes juzgarla.
+    </p>
+    <div class="comparison" style="font-size: 0.38em; margin-top: 0.35em;">
+      <div class="side">
+        <strong style="color: var(--c-blue);">Qué resuelve</strong><br>
+        Que todas las piezas <strong>hablen el mismo idioma</strong>, para poder encadenarlas. Y sobre
+        todo: <strong>leer formatos</strong> — PDF, HTML, Word, Notion, audio.
+      </div>
+      <div class="side">
+        <strong style="color: var(--c-orange);">Qué no resuelve</strong><br>
+        Nada de lo que decide si tu RAG funciona: el <strong>chunking</strong>, el
+        <strong>retriever</strong> y el <strong>prompt</strong> siguen siendo tu problema.
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.35em;">
+      ⚠️ Y una advertencia medida: probamos <strong>diez importaciones</strong> de los cursos oficiales
+      de LangChain de 2023 contra la versión actual y <strong style="color: var(--c-red);">fallaron las
+      diez</strong>. <code>langchain.chains</code>, <code>langchain.memory</code>,
+      <code>langchain.vectorstores</code> ya no existen. <strong>Fija tus versiones</strong>, y mira la
+      fecha de cualquier tutorial antes de seguirlo.
+    </blockquote>
+    <aside class="notes">La prueba de las 10 importaciones se hizo contra langchain 1.3.14 al preparar esta unidad. Es el argumento mas convincente para que el estudiante fije versiones, y explica por que el notebook 27 las fija.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-mapeo">
+    <h2>Lo que Ya Escribiste, con Otro Nombre</h2>
+    <table style="font-size: 0.38em; width: 100%; max-width: 860px; margin: 0.2em auto;">
+      <tr><th style="text-align:left;">Lo que escribiste a mano</th><th>Dónde</th><th style="text-align:left;">La pieza de LangChain</th></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>encoder.encode(..., normalize=True)</code></td><td>nb 18</td><td style="text-align:left;"><code>Embeddings</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">la matriz <code>EMB</code> y la colección de Chroma</td><td>nb 18, 20</td><td style="text-align:left;"><code>VectorStore</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>buscar(consulta, k)</code></td><td>nb 18</td><td style="text-align:left;"><code>Retriever</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>dividir_en_chunks(texto, tam, solape)</code></td><td>nb 20</td><td style="text-align:left;"><code>TextSplitter</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;"><code>construir_prompt(pregunta, indices)</code></td><td>nb 18</td><td style="text-align:left;"><code>PromptTemplate</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">el parseo del JSON con una regex</td><td>nb 16, 21</td><td style="text-align:left;"><code>OutputParser</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">el historial de mensajes que crece</td><td>nb 16</td><td style="text-align:left;">memoria conversacional</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Ninguna de esas piezas hace algo que no supieras hacer.</strong> Por eso el curso te hizo
+      escribirlas primero: cuando algo falle, vas a saber dónde mirar.
+    </p>
+    <aside class="notes">Esta es la diapositiva clave de la unidad y la que justifica el orden del curso. El notebook 27 recorre esta misma tabla con codigo.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-lcel">
+    <h2>LCEL: Encadenar con <code>|</code></h2>
+    <p style="font-size: 0.44em;">
+      El operador <code>|</code> conecta piezas: la salida de una es la entrada de la siguiente, como
+      una tubería de shell. El RAG completo del notebook 18 queda así:
+    </p>
+    <pre style="font-size: 0.4em; max-width: 88%; margin: 0.3em auto;"><code>cadena = ({"context": retriever | formatear,
+           "question": RunnablePassthrough()}
+          | PLANTILLA
+          | llm
+          | StrOutputParser())
+
+respuesta = cadena.invoke("what are the tradeoffs between GIF and JPEG?")</code></pre>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side">
+        <strong style="color: var(--c-orange);">A mano (notebook 18)</strong><br>
+        <strong style="font-size:1.4em;">20</strong> líneas
+      </div>
+      <div class="side correct">
+        <strong style="color: var(--c-green);">Con LangChain</strong><br>
+        <strong style="font-size:1.4em;">4</strong> líneas
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      🔎 Y el truco que hay que recordar para depurar: <strong>una cadena se puede cortar en cualquier
+      punto e invocar el trozo</strong>. Eso te devuelve lo que iba a recibir la pieza siguiente — el
+      equivalente a poner un <code>print</code> en medio de tu función.
+    </blockquote>
+    <aside class="notes">Conteo real del notebook 27. El truco de cortar la cadena es lo mas practico de toda la unidad: sin el, el framework es una caja negra.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-loaders">
+    <h2>Donde de Verdad Gana: los Loaders</h2>
+    <p style="font-size: 0.45em;">
+      LangChain te quita código que ya sabías escribir. Donde ahorra trabajo de verdad es en
+      <strong>leer formatos</strong>, que no enseña nada y da mucha lata.
+    </p>
+    <pre style="font-size: 0.42em; max-width: 82%; margin: 0.35em auto;"><code>paginas = PyPDFLoader("bowman.pdf").load()
+trozos  = RecursiveCharacterTextSplitter(
+              chunk_size=500, chunk_overlap=100).split_documents(paginas)</code></pre>
+    <p style="font-size: 0.43em; text-align:center;">
+      Dos líneas convierten el paper de la unidad de LLMs en <strong>16 documentos</strong> (uno por
+      página) y luego en <strong>179 chunks</strong>, y cada chunk conserva de qué página salió.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Hay <strong>más de ochenta loaders</strong>: PDF, HTML, Word, CSV, Notion, Slack, correo,
+      transcripciones de YouTube, audio. <strong>Ese</strong> es el argumento para usar el framework —
+      no que te componga la cadena.
+    </p>
+    <aside class="notes">Ejecutado en el notebook 27 sobre el PDF de Bowman (arXiv 2304.00612), el mismo de la unidad de LLMs. Los 16 y 179 son los numeros reales.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-idioma">
+    <h2>La Trampa del Idioma</h2>
+    <p style="font-size: 0.45em;">
+      Esto no lo arregla ningún framework, y es <strong>el caso exacto de tu capstone</strong>:
+      usuarios que preguntan en español sobre documentación en inglés.
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.9em; margin: 0.4em auto; max-width: 84%; text-align:left;">
+      <p style="font-size: 0.4em; margin: 0.2em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-red);">español</span> &nbsp;"problemas del motor del transbordador espacial"<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ ['autos', 'autos', 'espacio', 'autos']</p>
+      <p style="font-size: 0.4em; margin: 0.45em 0 0.2em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-green);">inglés</span> &nbsp;&nbsp;"space shuttle main engine problems"<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ ['espacio', 'espacio', 'espacio', 'espacio']</p>
+    </div>
+    <p style="font-size: 0.43em;">
+      El modelo se enganchó con "motor" y no entendió "transbordador espacial", porque
+      <code>all-MiniLM-L6-v2</code> <strong>se entrenó solo con inglés</strong>.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em;">
+      🌐 Dos salidas: un modelo de embeddings <strong>multilingüe</strong>, o
+      <strong>traducir la consulta</strong> antes de buscar — que es un query rewriting más, con su
+      costo. Lo que no vale es asumir que funciona.
+    </blockquote>
+    <aside class="notes">Medido en el notebook 27. Es probablemente la diapositiva mas util de la unidad para los proyectos de capstone, porque casi todos van a tener documentacion tecnica en ingles y usuarios en espanol.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-18-clave">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.5em;">
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Encadenar es una decisión con
+        costo</strong>, no una forma más elegante de programar. Medir cada etapa no es medir el sistema.</div>
+      <div class="step fragment fade-up" style="text-align:left;">El <strong>router</strong> es la mejor
+        inversión de los tres patrones — y decide tú hacia qué lado quieres que falle.</div>
+      <div class="step fragment fade-up" style="text-align:left;">El <strong>paralelismo</strong> compra
+        latencia, nunca dinero: pagas los mismos tokens.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>LangChain empaqueta lo que ya
+        sabes hacer.</strong> Su ganancia real son los loaders; el chunking, el retriever y el prompt
+        siguen siendo tuyos.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Fija las versiones</strong>, y
+        aprende a cortar la cadena para ver el prompt real. Sin eso, el framework es una caja negra.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Y falta un escalón:</strong> en todo esto <em>tú</em> decidiste el flujo. En la siguiente
+      unidad lo decide el modelo.
+    </p>
+    <aside class="notes">Cierre de la unidad 18, engancha con agentes. Notebooks 26 y 27.</aside>
+  </section>
+
+</section>
+
+<!-- ============================================================
+     SECCION 19 — Agentes y RAG Agentico
+     ============================================================ -->
+<section>
+
+  <section data-transition="fade">
+    <h1 style="font-size: 1.5em;">Agentes y RAG Agéntico</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">Cuando el Modelo Decide el Flujo</h3>
+    <p style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.7em;">
+      <strong>cadena fija</strong> → <strong>router</strong> que elige la rama →
+      <strong>agente</strong> que decide su propia secuencia
+    </p>
+    <aside class="notes">Unidad final. Cumple la promesa que la seccion 1 hacia desde el principio del curso. Notebook 28. Buena parte del contenido viene del deck de embeddings/RAG/agentes del ano pasado, actualizado y con mediciones propias.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-quien">
+    <h2>¿Quién Decide los Pasos?</h2>
+    <div class="comparison" style="font-size: 0.38em;">
+      <div class="side">
+        <strong style="color: var(--c-blue);">Cadena / router</strong><br>
+        <strong>Tú</strong> escribiste el flujo. Sabes cuántas llamadas habrá, en qué orden, y cuánto
+        va a costar. Si algo falla, sabes en qué paso.
+      </div>
+      <div class="side">
+        <strong style="color: var(--c-purple);">Agente</strong><br>
+        Le das una <strong>meta</strong> y unas <strong>herramientas</strong>. Él decide cuál usar, con
+        qué argumentos, y cuándo parar. No sabes cuántas llamadas habrá.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; margin-top: 0.4em;">
+      Ese es todo el cambio, y es más grande de lo que parece: pasas de un programa cuya ejecución
+      puedes dibujar a uno cuya ejecución <strong>solo puedes observar</strong>.
+    </p>
+    <aside class="notes">Contenido propio. Insistir en la perdida de control: es el eje de toda la unidad y lo que justifica la ultima diapositiva.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-herramienta">
+    <h2>Qué es una Herramienta</h2>
+    <p style="font-size: 0.45em;">
+      Una <strong>función normal</strong> más una descripción en lenguaje natural. El LLM no ejecuta
+      nada: solo dice <em>cuál</em> quiere y <em>con qué</em>. Ejecutarla es trabajo de tu código.
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.9em; margin: 0.4em auto; max-width: 84%; text-align:left;">
+      <p style="font-size: 0.42em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        el modelo, preguntado directo: &nbsp;3947 × 6213 =
+        <strong style="color:var(--c-red);">24,508,511</strong>
+        <span style="color:var(--c-text-dim);">(falla por 14,200)</span></p>
+      <p style="font-size: 0.42em; margin: 0.15em 0; font-family:'Fira Code',monospace;">
+        con una calculadora de 3 líneas: &nbsp;
+        <strong style="color:var(--c-green);">24,522,711</strong>
+        <span style="color:var(--c-text-dim);">(exacto)</span></p>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🔧 <strong>Los agentes no hacen al modelo más listo.</strong> Le dan acceso a cosas que hacen bien
+      lo que él hace mal. Es el mismo número que falló en la unidad de LLMs, resuelto sin tocar el
+      modelo.
+    </blockquote>
+    <aside class="notes">Los dos numeros son reales: el 24,508,511 se midio en la unidad de LLMs y el exacto sale del notebook 28. Es el mejor gancho de la unidad porque cierra un circulo que el estudiante ya vio fallar.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-componentes">
+    <h2>Las Cinco Piezas de un Agente</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.52em;">
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-blue);">Planificación</strong>
+        — partir la tarea en pasos que se puedan ejecutar</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-orange);">Selección de herramientas</strong>
+        — elegir cuál sirve para el paso actual</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-green);">Ejecución</strong>
+        — llamarla y leer lo que devuelve</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-purple);">Memoria</strong>
+        — recordar qué ya intentó y qué obtuvo</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color:var(--c-teal);">Reflexión</strong>
+        — juzgar si lo que obtuvo sirve, o hay que intentar de otro modo</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Las cinco las pone el <strong>bucle que tú escribes</strong>. El LLM solo aporta el texto que
+      dice qué hacer a continuación.
+    </p>
+    <aside class="notes">Estructura tomada del deck del ano pasado (seccion de agentes), reescrita. Paper de referencia para herramientas: Toolformer, Schick et al. 2023. Subrayar la ultima linea: el "agente" no es el modelo, es el bucle.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-react">
+    <h2>El Bucle ReAct</h2>
+    <p style="font-size: 0.44em;">
+      <em>Reasoning + Acting</em> (Yao et al., 2023). En vez de un formato especial, se le pide al
+      modelo que escriba <strong>pensamiento, acción y observación</strong> como texto plano, y el bucle
+      lo lleva tu código.
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.9em; margin: 0.35em auto; max-width: 88%; text-align:left;">
+      <p style="font-size: 0.38em; margin: 0.1em 0; color: var(--c-text-dim);">traza real del notebook 28:</p>
+      <p class="fragment fade-up" style="font-size: 0.4em; margin: 0.25em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-blue);">Pensamiento:</span> necesito calcular el producto para responder</p>
+      <p class="fragment fade-up" style="font-size: 0.4em; margin: 0.25em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-orange);">Acción:</span> calculadora[3947*6213]</p>
+      <p class="fragment fade-up" style="font-size: 0.4em; margin: 0.25em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-green);">Observación:</span> 24522711
+        <span style="color:var(--c-text-dim);">&nbsp;← lo devuelve TU código, no el modelo</span></p>
+      <p class="fragment fade-up" style="font-size: 0.4em; margin: 0.25em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-blue);">Pensamiento:</span> el resultado del cálculo es 24522711</p>
+      <p class="fragment fade-up" style="font-size: 0.4em; margin: 0.25em 0; font-family:'Fira Code',monospace;">
+        <span style="color:var(--c-yellow);">Respuesta:</span> 24522711</p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center;">
+      La observación se le devuelve como un mensaje más, y el bucle repite hasta que escriba
+      <code>Respuesta:</code> o se agoten los pasos.
+    </p>
+    <aside class="notes">Traza literal de una corrida del notebook 28. Paper: ReAct, Yao et al. 2023 (arXiv 2210.03629). Ir revelando fragmento por fragmento mientras se explica el bucle.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-vs">
+    <h2>Nativo contra ReAct: Medido</h2>
+    <p style="font-size: 0.44em;">
+      Los modelos modernos traen <em>tool calling</em> entrenado: se les pasa el esquema y contestan con
+      un bloque JSON. Debería ganar. Con un modelo de 1.5B, <strong>no gana</strong>.
+    </p>
+    <table style="font-size: 0.4em; width: 100%; max-width: 800px; margin: 0.3em auto;">
+      <tr><th style="text-align:left;">Caso</th><th>Tool calling nativo</th><th>ReAct a mano</th></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">necesita el manual</td>
+        <td style="color:var(--c-red);">✘ no lo pide</td><td style="color:var(--c-green);">✔</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">necesita calcular</td>
+        <td style="color:var(--c-green);">✔</td><td style="color:var(--c-green);">✔</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">no necesita nada</td>
+        <td style="color:var(--c-green);">✔</td><td style="color:var(--c-red);">✘ inventa una</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em;">
+      Y no es que faltara insistir: probamos <strong>cuatro configuraciones</strong> del nativo
+      —descripción explícita, system prompt que se lo ordena, las dos— y <strong>las cuatro
+      fallaron</strong> en pedir el buscador.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em;">
+      🎯 Escribir <code>Acción: buscar[...]</code> es <strong>continuar texto</strong>, que es
+      justo para lo que el modelo fue entrenado. Emitir JSON válido en un formato especial es una
+      habilidad <strong>añadida después</strong>, y en modelos pequeños está poco consolidada.
+      Con modelos grandes usa el nativo; con pequeños, <strong>mide los dos</strong>.
+    </blockquote>
+    <aside class="notes">Todo medido en el notebook 28. Enlazar con el punto 4 de Bowman de la unidad de LLMs: no hay tecnicas fiables para dirigir el comportamiento de un LLM, y aqui el estudiante lo mide en su propia maquina.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-falla">
+    <h2>Los Dos Fallos que Vas a Ver</h2>
+    <div class="comparison" style="font-size: 0.38em;">
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Se atasca</strong>
+        <p style="margin:0.3em 0;">Buscó <code>políticas_vacaciones</code>, recuperó mal, y
+          <strong>repitió la misma acción cuatro veces</strong> hasta agotar el tope. Nunca respondió.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">No aprende de una observación mala: nada
+          lo obliga a cambiar de estrategia.</p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-orange);">
+        <strong style="color: var(--c-orange);">Inventa una herramienta</strong>
+        <p style="margin:0.3em 0;">Ante un saludo pidió <code>saludo[bonjour]</code>, que
+          <strong>nunca le ofrecimos</strong>.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">Un <code>HERRAMIENTAS[nombre](arg)</code>
+          a secas habría sido un <code>KeyError</code> en producción.</p>
+      </div>
+    </div>
+    <div style="font-size: 0.4em; margin-top: 0.4em;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● <strong>Lista blanca siempre</strong>: el nombre de la acción se comprueba contra el registro.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● <strong>Los errores se le devuelven como observación</strong>, no se lanzan. En la corrida
+        real, al leer "esa herramienta no existe" el agente <strong>se corrigió solo</strong>.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● <strong>Tope de pasos</strong>, siempre. Un agente sin límite da vueltas para siempre, y cada
+        vuelta cuesta una llamada.
+      </div>
+    </div>
+    <aside class="notes">Los dos fallos son de corridas reales del notebook 28 y estan ahi a proposito. El de la recuperacion del error es el mas util: un error devuelto es recuperable, una excepcion no.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-ragagentico">
+    <h2>RAG Agéntico</h2>
+    <p style="font-size: 0.44em;">
+      El RAG de la unidad 13 recuperaba una vez y respondía. El agéntico añade un paso que
+      <strong>juzga si lo recuperado alcanza</strong>, y si no, vuelve a buscar con otra consulta.
+    </p>
+    <div class="comparison" style="font-size: 0.37em; margin-top: 0.3em;">
+      <div class="side">
+        <strong style="color: var(--c-orange);">RAG tradicional</strong>
+        <ul style="margin:0.2em 0;">
+          <li>una sola recuperación</li>
+          <li>búsqueda fija</li>
+          <li>plantilla estática</li>
+          <li>no razona sobre lo que recuperó</li>
+        </ul>
+      </div>
+      <div class="side correct">
+        <strong style="color: var(--c-green);">RAG agéntico</strong>
+        <ul style="margin:0.2em 0;">
+          <li>recuperación en varios pasos</li>
+          <li>estrategia adaptativa</li>
+          <li>reformula la consulta si hace falta</li>
+          <li><strong>evalúa si le alcanza</strong></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Para profundizar: <strong>Self-RAG</strong> (Asai et al., 2023) entrena al modelo para criticar lo
+      que recupera; <strong>FLARE</strong> (Jiang et al., 2023) decide sobre la marcha cuándo hace falta
+      volver a buscar.
+    </p>
+    <aside class="notes">Tabla y papers del deck del ano pasado. El notebook 28 implementa la version minima: recuperar, evaluar con el LLM, reformular y reintentar.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-cuando">
+    <h2>Cuándo un Agente NO es la Respuesta</h2>
+    <p style="font-size: 0.44em;">
+      Un agente es una cadena cuya longitud <strong>no controlas</strong>. Y en la unidad anterior
+      medimos qué le pasa a la fiabilidad cuando se encadenan pasos.
+    </p>
+    <table style="font-size: 0.39em; width: 100%; max-width: 820px; margin: 0.3em auto;">
+      <tr><th style="text-align:left;">Usa un agente si…</th><th style="text-align:left;">Escribe el flujo tú si…</th></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">no sabes de antemano qué pasos hacen falta</td>
+        <td style="text-align:left;">el flujo es siempre el mismo</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">las herramientas son muchas y variadas</td>
+        <td style="text-align:left;">tienes dos o tres pasos fijos</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">el usuario puede pedir cosas muy distintas</td>
+        <td style="text-align:left;">el dominio es acotado</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">puedes pagar la latencia y los reintentos</td>
+        <td style="text-align:left;">necesitas responder en menos de un segundo</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.42em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      <strong>Empieza por el flujo fijo.</strong> Si mides que se queda corto, mete un router. Y solo si
+      el router tampoco alcanza, un agente.
+    </p>
+    <aside class="notes">Cierre argumentativo de la unidad. Conecta con la medicion de fiabilidad compuesta de la unidad 18: con un agente ni siquiera sabes cuantos pasos habra.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-19-clave">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.5em;">
+      <div class="step fragment fade-up" style="text-align:left;">Una <strong>herramienta</strong> es una
+        función más una descripción. El LLM elige; <strong>tu código ejecuta</strong>.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Los agentes <strong>no hacen al modelo
+        más listo</strong>: le dan acceso a lo que sí sabe hacer bien.</div>
+      <div class="step fragment fade-up" style="text-align:left;">El <strong>bucle ReAct</strong> le ganó
+        al tool calling nativo con un modelo pequeño, en las cuatro configuraciones que probamos.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Lista blanca, errores como
+        observación, y tope de pasos.</strong> Los tres, siempre.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Un agente hereda el problema de la
+        cadena — <strong>y encima no sabes cuántos pasos tendrá</strong>.</div>
+    </div>
+    <div class="resource-grid" style="max-width: 560px; margin: 0.4em auto 0 auto; font-size: 0.78em;">
+      <a class="resource-card" href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">
+        <div class="resource-icon">📄</div>
+        <h4>ReAct (2023)</h4>
+        <p>Yao et al. — <em>Synergizing Reasoning and Acting in Language Models</em>. El bucle que
+          implementamos en el notebook 28.</p>
+        <span class="resource-tag">arxiv.org/abs/2210.03629</span>
+      </a>
+    </div>
+    <aside class="notes">Cierre de la unidad y del curso. Otros papers para mencionar: Toolformer (arXiv 2302.04761), Self-RAG (arXiv 2310.11511) y FLARE (arXiv 2305.06983).</aside>
+  </section>
+
+</section>
+
 
 </div>
 </div>
