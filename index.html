@@ -7465,9 +7465,406 @@ Sentimiento:</code></pre>
     <aside class="notes">Contenido propio, con las cifras medidas del widget. El sesgo de recencia y el de etiquetas desbalanceadas estan documentados en Zhao et al. (2021), "Calibrate Before Use: Improving Few-Shot Performance of Language Models". La emergencia del aprendizaje en contexto con la escala es de Brown et al. (2020), el paper de GPT-3, que es justamente donde se popularizo el termino few-shot.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-8f-portada">
+    <h2>Ocho Cosas que Saber sobre los LLMs</h2>
+    <p style="font-size: 0.45em;">
+      Hasta aquí vimos <strong>cómo funciona</strong> un LLM y <strong>cómo se usa</strong>. Toca dar un
+      paso atrás y ver qué sabe —y qué no sabe— la comunidad que los construye.
+    </p>
+    <div style="background: rgba(88,196,221,0.07); border-left: 4px solid var(--c-blue); border-radius: 0 10px 10px 0; padding: 0.7em 1em; margin: 0.4em auto; max-width: 88%; text-align:left;">
+      <p style="font-size: 0.5em; margin: 0.1em 0;"><strong style="color: var(--c-blue);">Eight Things to Know about Large Language Models</strong></p>
+      <p style="font-size: 0.42em; margin: 0.2em 0; color: var(--c-text-dim);">
+        Samuel R. Bowman — New York University y Anthropic, abril 2023
+      </p>
+      <p style="font-size: 0.42em; margin: 0.3em 0 0 0; font-family:'Fira Code',monospace; color: var(--c-teal);">
+        arxiv.org/abs/2304.00612
+      </p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em;">
+      No es un artículo de opinión: es una <strong>recopilación de evidencia</strong> publicada. El propio
+      autor lo aclara — <em>"no pretendo que estas afirmaciones sean normativas"</em>. Su objetivo es que
+      quien tenga que decidir sobre esta tecnología lo haga informado.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      🧭 Los ocho puntos están elegidos por ser <strong>potencialmente sorprendentes</strong>: cosas que
+      quienes trabajan en esto dan por sabidas y que casi nunca llegan a la conversación pública.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023 (arXiv 2304.00612v1), abstract e introduccion. El paper esta escrito para
+      periodistas, legisladores y academicos de fuera del area tecnica, asi que el nivel es justo el
+      adecuado para este curso. Bowman es profesor en NYU y trabaja en Anthropic. Aclarar que el
+      articulo es de abril 2023: algunos ejemplos concretos envejecieron, pero los ocho puntos siguen
+      siendo el mejor mapa disponible de lo que se sabe.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-1">
+    <h2>1. Escalar Funciona, y se Puede Predecir</h2>
+    <p style="font-size: 0.45em;">
+      Los tres primeros GPT tienen diseños <strong>casi idénticos</strong>. Lo que los separa no es una
+      idea nueva sobre lenguaje: es la escala.
+    </p>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.6em; margin: 0.4em 0;">
+      <div class="step fragment fade-up" style="text-align:left;"><strong>GPT</strong> — etiqueta texto,
+        pero no produce texto coherente.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>GPT-2</strong> — ya escribe
+        razonablemente bien y sigue instrucciones simples.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>GPT-3</strong> — el primer LLM
+        moderno, útil en un montón de tareas. Usó <strong style="color:var(--c-yellow);">20,000 veces
+        más cómputo</strong> que el GPT original.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.43em;">
+      Y hay algo más raro todavía: ese progreso es <strong>predecible</strong>. Las <em>scaling laws</em>
+      permiten anticipar qué tan capaz será un modelo futuro a partir de sus datos, su tamaño y su
+      cómputo, sin tener que entrenarlo.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.25em;">
+      💰 El desempeño de <strong>GPT-4</strong> se pronosticó ajustando la tendencia de modelos pequeños
+      que en conjunto costaron el <strong style="color: var(--c-yellow);">0.1%</strong> de los recursos
+      del modelo final. Poder predecir así es rarísimo en la historia del software — y es exactamente lo
+      que permite que alguien apruebe un proyecto de cientos de millones de dólares.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 1. Scaling laws: Kaplan et al. 2020, Hoffmann et al. 2022 (el paper de
+      Chinchilla). El dato de 20,000x viene de Sevilla et al. 2022. La Figura 1 del paper muestra la
+      prediccion de GPT-4 sobre un rango de 10 mil millones de veces en computo. Subrayar que las
+      innovaciones entre GPT y GPT-3 son casi todas de infraestructura de computo, no de diseno de
+      modelos de lenguaje.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-2">
+    <h2>2. Pero <em>Qué</em> Capacidades Aparecen, No</h2>
+    <p style="font-size: 0.44em;">
+      Las <em>scaling laws</em> predicen la <strong>pérdida</strong> —qué tan bien predice el siguiente
+      token— no las habilidades concretas. Un modelo puede fallar siempre en una tarea, y el mismo
+      modelo cinco veces más grande resolverla.
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.8em; margin: 0.35em 0; text-align:left;">
+      <p style="font-size: 0.4em; margin: 0 0 0.35em 0; color: var(--c-text-dim);">
+        Las <strong>202 tareas</strong> de BIG-Bench, según cómo se comportan al escalar el modelo:
+      </p>
+      <p style="font-size: 0.38em; margin: 0.18em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:4em; color:var(--c-green);">29%</span>
+        <span style="display:inline-block; background:var(--c-green); height:0.75em; width:8.7em; vertical-align:middle; opacity:0.8;"></span>
+        <span style="margin-left:0.6em;">mejoran de forma <strong>suave y predecible</strong></span></p>
+      <p style="font-size: 0.38em; margin: 0.18em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:4em; color:var(--c-yellow);">33%</span>
+        <span style="display:inline-block; background:var(--c-yellow); height:0.75em; width:9.9em; vertical-align:middle; opacity:0.8;"></span>
+        <span style="margin-left:0.6em;"><strong>emergentes</strong>: azar en los chicos, muy por encima del azar en los grandes</span></p>
+      <p style="font-size: 0.38em; margin: 0.18em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:4em; color:var(--c-text-dim);">22%</span>
+        <span style="display:inline-block; background:var(--c-text-dim); height:0.75em; width:6.6em; vertical-align:middle; opacity:0.8;"></span>
+        <span style="margin-left:0.6em;">planas: todos los modelos aciertan al azar</span></p>
+      <p style="font-size: 0.38em; margin: 0.18em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:4em; color:var(--c-orange);">13%</span>
+        <span style="display:inline-block; background:var(--c-orange); height:0.75em; width:3.9em; vertical-align:middle; opacity:0.8;"></span>
+        <span style="margin-left:0.6em;">sin ninguna relación con la escala</span></p>
+      <p style="font-size: 0.38em; margin: 0.18em 0; font-family:'Fira Code',monospace;">
+        <span style="display:inline-block; width:4em; color:var(--c-red);">2.5%</span>
+        <span style="display:inline-block; background:var(--c-red); height:0.75em; width:0.75em; vertical-align:middle; opacity:0.9;"></span>
+        <span style="margin-left:0.6em;"><strong>empeoran</strong> al escalar (<em>inverse scaling</em>)</span></p>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em;">
+      Por eso entrenar un modelo en la frontera es <strong>comprar una caja de sorpresas</strong>: sabes
+      que vas a obtener capacidades nuevas y valiosas, pero no cuáles.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em;">
+      🎁 El <em>few-shot</em> de GPT-3 se descubrió <strong>después</strong> de haberlo entrenado, y el
+      <em>chain-of-thought</em> <strong>meses después</strong> de que el modelo ya estuviera desplegado al
+      público. Nadie los diseñó: estaban ahí y no se sabía.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 2, con la Figura 3 (datos de Wei et al. 2022a sobre BIG-Bench,
+      Srivastava et al. 2022). Los conteos exactos son 58, 67, 45, 27 y 5 de 202 tareas. Dato extra
+      para la clase: en una competencia de pronosticos de 2021, con expertos y premio en efectivo, los
+      resultados reales de 2022 ya superaban el consenso para 2024, y GPT-4 en 2023 supero el de 2025.
+      Los expertos subestiman sistematicamente el ritmo.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-3">
+    <h2>3. Parecen Aprender un Modelo del Mundo</h2>
+    <p style="font-size: 0.45em;">
+      Hay evidencia creciente de que, para predecir texto, los modelos construyen
+      <strong>representaciones internas de aquello de lo que el texto habla</strong>.
+    </p>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.56em; margin: 0.35em 0;">
+      <div class="step fragment fade-up" style="text-align:left;">Un modelo entrenado <strong>solo con
+        listas de jugadas</strong> de Othello, sin haber visto nunca un tablero, desarrolla por dentro una
+        representación del <strong style="color:var(--c-yellow);">estado del tablero</strong> en cada turno.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Sus representaciones de las palabras de
+        <strong>color</strong> reflejan hechos objetivos de cómo los humanos percibimos el color.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Siguen la <strong>posición de los
+        objetos</strong> de un relato y cómo cambian conforme la historia avanza.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Pasan pruebas como el <strong>Winograd
+        Schema Challenge</strong>, diseñadas a propósito para que <em>no haya</em> pistas puramente
+        textuales que permitan acertar.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em;">
+      El autor es cuidadoso con esto: dice que ocurre de forma <strong>débil y esporádica</strong>, y que
+      la evidencia es más clara en los modelos más grandes y recientes — así que cabe esperar que se
+      vuelva más robusto conforme se escale.
+    </p>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 3. Othello: Li et al. 2023. Colores: Abdou et al. 2021, Patel &amp;
+      Pavlick 2022, Sogaard 2023. Objetos en relatos: Li et al. 2021. Winograd: Levesque et al. 2012.
+      El experimento de Othello es el mas contundente porque el tablero NUNCA aparece en los datos: la
+      unica forma de predecir bien la siguiente jugada legal es haberse construido uno por dentro.
+      Mantener el matiz del autor ("weakly and sporadically"): es evidencia, no una afirmacion de que el
+      modelo entienda.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-4">
+    <h2>4. No Hay Forma Fiable de Dirigirlos</h2>
+    <p style="font-size: 0.45em;">
+      Un modelo recién pre-entrenado solo continúa texto: si le das una instrucción, la
+      <em>continúa</em> en vez de obedecerla. Para que sirva hay que adaptarlo, y solo existen tres
+      herramientas:
+    </p>
+    <div class="flow-row" style="justify-content:center; font-size: 0.38em; margin: 0.35em 0;">
+      <div class="flow-node" style="border-color: var(--c-blue);">Prompting</div>
+      <div class="flow-arrow">·</div>
+      <div class="flow-node" style="border-color: var(--c-orange);">Fine-tuning<br>supervisado</div>
+      <div class="flow-arrow">·</div>
+      <div class="flow-node" style="border-color: var(--c-green);">Aprendizaje<br>por refuerzo</div>
+    </div>
+    <p style="font-size: 0.43em;">
+      Las tres producen sistemas útiles, y <strong>ninguna garantiza nada</strong>: no aseguran que el
+      modelo se comporte bien en toda situación que va a encontrar, ni siquiera que lo <em>intente</em>.
+    </p>
+    <div class="comparison" style="font-size: 0.38em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Sycophancy</strong><br>
+        Responde preguntas subjetivas de forma que <strong>halaga las creencias</strong> que el usuario
+        ya expresó.
+      </div>
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Sandbagging</strong><br>
+        Respalda más los <strong>errores comunes</strong> cuando el usuario parece tener menos formación.
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      ⚠️ Y hay una asimetría incómoda: cuanto más capaz es el modelo, mejor <strong>reconoce cuándo lo
+      están evaluando</strong>. Puede aprender a comportarse como se espera justo en esas condiciones y
+      de otro modo en el resto.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 4. Sycophancy y sandbagging son de Perez et al. 2022. Los tres metodos
+      de adaptacion con sus referencias: prompting (Radford et al. 2019), SFT (Ouyang et al. 2022), RL
+      con preferencias (Ziegler et al. 2019, Bai et al. 2022a). El paper menciona el comportamiento raro
+      de las primeras versiones de Bing Chat como ejemplo publico, pese a haberse probado extensamente
+      antes del lanzamiento. Conectar con la diapositiva de prompt injection de la unidad de produccion:
+      la defensa nunca puede ser "pedirle al modelo que no lo haga".
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-5">
+    <h2>5. Nadie Sabe Interpretar su Interior</h2>
+    <p style="font-size: 0.45em;">
+      Podemos abrir el modelo y ver cada número, y aun así <strong>no sabemos explicar por qué respondió
+      lo que respondió</strong>. Son cientos de miles de millones de conexiones, muchas de ellas
+      invocadas varias veces para procesar un solo texto.
+    </p>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.56em; margin: 0.4em 0;">
+      <div class="step fragment fade-up" style="text-align:left;">Existen herramientas <strong>gruesas</strong>
+        para comprobar si un modelo representa cierto tipo de información — pero nada que permita decir
+        qué conocimiento o qué razonamiento usó para una salida concreta.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Varias técnicas que <em>parecían</em> dar
+        visibilidad resultaron después <strong style="color:var(--c-red);">severamente engañosas</strong>.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Y la más importante para nosotros: cuando
+        el modelo <strong>explica su propio razonamiento</strong> en lenguaje natural, esa explicación
+        <strong style="color:var(--c-yellow);">no corresponde de forma fiable</strong> al proceso que
+        realmente usó.</div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.25em;">
+      🔎 Consecuencia práctica directa: <strong>"pregúntale al modelo por qué lo dijo" no es depurar</strong>.
+      La respuesta es texto plausible sobre su propio funcionamiento, generado igual que cualquier otro
+      texto. Depurar es medir la salida, no entrevistar al modelo.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 5. Que las explicaciones generadas por el modelo pueden ser
+      sistematicamente enganosas: Lipton 2018, Christiano 2022, Uesato et al. 2022. Que tecnicas ad-hoc
+      de interpretabilidad resultaron enganosas: Feng et al. 2018, Jain &amp; Wallace 2019, Bolukbasi et
+      al. 2021. Este punto justifica el enfoque de todos los notebooks de la unidad de RAG: medir la
+      salida con un conjunto de evaluacion en vez de razonar sobre lo que el modelo "esta pensando".
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-6">
+    <h2>6. El Nivel Humano No es un Techo</h2>
+    <p style="font-size: 0.45em;">
+      Se entrenan imitando escritura humana, así que la intuición dice que como mucho llegarán a
+      igualarnos. Es falso, y por dos razones distintas.
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.3em;">
+      <div class="col">
+        <p style="font-size: 0.4em; text-align:left;"><strong style="color:var(--c-blue);">Ven muchísimo más texto</strong><br>
+          Un adolescente ha escuchado <strong>decenas de miles</strong> de palabras. Un LLM se expone a
+          más de <strong style="color:var(--c-yellow);">un billón</strong>: unas
+          <strong>10,000 veces más</strong>. Hay ahí mucho más que memorizar y que combinar.</p>
+      </div>
+      <div class="col">
+        <p style="font-size: 0.4em; text-align:left;"><strong style="color:var(--c-orange);">El refuerzo no necesita un ejemplo humano</strong><br>
+          Con aprendizaje por refuerzo basta con que una persona <em>reconozca</em> qué respuesta es mejor;
+          nadie tiene que ser capaz de escribirla. Es el mismo mecanismo que produjo un juego de Go
+          superior al humano.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      🎯 De hecho ya nos superan en su propia tarea de entrenamiento: predicen mejor que un humano cuál
+      será la siguiente palabra de un texto. Y hay casos medidos en que <strong>personas enseñaron a un
+      modelo a hacer una tarea con más exactitud de la que ellas mismas tenían</strong>.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 6 y su nota al pie 4. Los datos de exposicion humana son de Hart &amp;
+      Risley 1992 y Gilkerson et al. 2017; el de LLM, de Hoffmann et al. 2022. Que superan a humanos
+      prediciendo el siguiente token: Shlegeris et al. 2022. Que humanos ensenan tareas por encima de su
+      propia habilidad: Stiennon et al. 2020. Ojo con el idioma: "one trillion" en ingles es un billon
+      en espanol (10^12). Buen momento para matizar la diapositiva de "nivel humano" de la unidad de
+      evaluacion: alcanzar al humano es un objetivo razonable, no un limite del sistema.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-7">
+    <h2>7. Sus Valores no Son los del Texto</h2>
+    <p style="font-size: 0.44em;">
+      Un modelo recién pre-entrenado sí refleja lo que había en sus datos, incluidos sus sesgos. Pero lo
+      que llega al usuario ya pasó por prompting, fine-tuning y refuerzo — y ahí
+      <strong>los valores se eligen</strong>.
+    </p>
+    <div class="comparison" style="font-size: 0.38em; margin-top: 0.3em;">
+      <div class="side">
+        <strong style="color: var(--c-orange);">Cómo se hacía</strong><br>
+        Los valores nunca se escriben: quedan implícitos en miles de juicios sueltos de anotadores
+        humanos durante el entrenamiento. Nadie puede leerlos ni auditarlos.
+      </div>
+      <div class="side correct">
+        <strong style="color: var(--c-green);">Constitutional AI</strong><br>
+        Los valores se escriben como una <strong>lista explícita de normas</strong> —una "constitución"—
+        y el modelo se entrena para seguirla. Se pueden leer, discutir y regular.
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      Esto tiene una consecuencia que suele pasarse por alto: si los valores son elegibles y explícitos,
+      también son <strong>auditables desde fuera</strong>. Es perfectamente imaginable que un organismo
+      independiente publique constituciones que los desarrolladores deban adoptar.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em;">
+      🤯 Y un resultado que va contra toda intuición: en algunos casos, exponer al modelo a
+      <strong>más</strong> ejemplos del comportamiento no deseado durante el pre-entrenamiento hace
+      <strong style="color: var(--c-yellow);">más fácil</strong> que lo evite después. La relación
+      "lo que entra es lo que sale" no es tan directa como parece.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 7. Constitutional AI: Bai et al. 2022b. Reduccion de sesgos
+      explicitos: Ganguli et al. 2023. El resultado contraintuitivo del final es de Korbak et al. 2023.
+      El paper aclara que estas tecnicas tambien fallan de formas sutiles, y que quedan fuera muchas
+      otras cuestiones eticas: impacto ambiental, acceso, mal uso, privacidad y concentracion de poder.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-8">
+    <h2>8. Jugar un Rato con el Modelo Engaña</h2>
+    <p style="font-size: 0.44em;">
+      Este es el punto más útil para trabajar: <strong>una interacción corta no es evidencia</strong>, ni
+      a favor ni en contra.
+    </p>
+    <div class="comparison" style="font-size: 0.4em; margin-top: 0.3em;">
+      <div class="side" style="border: 1px solid var(--c-red);">
+        <strong style="color: var(--c-red);">Que falle no prueba que no pueda</strong>
+        <p style="margin:0.3em 0;">Reformular la petición, o simplemente pedirle
+          <em>"piensa paso a paso"</em>, hace que resuelva <strong>categorías enteras</strong> de
+          problemas en los que antes fallaba siempre.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">Y que <em>este</em> modelo falle tampoco
+          dice nada sobre lo que puede otro.</p>
+      </div>
+      <div class="side" style="border: 1px solid var(--c-orange);">
+        <strong style="color: var(--c-orange);">Que acierte no prueba que pueda</strong>
+        <p style="margin:0.3em 0;">Pudo <strong>memorizar</strong> ese caso concreto de sus datos sin
+          haber aprendido el procedimiento que lo resuelve en general.</p>
+        <p style="margin:0.2em 0; color: var(--c-text-dim);">Y las demos que circulan suelen estar
+          <strong>escogidas a dedo</strong> entre muchos intentos.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.35em;">
+      🎯 Por eso la única evidencia que vale es un <strong>conjunto de evaluación</strong>: varios casos,
+      corridos varias veces, con un criterio de acierto definido de antemano. Es exactamente lo que
+      hacemos en los notebooks de la unidad de RAG, y esta es la razón de fondo.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Bowman 2023, seccion 8. "Think step by step": Kojima et al. 2022. Memorizacion sin
+      generalizacion: McCoy et al. 2019, Magar &amp; Schwartz 2022. El ejemplo del unicornio dibujado por
+      GPT-4 (Figura 4 del paper) es el caso cherry-picked que el propio autor senala. Este punto es el
+      que justifica la disciplina de todo el curso: nada de "lo probe y funciona".
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-cierre">
+    <h2>Qué Significa Esto para tu Capstone</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.54em;">
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Mide, no impresiones.</strong>
+        Un conjunto de evaluación pequeño y corrido varias veces vale más que una demo perfecta
+        <em>(punto 8)</em>.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>No le preguntes al modelo por
+        qué.</strong> Su explicación es texto plausible, no una traza de ejecución <em>(punto 5)</em>.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Un fallo no cierra la puerta.</strong>
+        Antes de descartar un enfoque, prueba a reformular el prompt <em>(puntos 2 y 8)</em>.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>No confíes en el control por
+        instrucción.</strong> Pedirle que se comporte reduce la frecuencia del problema; no lo elimina
+        <em>(punto 4)</em>.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>Diseña para que el modelo
+        mejore.</strong> Lo que hoy no puede, la siguiente versión quizá sí — y va a llegar antes de lo
+        que pronostiquen los expertos <em>(puntos 1 y 2)</em>.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.06);">
+      Los ocho puntos se sostienen en evidencia publicada. Si vas a citarlos —en tu tesis o ante un
+      cliente— <strong>cita el paper</strong>, y de paso las fuentes originales que él recopila.
+    </p>
+    <aside class="notes">
+      Cierre propio, aterrizando el paper al trabajo del curso. Cada vineta dice de que punto sale, para
+      que el estudiante pueda volver. Insistir en el ultimo: disenar sistemas que se beneficien de
+      cambiar el modelo por uno mejor sin reescribirlo todo.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-8f-recursos">
+    <h2>La Fuente</h2>
+    <div class="resource-grid" style="max-width: 820px; margin: 0 auto; grid-template-columns: 1fr 1fr; font-size: 0.85em;">
+      <a class="resource-card" href="https://arxiv.org/abs/2304.00612" target="_blank" rel="noopener">
+        <div class="resource-icon">📄</div>
+        <h4>El paper (2023)</h4>
+        <p>Samuel R. Bowman — <em>Eight Things to Know about Large Language Models</em>. Los ocho puntos
+          con toda su evidencia y sus referencias originales. Doce páginas, legible de una sentada.</p>
+        <span class="resource-tag">arxiv.org/abs/2304.00612</span>
+      </a>
+      <a class="resource-card" href="https://www.youtube.com/watch?v=RX-gGs_EV7M" target="_blank" rel="noopener">
+        <div class="resource-icon">🎥</div>
+        <h4>Resumen en video</h4>
+        <p>Un recorrido por los ocho puntos, útil si prefieres escucharlo antes de leer el paper.</p>
+        <span class="resource-tag">youtube.com/watch?v=RX-gGs_EV7M</span>
+      </a>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; color: var(--c-text-dim); margin-top: 0.4em;">
+      Vale la pena entrar a las fuentes que el paper recopila: <code>arxiv.org/abs/2001.08361</code>
+      (scaling laws), <code>arxiv.org/abs/2206.07682</code> (habilidades emergentes) y
+      <code>arxiv.org/abs/2212.08073</code> (constitutional AI).
+    </p>
+    <aside class="notes">
+      El propio Bowman pide que quien use estas afirmaciones consulte y cite directamente las fuentes
+      originales que el recopila, no solo su paper. Los tres arXiv del pie son, en orden: Kaplan et al.
+      2020, Wei et al. 2022 y Bai et al. 2022b. Todos los enlaces abren en pestana nueva.
+    </aside>
+  </section>
+
+
   <section data-transition="fade">
     <h2>Lo que Hay que Llevarse</h2>
     <div class="roadmap" style="flex-direction: column; align-items: stretch; font-size: 0.68em;">
+      <div class="step fragment fade-up">Y ocho cosas que la investigación sí sabe: escalar da
+        capacidades <strong>predecibles en cantidad e impredecibles en tipo</strong>, nadie interpreta
+        el interior, y <strong>una interacción corta nunca es evidencia</strong></div>
       <div class="step fragment fade-up">Un LLM es un <strong>clasificador del siguiente token</strong>:
         entra una secuencia, sale una distribución sobre el vocabulario</div>
       <div class="step fragment fade-up">Genera <strong>autorregresivamente</strong>: muestrea un token, lo
