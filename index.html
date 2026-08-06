@@ -6106,12 +6106,18 @@ docs = retriever.invoke(
      ============================================================ -->
 <section>
 
-  <section data-transition="fade">
+  <section data-transition="fade" id="sl-tl-portada">
     <h1 style="font-size: 1.5em;">Transfer Learning</h1>
     <h3 style="color: var(--c-blue); margin-top: 0.1em;">Aprovechar lo que Otro ya Entrenó</h3>
     <p style="font-size: 0.46em; color: var(--c-text-dim); margin-top: 0.7em;">
       Casi nunca tienes un millón de imágenes etiquetadas ni un mes de GPU.
       Pero <strong>alguien más sí los tuvo</strong> — y su modelo se puede reutilizar.
+    </p>
+    <p style="font-size: 0.42em; margin-top: 0.5em; padding: 0.35em 0.6em; background: rgba(255,255,0,0.06); border-radius: 8px;">
+      Y de hecho <strong>ya lo hiciste</strong>, sin llamarlo así: en la unidad anterior cargaste
+      <code>all-MiniLM-L6-v2</code> y lo usaste para embeber texto. Ese modelo lo entrenó otro con
+      más de mil millones de pares de frases; tú solo lo llamaste.
+      <strong style="color: var(--c-yellow);">Eso es transfer learning.</strong>
     </p>
     <aside class="notes">Unidad corta que va antes de LLMs, y a proposito: el fine-tuning de un LLM es exactamente la misma idea aplicada a texto. Los notebooks 13 (Keras) y 14 (PyTorch) acompanan esta unidad.</aside>
   </section>
@@ -11813,7 +11819,7 @@ print(resultado)
     <aside class="notes">Fuente: RAG_M4 ("Sequential / Conditional / Iterative / Parallel Workflow", "Implementing Agentic Systems"). El calculo del 77% (0.95^5) es propio y es el argumento mas fuerte contra encadenar etapas por gusto: la fiabilidad se multiplica, no se promedia.</aside>
   </section>
 
-  <section data-transition="fade">
+  <section data-transition="fade" id="sl-finetuning">
     <h2>La Otra Opción: Fine-Tuning</h2>
     <p style="font-size: 0.42em;">
       Reentrenar el modelo con <strong>tus datos</strong> para cambiar sus parámetros internos.
@@ -11846,7 +11852,14 @@ print(resultado)
         </div>
       </div>
     </div>
-    <aside class="notes">Fuente: RAG_M4 ("Understanding Fine-Tuning", "Fine-Tuning Example"). Notar que el cambio es de REGISTRO y de criterio, no de datos nuevos: el modelo ya conocia el lupus, lo que cambio es que ahora responde como un profesional.</aside>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.35em; padding: 0.35em 0.6em; background: rgba(255,255,0,0.06); border-radius: 8px;">
+      <strong>Esto ya lo viste.</strong> Es exactamente la unidad 11: se parte de un modelo que otro
+      entrenó, se congela casi todo y se reentrena con un learning rate mucho más bajo. Allí eran
+      hormigas y abejas sobre un backbone de ImageNet; aquí es lenguaje médico sobre un LLM.
+      <strong style="color: var(--c-yellow);">Cambia el tipo de dato, no el mecanismo</strong> — y
+      también se aplican los mismos errores silenciosos.
+    </p>
+    <aside class="notes">Fuente: RAG_M4 ("Understanding Fine-Tuning", "Fine-Tuning Example"). Notar que el cambio es de REGISTRO y de criterio, no de datos nuevos: el modelo ya conocia el lupus, lo que cambio es que ahora responde como un profesional. Enlazar explicitamente con la unidad 11 (Transfer Learning): el estudiante ya implemento este mecanismo en los notebooks 13 y 14, y ahi vio medido que partir de un preentrenado subio de 67% a 95%.</aside>
   </section>
 
   <section data-transition="fade">
