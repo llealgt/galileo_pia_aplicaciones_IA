@@ -5294,6 +5294,99 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
     <aside class="notes">Contenido propio. El ejemplo del banco es el clasico en espanol; en ingles se usa "bank" (rio / banco).</aside>
   </section>
 
+  <section data-transition="fade" id="slide-w2v">
+    <h2>Cómo se Entrena Word2Vec</h2>
+    <p style="font-size: 0.44em;">
+      Sin anotadores y sin etiquetas: la etiqueta <strong>sale del propio texto</strong>. Se desliza una
+      ventana sobre cada frase y se le pide al modelo adivinar las palabras vecinas.
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.8em; margin: 0.35em 0; text-align:left;">
+      <p style="font-family:'Fira Code',monospace; font-size: 0.46em; margin: 0.2em 0;">
+        el gato <span style="background:rgba(255,255,0,0.25); padding:0 0.35em;"><strong>duerme</strong></span> en el sofá
+      </p>
+      <p style="font-size: 0.4em; margin: 0.35em 0 0.1em 0; color: var(--c-text-dim);">
+        con la palabra del centro, predecir las de alrededor (<em>skip-gram</em>):
+      </p>
+      <p style="font-family:'Fira Code',monospace; font-size: 0.42em; margin: 0.1em 0; color: var(--c-blue);">
+        duerme → gato &nbsp;·&nbsp; duerme → el &nbsp;·&nbsp; duerme → en &nbsp;·&nbsp; duerme → sofá
+      </p>
+      <p style="font-size: 0.38em; margin: 0.35em 0 0 0; color: var(--c-text-dim);">
+        (o al revés, <em>CBOW</em>: con las vecinas, predecir la del centro)
+      </p>
+    </div>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.2em;">
+      <div class="col-40">
+        <p style="font-size: 0.4em; text-align:left;"><strong style="color:var(--c-blue);">Dataset</strong><br>
+          Texto crudo, el que sea. El original de 2013 usó <strong>Google News</strong>:
+          unos <strong>100 mil millones</strong> de palabras.</p>
+      </div>
+      <div class="col-55">
+        <p style="font-size: 0.4em; text-align:left;"><strong style="color:var(--c-orange);">Objetivo</strong><br>
+          Acertar la palabra vecina. Nadie le enseña qué significan las palabras: para acertar,
+          el modelo <em>tiene</em> que agrupar las que aparecen en contextos parecidos.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Y el detalle bonito: <strong>el embedding no es la respuesta del modelo</strong>, es un subproducto.
+      Lo que nos llevamos es la <strong style="color: var(--c-yellow);">tabla de pesos de la capa de
+      entrada</strong> — una fila por palabra. La tarea de predecir vecinas era solo la excusa para
+      construirla.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Mikolov et al. 2013 (arXiv 1301.3781). Alto nivel a proposito: no entramos en negative
+      sampling ni en el softmax jerarquico. Lo que tiene que quedar: (1) el dato de entrenamiento es
+      texto sin etiquetar, (2) la etiqueta la genera la propia ventana, y (3) el vector es un
+      subproducto de una tarea que no nos interesa. Enlazar con la unidad de LLMs: es la MISMA idea
+      de auto-supervision de la diapositiva "Como Aprenden".
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="slide-elmo">
+    <h2>Cómo se Entrena ELMo</h2>
+    <p style="font-size: 0.44em;">
+      Mismo truco —la etiqueta es el propio texto— pero con otra tarea: en vez de adivinar vecinas,
+      <strong>predecir la siguiente palabra</strong>. Y se hace dos veces, en las dos direcciones.
+    </p>
+    <div style="background: rgba(13,13,26,0.5); border-radius: 10px; padding: 0.6em 0.8em; margin: 0.35em 0; text-align:left;">
+      <p style="font-family:'Fira Code',monospace; font-size: 0.44em; margin: 0.25em 0; color: var(--c-blue);">
+        →&nbsp; me senté en el ____ &nbsp;&nbsp;<span style="color:var(--c-text-dim);">(leyendo hacia adelante)</span>
+      </p>
+      <p style="font-family:'Fira Code',monospace; font-size: 0.44em; margin: 0.25em 0; color: var(--c-green);">
+        ←&nbsp; ____ me dio un crédito &nbsp;&nbsp;<span style="color:var(--c-text-dim);">(leyendo hacia atrás)</span>
+      </p>
+      <p style="font-size: 0.38em; margin: 0.4em 0 0 0; color: var(--c-text-dim);">
+        Dos redes recurrentes independientes, una por dirección. Para acertar la palabra que falta hay
+        que haber entendido <strong>toda la frase anterior</strong> — y ahí está la diferencia.
+      </p>
+    </div>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.2em;">
+      <div class="col-40">
+        <p style="font-size: 0.4em; text-align:left;"><strong style="color:var(--c-blue);">Dataset</strong><br>
+          El <em>1B Word Benchmark</em>: unos <strong>800 millones</strong> de palabras de noticias.
+          Mucho menos que Word2Vec, pero se aprovecha más.</p>
+      </div>
+      <div class="col-55">
+        <p style="font-size: 0.4em; text-align:left;"><strong style="color:var(--c-orange);">Objetivo</strong><br>
+          Modelado de lenguaje: predecir la palabra siguiente (y la anterior). Es el mismo objetivo
+          que usa un LLM moderno — ELMo es el puente entre los embeddings y GPT.</p>
+      </div>
+    </div>
+    <blockquote class="fragment fade-up" style="font-size: 0.42em; margin-top: 0.3em;">
+      Aquí <strong>no hay tabla que consultar</strong>. El vector de una palabra se
+      <strong style="color: var(--c-yellow);">calcula al vuelo</strong>, combinando lo que las capas
+      internas de la red vieron en <em>esa</em> oración. Por eso "banco" sale distinto cada vez: no se
+      busca, se computa.
+    </blockquote>
+    <aside class="notes">
+      Fuente: Peters et al. 2018, "Deep contextualized word representations" (arXiv 1802.05365). De
+      nuevo alto nivel: no entramos en que son LSTM de 2 capas ni en la combinacion ponderada y
+      aprendida de las capas. El contraste que importa es tabla-vs-computo: Word2Vec se CONSULTA,
+      ELMo se EJECUTA. Eso explica de una vez por que los contextuales son mas caros y por que
+      resuelven la polisemia. Buen momento para adelantar que la unidad de LLMs entrena con este
+      mismo objetivo, solo que con transformers y a otra escala.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>De Palabras a Oraciones</h2>
     <p style="font-size: 0.46em;">
