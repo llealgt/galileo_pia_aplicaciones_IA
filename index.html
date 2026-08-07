@@ -13961,6 +13961,35 @@ trozos  = RecursiveCharacterTextSplitter(
     <aside class="notes">Traza literal de una corrida del notebook 28. Paper: ReAct, Yao et al. 2023 (arXiv 2210.03629). Ir revelando fragmento por fragmento mientras se explica el bucle.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-19-widget">
+    <h2>Explora el Bucle, con Trazas Reales</h2>
+    <p style="font-size: 0.36em; margin-bottom: 0.2em;">
+      Tres corridas del notebook 28, tal cual salieron.
+    </p>
+    <div class="widget-container">
+      <canvas id="react-canvas" width="900" height="400"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.3em; flex-wrap:wrap;">
+        <button class="widget-btn fi-btn react-caso-btn" data-caso="exito">✔ funciona</button>
+        <button class="widget-btn fi-btn react-caso-btn" data-caso="atasco">✘ se atasca</button>
+        <button class="widget-btn fi-btn react-caso-btn" data-caso="alucina">⚠ inventa una</button>
+        <button class="widget-btn fi-btn" id="react-paso">Siguiente paso</button>
+        <button class="widget-btn fi-btn" id="react-animar">Animar</button>
+        <button class="widget-btn fi-btn" id="react-reset">Reiniciar</button>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/react-loop-widget.js). Las tres trazas son salidas literales de
+      Qwen2.5-1.5B-Instruct al ejecutar el notebook 28: ningun texto esta inventado. Guion sugerido:
+      empezar por "funciona" para que se vea el bucle limpio y que la calculadora da 24522711 —el
+      numero que el modelo falla en la unidad 12—, seguir con "se atasca" y preguntar a la clase que
+      harian (la respuesta es que el arreglo esta en las herramientas, no en un prompt mas severo), y
+      cerrar con "inventa una herramienta" para mostrar que el error devuelto COMO OBSERVACION deja
+      que el agente se recupere solo. El contador del centro son llamadas al LLM: sirve para que se
+      vea que el caso atascado cuesta el doble que el que funciona y no devuelve nada.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-19-vs">
     <h2>Nativo contra ReAct: Medido</h2>
     <p style="font-size: 0.44em;">
@@ -14138,6 +14167,7 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/kfold-widget.js"></script>
 <script src="js/widgets/scientific-cycle-widget.js"></script>
 <script src="js/widgets/rag-prompts-widget.js"></script>
+<script src="js/widgets/react-loop-widget.js"></script>
 <script src="js/widgets/search-strategy-widget.js"></script>
 <script src="js/widgets/batchnorm-experiments-widget.js"></script>
 <script src="js/widgets/callback-lifecycle-widget.js"></script>
@@ -14299,6 +14329,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initKFoldWidget === 'function') {
       initKFoldWidget();
       widgetsInitialized.kfold = true;
+    }
+  }
+  if (slide.querySelector('#react-canvas') && !widgetsInitialized.reactLoop) {
+    if (typeof initReactLoopWidget === 'function') {
+      initReactLoopWidget();
+      widgetsInitialized.reactLoop = true;
     }
   }
   if (slide.querySelector('#rag-prompts') && !widgetsInitialized.ragPrompts) {
