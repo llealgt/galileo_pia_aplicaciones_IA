@@ -3091,7 +3091,7 @@ X_train, X_cv, y_train, y_cv = train_test_split(
           <li class="fragment fade-up">Aplicar la acción correctiva según el diagnóstico — y repetir</li>
         </ul>
       </div>
-      <div class="col-45" style="text-align:center;">
+      <div class="col-40" style="text-align:center;">
         <div class="flow-row fragment fade-up" style="flex-direction:column; align-items:center; gap:0.4em;">
           <div class="flow-node" style="min-width:70%;"><span class="flow-icon">💡</span>Idea</div>
           <span class="flow-arrow" style="transform:rotate(90deg);">→</span>
@@ -3340,6 +3340,9 @@ X_train, X_cv, y_train, y_cv = train_test_split(
       que hace comparables dos filas de la bitácora. Enlazar con la diapositiva "Un Proceso Iterativo"
       de la sección anterior: aquí se le pone método al bucle. El punto de la hipótesis refutada suele
       ser el que más le cuesta al estudiante, que tiende a esconder los experimentos que salieron mal.
+
+      La vinieta "si mejora, ¿fue el escalado o el kernel?" es a proposito la pregunta que responde con
+      numeros la diapositiva "Una Cosa a la Vez", dos mas adelante. Aqui se deja planteada.
     </aside>
   </section>
 
@@ -3370,6 +3373,106 @@ X_train, X_cv, y_train, y_cv = train_test_split(
       Vuelta 4: la mejora (+0.006) es menor que la desviación entre folds — se ve en las barras de error
       del panel inferior, que se traslapan con las de la vuelta 2. Ese es el gancho para la siguiente
       diapositiva: buscar a ojo no escala ni da certeza, y de ahí sale grid search.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="slide-una-a-la-vez">
+    <h2>Una Cosa a la Vez</h2>
+    <p style="font-size: 0.5em; text-align: center; margin: 0.1em 0 0.55em 0;">
+      Si mueves dos perillas y el número sube, <strong>no sabes cuál lo subió</strong>. No es pedantería:
+      sin control de variables no hay <strong style="color: var(--c-yellow);">atribución</strong>, y sin
+      atribución no aprendiste nada que puedas reusar.
+    </p>
+
+    <div class="columns" style="align-items: start;">
+      <div class="col-55">
+        <p style="font-size: 0.42em; color: var(--c-text-dim); text-align: left; margin: 0 0 0.25em 0;">
+          Las cuatro combinaciones, medidas (mismo setup del ciclo anterior):
+        </p>
+        <table style="font-size: 0.46em; width: 100%; border-collapse: collapse;">
+          <tr style="color: var(--c-text-dim);">
+            <th style="text-align:left; padding: 0.25em 0.4em;"></th>
+            <th style="padding: 0.25em 0.4em;">kernel <code>rbf</code></th>
+            <th style="padding: 0.25em 0.4em;">kernel <code>linear</code></th>
+          </tr>
+          <tr>
+            <td style="text-align:left; padding: 0.3em 0.4em; border-top: 1px solid rgba(236,230,208,0.15);">sin escalar</td>
+            <td style="padding: 0.3em 0.4em; border-top: 1px solid rgba(236,230,208,0.15); font-family:'Fira Code',monospace; color: var(--c-red);">0.875 ±.053</td>
+            <td style="padding: 0.3em 0.4em; border-top: 1px solid rgba(236,230,208,0.15); font-family:'Fira Code',monospace;">0.940 ±.021</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; padding: 0.3em 0.4em; border-top: 1px solid rgba(236,230,208,0.15);">escalado</td>
+            <td style="padding: 0.3em 0.4em; border-top: 1px solid rgba(236,230,208,0.15); font-family:'Fira Code',monospace; color: var(--c-green);">0.961 ±.008</td>
+            <td style="padding: 0.3em 0.4em; border-top: 1px solid rgba(236,230,208,0.15); font-family:'Fira Code',monospace;">0.952 ±.016</td>
+          </tr>
+        </table>
+        <p class="fragment fade-up" style="font-size: 0.44em; text-align: left; margin-top: 0.55em;">
+          Cambia <strong>las dos</strong> a la vez y vas de <code>0.875</code> a <code>0.952</code>,
+          <strong style="color: var(--c-green);">+0.077</strong>. Parece un éxito, y le darías el crédito
+          al kernel — que <strong style="color: var(--c-red);">no aportó nada</strong>.
+        </p>
+      </div>
+
+      <div class="col-40">
+        <p style="font-size: 0.42em; color: var(--c-text-dim); text-align: left; margin: 0 0 0.25em 0;">
+          Lo que vale cada cambio <strong>depende del otro</strong>:
+        </p>
+        <ul style="font-size: 0.44em; text-align: left; display: block; margin: 0; padding-left: 0; list-style: none;">
+          <li class="fragment fade-up" style="margin: 0.2em 0;">escalar, con <code>rbf</code> →
+            <strong style="color: var(--c-green);">+0.086</strong></li>
+          <li class="fragment fade-up" style="margin: 0.2em 0;">escalar, con <code>linear</code> →
+            <strong>+0.012</strong></li>
+          <li class="fragment fade-up" style="margin: 0.2em 0; padding-top: 0.25em; border-top: 1px solid rgba(236,230,208,0.15);">
+            pasar a <code>linear</code>, sin escalar →
+            <strong style="color: var(--c-green);">+0.065</strong></li>
+          <li class="fragment fade-up" style="margin: 0.2em 0;">pasar a <code>linear</code>, escalado →
+            <strong style="color: var(--c-red);">−0.009</strong></li>
+        </ul>
+        <p class="fragment fade-up" style="font-size: 0.42em; text-align: left; margin-top: 0.5em;">
+          El efecto del kernel <strong style="color: var(--c-yellow);">cambia de signo</strong> según el
+          otro factor. «<code>linear</code> es mejor» no es verdadero ni falso: <em>depende</em>.
+        </p>
+      </div>
+    </div>
+
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align: center; margin-top: 0.6em;">
+      Una perilla por corrida — <strong>mismos folds, misma semilla, misma métrica</strong>. Lo demás es
+      tanteo con suerte.
+    </p>
+
+    <aside class="notes">
+      Contenido propio. La idea ya aparecia como sub-vinieta en la diapositiva del metodo cientifico
+      (etapa 2, "cambia una sola cosa"); aqui se le da su propia diapositiva porque es LA regla que hace
+      que el ciclo sirva de algo, y porque el ejemplo medido la vuelve concreta.
+
+      Las cuatro celdas se midieron con el mismo setup del notebook 09 y del widget del ciclo:
+      load_breast_cancer, y = 1 - target (maligno positivo), split 80/20 con random_state=42,
+      StratifiedKFold(5, shuffle=True, random_state=42) sobre el dev-set de 455 filas, scoring="f1",
+      SVC con parametros por defecto salvo el kernel. Tres de las cuatro celdas son exactamente las
+      mismas que muestra el widget de la diapositiva anterior (0.875, 0.961, 0.952), asi que las dos
+      diapositivas son consistentes; la cuarta (sin escalar + linear, 0.940) se midio para completar
+      el cuadro.
+
+      EL GUION: preguntar a la clase, viendo solo la esquina de arriba a la izquierda (0.875) y la de
+      abajo a la derecha (0.952), a que se debio la mejora. La respuesta intuitiva es "al kernel
+      lineal", porque es el cambio que suena mas importante. Es la equivocada: una vez escaladas las
+      features, pasar a linear RESTA (-0.009). Toda la mejora vino de escalar.
+
+      POR QUE PASA: el SVM lineal es mucho menos sensible a la escala de las features que el RBF,
+      porque el kernel RBF mide distancias euclidianas y en breast cancer las features van de 0.1 a
+      2500 (el "area" domina todo). Por eso "linear le gana a rbf" solo es cierto mientras nadie
+      escale. El efecto de un factor depende del nivel del otro: eso es una interaccion, y es
+      exactamente lo que hace imposible atribuir cuando se mueven dos cosas juntas.
+
+      HONESTIDAD CON EL RUIDO: 0.961 y 0.952 se diferencian en 0.009, menos que la dispersion entre
+      folds (0.008 y 0.016), asi que las dos celdas escaladas son un empate. Eso no debilita el punto,
+      lo refuerza: el +0.065 que le ibas a atribuir al kernel se evapora al escalar. Nunca fue el
+      kernel. Mismo criterio que la vuelta 4 del widget.
+
+      PUENTE A LA SIGUIENTE: alguien va a preguntar si grid search no rompe la regla, ya que mueve
+      varios hyper-parametros a la vez. No la rompe: la barre COMPLETA y por eso puede atribuir; cada
+      celda de la grilla difiere de su vecina en una sola coordenada, que es justo esta tabla llevada
+      a N dimensiones. Lo que no se puede hacer es mover dos perillas a mano y quedarse con el numero.
     </aside>
   </section>
 
