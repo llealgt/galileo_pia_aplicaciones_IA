@@ -720,3 +720,53 @@
   color: var(--c-text-dim);
   font-size: 1.1em;
 }
+
+/* ---- Indice agrupado por bloques ----
+   Cada .toc-group define su color en --g; el encabezado, el numero de
+   seccion y el hover lo heredan, para que el bloque se lea de un vistazo. */
+.toc-grid.toc-bloques { align-items: flex-start; gap: 1.8em; }
+.toc-grid.toc-bloques .toc-column { max-width: 445px; }
+.toc-group {
+  --g: var(--c-blue);
+  margin-bottom: 0.55em;
+  text-align: left;          /* Reveal centra por defecto */
+}
+.toc-group:last-child { margin-bottom: 0; }
+.toc-group-head {
+  color: var(--g);
+  font-size: 0.52em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin: 0 0 0.1em 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+}
+.toc-group-head .toc-range {
+  color: var(--c-text-dim);
+  font-weight: 400;
+  font-size: 0.8em;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.toc-group-sub {
+  font-size: 0.4em;
+  color: var(--c-text-dim);
+  font-style: italic;
+  margin: 0 0 0.22em 0.15em;
+  line-height: 1.2;
+  text-align: left;
+}
+.toc-group .toc-item {
+  font-size: 0.52em;
+  padding: 0.22em 0.6em;
+  margin: 0.05em 0;
+  line-height: 1.25;
+}
+.toc-group .toc-num { color: var(--g); }
+.toc-group .toc-item:hover {
+  background: rgba(255,255,255,0.06);
+  border-left-color: var(--g);
+  color: var(--g);
+}

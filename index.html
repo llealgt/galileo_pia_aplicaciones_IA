@@ -21,7 +21,7 @@
 </head>
 <body>
 
-<button class="nav-home-btn" id="nav-home-btn" title="Ir al inicio">&#8962;</button>
+<button class="nav-home-btn" id="nav-home-btn" title="Ir al índice">&#8962;</button>
 
 <div class="reveal">
 <div class="slides">
@@ -46,40 +46,83 @@
 
   <!-- Índice Navegable -->
   <section data-transition="fade">
-    <h3>Índice</h3>
-    <div class="toc-grid">
+    <h3 style="margin-bottom: 0.05em;">Índice</h3>
+    <p style="font-size: 0.42em; color: var(--c-text-dim); text-align: center; margin: 0 0 0.7em 0;">
+      20 unidades en <strong>5 bloques</strong>
+    </p>
+    <div class="toc-grid toc-bloques">
+
       <div class="toc-column">
-        <h4 style="color: var(--c-blue); font-size: 0.75em; margin-bottom: 0.3em;">Clase 1</h4>
-        <a class="toc-item" onclick="Reveal.slide(0, 0)"><span class="toc-num">0</span>Portada y Bienvenida</a>
-        <a class="toc-item" onclick="Reveal.slide(1, 0)"><span class="toc-num">1</span>Aplicaciones de IA en el Mundo Real</a>
-        <a class="toc-item" onclick="Reveal.slide(2, 0)"><span class="toc-num">2</span>Herramientas del Curso</a>
+        <div class="toc-group" style="--g: var(--c-blue);">
+          <div class="toc-group-head">Introducción y Herramientas <span class="toc-range">0 – 3</span></div>
+          <p class="toc-group-sub">de qué va el curso, con qué se trabaja y de dónde salen los datos</p>
+          <a class="toc-item" onclick="Reveal.slide(0, 0)"><span class="toc-num">0</span>Portada y Bienvenida</a>
+          <a class="toc-item" onclick="Reveal.slide(1, 0)"><span class="toc-num">1</span>Aplicaciones de IA en el Mundo Real</a>
+          <a class="toc-item" onclick="Reveal.slide(2, 0)"><span class="toc-num">2</span>Herramientas del Curso</a>
+          <a class="toc-item" onclick="Reveal.slide(3, 0)"><span class="toc-num">3</span>Datasets e Ideas de Proyecto</a>
+        </div>
+        <div class="toc-group" style="--g: var(--c-purple);">
+          <div class="toc-group-head">Buenas Prácticas de ML <span class="toc-range">4 – 9</span></div>
+          <p class="toc-group-sub">cómo evaluar, diagnosticar y ajustar un modelo sin engañarte</p>
+          <a class="toc-item" onclick="Reveal.slide(4, 0)"><span class="toc-num">4</span>Evaluación de Modelos</a>
+          <a class="toc-item" onclick="Reveal.slide(5, 0)"><span class="toc-num">5</span>Train/Test Split, Over/Underfitting</a>
+          <a class="toc-item" onclick="Reveal.slide(6, 0)"><span class="toc-num">6</span>Regularización</a>
+          <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos, CV y Tuning</a>
+          <a class="toc-item" onclick="Reveal.slide(8, 0)"><span class="toc-num">8</span>Callbacks</a>
+          <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
+        </div>
       </div>
+
       <div class="toc-column">
-        <h4 style="color: var(--c-orange); font-size: 0.75em; margin-bottom: 0.3em;">Clase 2</h4>
-        <a class="toc-item" onclick="Reveal.slide(3, 0)"><span class="toc-num">3</span>Datasets e Ideas de Proyecto</a>
+        <div class="toc-group" style="--g: var(--c-teal);">
+          <div class="toc-group-head">Modelos Preentrenados <span class="toc-range">10 – 12</span></div>
+          <p class="toc-group-sub">reusar lo que otros ya entrenaron, en vez de empezar de cero</p>
+          <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
+          <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Transfer Learning</a>
+          <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>Large Language Models</a>
+        </div>
+        <div class="toc-group" style="--g: var(--c-orange);">
+          <div class="toc-group-head">RAG <span class="toc-range">13 – 17</span></div>
+          <p class="toc-group-sub">darle al LLM el contexto que no tiene, y medir si sirvió</p>
+          <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>RAG: Retrieval Augmented Generation</a>
+          <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación de Información: los Fundamentos</a>
+          <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>Recuperación en Producción</a>
+          <a class="toc-item" onclick="Reveal.slide(16, 0)"><span class="toc-num">16</span>LLMs y Generación de Texto</a>
+          <a class="toc-item" onclick="Reveal.slide(17, 0)"><span class="toc-num">17</span>RAG en Producción</a>
+        </div>
+        <div class="toc-group" style="--g: var(--c-green);">
+          <div class="toc-group-head">Orquestación y Agentes <span class="toc-range">18 – 19</span></div>
+          <p class="toc-group-sub">componer varias llamadas, y dejar que el modelo decida el flujo</p>
+          <a class="toc-item" onclick="Reveal.slide(18, 0)"><span class="toc-num">18</span>Componer y Orquestar: Chains y LangChain</a>
+          <a class="toc-item" onclick="Reveal.slide(19, 0)"><span class="toc-num">19</span>Agentes y RAG Agéntico</a>
+        </div>
       </div>
-      <div class="toc-column">
-        <h4 style="color: var(--c-purple); font-size: 0.75em; margin-bottom: 0.3em;">Buenas Prácticas</h4>
-        <a class="toc-item" onclick="Reveal.slide(4, 0)"><span class="toc-num">4</span>Evaluación de Modelos</a>
-        <a class="toc-item" onclick="Reveal.slide(5, 0)"><span class="toc-num">5</span>Train/Test Split, Over/Underfitting</a>
-        <a class="toc-item" onclick="Reveal.slide(6, 0)"><span class="toc-num">6</span>Regularización</a>
-        <a class="toc-item" onclick="Reveal.slide(7, 0)"><span class="toc-num">7</span>Selección de Modelos, CV e Hyper-parameter Tuning</a>
-        <a class="toc-item" onclick="Reveal.slide(8, 0)"><span class="toc-num">8</span>Callbacks</a>
-        <a class="toc-item" onclick="Reveal.slide(9, 0)"><span class="toc-num">9</span>Herramientas de ML en la Industria</a>
-        <a class="toc-item" onclick="Reveal.slide(10, 0)"><span class="toc-num">10</span>Embeddings y Búsqueda Semántica</a>
-        <a class="toc-item" onclick="Reveal.slide(11, 0)"><span class="toc-num">11</span>Transfer Learning</a>
-        <a class="toc-item" onclick="Reveal.slide(12, 0)"><span class="toc-num">12</span>Large Language Models</a>
-        <a class="toc-item" onclick="Reveal.slide(13, 0)"><span class="toc-num">13</span>RAG: Retrieval Augmented Generation</a>
-        <a class="toc-item" onclick="Reveal.slide(14, 0)"><span class="toc-num">14</span>Recuperación de Información: los Fundamentos</a>
-        <a class="toc-item" onclick="Reveal.slide(15, 0)"><span class="toc-num">15</span>Recuperación en Producción</a>
-        <a class="toc-item" onclick="Reveal.slide(16, 0)"><span class="toc-num">16</span>LLMs y Generación de Texto</a>
-        <a class="toc-item" onclick="Reveal.slide(17, 0)"><span class="toc-num">17</span>RAG en Producción</a>
-        <a class="toc-item" onclick="Reveal.slide(18, 0)"><span class="toc-num">18</span>Componer y Orquestar: Chains y LangChain</a>
-        <a class="toc-item" onclick="Reveal.slide(19, 0)"><span class="toc-num">19</span>Agentes y RAG Agéntico</a>
-      </div>
+
     </div>
-    <p style="font-size: 0.5em; color: var(--c-text-dim); margin-top: 1em; text-align: center;">Click en cualquier sección para navegar directamente</p>
-    <aside class="notes">Fuente: portada compuesta a partir de Clase_01_01.pptx y clase2_ejemplos.pptx.</aside>
+    <p style="font-size: 0.42em; color: var(--c-text-dim); margin-top: 0.7em; text-align: center;">
+      Click en cualquier unidad para navegar — el botón 🏠 de la esquina regresa aquí
+    </p>
+    <aside class="notes">
+      Fuente: portada compuesta a partir de Clase_01_01.pptx y clase2_ejemplos.pptx.
+
+      El indice esta agrupado en 5 bloques. Antes las secciones 4 a 19 colgaban todas de "Buenas
+      Practicas", que era heredado de cuando el curso terminaba en la seccion 9: con LLMs, RAG,
+      embeddings y agentes adentro, la etiqueta ya no describia nada y el indice no ayudaba a
+      ubicarse.
+
+      Los bloques no son decorativos, marcan el arco del curso:
+        - Introduccion y Herramientas: contexto y tooling.
+        - Buenas Practicas de ML: metodo. Aplica a TODO lo que viene despues, incluido lo de LLMs;
+          vale la pena decirlo en clase para que no se lea como "la parte aburrida del principio".
+        - Modelos Preentrenados: el hilo es "reusar en vez de entrenar" — embeddings, transfer
+          learning y LLMs son el mismo movimiento a tres escalas. Por eso transfer learning esta
+          pegado a LLMs, donde conecta con fine-tuning.
+        - RAG: el arco completo, de la idea a produccion.
+        - Orquestacion y Agentes: cadena fija -> router -> agente que decide su propia cadena.
+
+      Si se agregan unidades nuevas, van a un bloque existente o se abre uno nuevo, pero no se
+      cuelgan de "Buenas Practicas" por inercia.
+    </aside>
   </section>
 
   <section data-transition="fade">
@@ -14465,11 +14508,15 @@ Reveal.initialize({
 // ============================================================
 // Home button navigation
 // ============================================================
+// El boton lleva al INDICE (0,1), no a la portada: el indice es la
+// diapositiva de navegacion, desde la portada habria que bajar una mas.
 const navHomeBtn = document.getElementById('nav-home-btn');
-navHomeBtn.addEventListener('click', () => Reveal.slide(0, 0));
+navHomeBtn.addEventListener('click', () => Reveal.slide(0, 1));
 navHomeBtn.style.display = 'none';
 Reveal.on('slidechanged', function(e) {
-  navHomeBtn.style.display = (e.indexh === 0 && e.indexv === 0) ? 'none' : 'block';
+  // se esconde en la portada y en el indice mismo
+  const enInicio = e.indexh === 0 && (e.indexv === 0 || e.indexv === 1);
+  navHomeBtn.style.display = enInicio ? 'none' : 'block';
 });
 
 // ============================================================
