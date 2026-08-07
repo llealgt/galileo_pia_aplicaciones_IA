@@ -6667,58 +6667,71 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
   <section data-transition="fade" id="sl-escala">
     <h2>Lo que Escaló fue el Tamaño</h2>
     <img src="img/Clase_LLM_escala_parametros.png"
-         alt="Parámetros de 395 modelos de lenguaje publicados entre 1993 y 2026, en escala logarítmica"
-         style="max-width: 100%; max-height: 452px; border-radius: 8px;">
-    <div class="columns" style="margin-top: 0.35em;">
+         alt="Burbujas de 20 modelos de lenguaje entre 2018 y 2026; el área de cada una es proporcional a su número de parámetros"
+         style="max-width: 100%; max-height: 424px; border-radius: 8px;">
+    <div class="columns" style="margin-top: 0.3em;">
       <div class="col-55">
         <p style="font-size: 0.42em; text-align: left; margin: 0.1em 0;">
-          De <strong style="color: var(--c-green);">276 parámetros</strong> (una LSTM de 1999) a
-          <strong style="color: var(--c-red);">~3 billones</strong>: <strong>diez órdenes de magnitud</strong>.
-          Cada línea punteada es <strong>×1000</strong>.
+          <strong style="color: var(--c-red);">Grok 3</strong> tiene <strong>2000 veces</strong> los
+          parámetros de GPT-2. El mayor de 2019 —T5, 11 B— es el
+          <strong style="color: var(--c-yellow);">0.4 %</strong> de eso: por eso todo lo anterior a 2020
+          cabe en el grosor del eje.
         </p>
       </div>
       <div class="col-40">
         <p style="font-size: 0.42em; text-align: left; margin: 0.1em 0;">
-          El <strong style="color: var(--c-orange);">punto naranja de 2007</strong> es más grande que GPT-3.
-          No todos los «parámetros» son lo mismo.
+          Ojo con el eje: es <strong>lineal</strong>, no logarítmico. Hasta
+          <strong style="color: var(--c-red);">GPT-3</strong>, el que estrenó el término «LLM», es aquí
+          una bolita.
         </p>
       </div>
     </div>
-    <p class="fragment fade-up" style="font-size: 0.4em; text-align: center; margin-top: 0.35em; color: var(--c-text-dim);">
-      Datos: Epoch AI, <em>Data on AI Models</em> (CC-BY 4.0) — los 395 modelos de lenguaje del dataset con
-      tamaño y fecha conocidos.
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align: center; margin-top: 0.3em; color: var(--c-text-dim);">
+      Datos: Epoch AI, <em>Data on AI Models</em> (CC-BY 4.0). Los de borde punteado son
+      <em>mixture of experts</em>: cuentan todos sus parámetros, pero solo activan una parte por token.
     </p>
 
     <aside class="notes">
       Grafica propia hecha con el dataset abierto de Epoch AI, "Data on AI Models"
       (epoch.ai/data/ai-models, archivo notable_ai_models.csv, descargado en agosto de 2026), licencia
-      Creative Commons Attribution 4.0. Se filtro Domain = Language con Parameters y fecha conocidos:
-      quedan 395 modelos, de junio de 1993 a julio de 2026, de 276 parametros a 3x10^12. Cada punto
-      viene del CSV, ninguno esta inventado.
+      Creative Commons Attribution 4.0. Son 20 modelos elegidos por reconocibles, de 2018 a 2026, y
+      cada tamano se lee del CSV por nombre exacto de modelo: no hay numeros escritos a mano.
+
+      La unica excepcion, declarada en el pie de la grafica, es Qwen2.5-1.5B (la estrella): no esta en
+      el dataset de Epoch y su tamano sale de su model card en Hugging Face. Se marca a proposito
+      porque es el modelo que los estudiantes corren en Colab en los notebooks 17 y 28. Sirve para
+      situarlos: es unas 1200 veces mas chico que GPT-4 y aun asi hace las cinco tareas de la unidad.
+
+      COMO SE LEE: el eje vertical es LINEAL y el AREA de cada burbuja tambien es proporcional al
+      numero de parametros. La redundancia es deliberada — con escala logaritmica la escalada se
+      aplana y deja de impresionar, que es justo lo que hay que evitar aqui. Precio a pagar: los
+      modelos chicos no se pueden dibujar a escala (GPT-1 seria de una centesima de pixel), asi que
+      llevan un radio minimo y su etiqueta apilada a la izquierda. Vale decirlo en voz alta: esos seis
+      puntos NO estan a escala, son mas chicos de lo que se ven.
+
+      TRES COSAS QUE SENALAR EN VIVO:
+
+      1) Todo lo anterior a 2020 esta pegado al eje. El mayor modelo de 2019 (T5, 11 B) es el 0.4 %
+         de Grok 3. Ese aplastamiento ES el mensaje de la diapositiva anterior: la idea lleva decadas,
+         el tamano lleva pocos anos.
+
+      2) La linea punteada esta en GPT-3 (mayo 2020), que es donde suele ponerse la frontera
+         LM / LLM. No hay un umbral oficial de parametros que defina "large"; es una convencion, y
+         conviene decirlo.
+
+      3) Las burbujas de borde punteado (Switch, DeepSeek-V3, Kimi K2) son mixture of experts:
+         sus autores lo documentan. Tienen ese total de parametros pero solo activan una fraccion por
+         token — DeepSeek-V3 son 671 B totales y 37 B activos. Comparar su burbuja con la de un modelo
+         denso no es del todo justo. De varios de los mas grandes de 2023 en adelante se sospecha lo
+         mismo, pero los laboratorios no lo confirman, asi que solo se marcan los documentados.
+
+      Conecta hacia adelante con la seccion "Ocho Cosas que Saber sobre los LLMs", punto 1 ("escalar
+      funciona y se puede predecir"): esta grafica es el POR QUE alguien se molesto en escalar tanto.
 
       Para regenerarla (por ejemplo el proximo trimestre, con datos mas nuevos):
       python3 scripts/gen_escala_parametros.py
       El CSV que se uso queda versionado al lado del script, asi que los numeros de esta diapositiva
       son reproducibles aunque Epoch actualice el suyo.
-
-      La unica excepcion, declarada en el pie de la grafica: Qwen2.5-1.5B (la estrella) no esta en el
-      dataset de Epoch y su tamano se tomo de su model card en Hugging Face. Se marca a proposito
-      porque es el modelo que los estudiantes corren en Colab en los notebooks 17 y 28: sirve para
-      situarlos: son unas 1000 veces mas chico que GPT-4 y aun asi hace las cinco tareas de la unidad.
-
-      DOS COSAS QUE VALE LA PENA SENALAR EN VIVO:
-
-      1) El punto naranja de 2007 (300 mil millones de n-gramas de Google) esta MAS ARRIBA que GPT-3
-         (175 mil millones, 2020). Si el tamano fuera lo unico que importa, ese modelo de 2007 deberia
-         haber sido mejor que GPT-3, y no lo era ni de lejos. La diferencia es QUE es un parametro:
-         en 2007 eran conteos de n-gramas en una tabla; en GPT-3 son pesos aprendidos de un
-         transformer, mas datos y muchisimo mas computo. El tamano solo no explica el salto.
-
-      2) La nube de la derecha no es solo "modelos mas grandes": son MUCHISIMOS mas modelos. Parte de
-         lo que se ve a partir de 2018 es que empezo a publicarse mucho mas.
-
-      Conecta hacia adelante con la seccion "Ocho Cosas que Saber sobre los LLMs", punto 1 ("escalar
-      funciona y se puede predecir"): esta grafica es el POR QUE alguien se molesto en escalar tanto.
     </aside>
   </section>
 
