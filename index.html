@@ -6445,6 +6445,137 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     <aside class="notes">Fuente: RAG_M1, seccion Introduction to LLMs ("LLMs are just fancy autocomplete").</aside>
   </section>
 
+  <section data-transition="fade" id="sl-decadas">
+    <h2>Esto No es Nuevo: Lleva Décadas</h2>
+    <p style="font-size: 0.48em; text-align: center; margin: 0.2em 0 0.6em 0;">
+      Los LLMs parecen haber aparecido de la nada en 2022. La idea de
+      <strong style="color: var(--c-yellow);">predecir el siguiente símbolo</strong> tiene
+      <strong>78 años</strong>.
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 0.42em; text-align: left; max-width: 830px; margin: 0 auto;">
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-green); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">1948</span>
+        <span style="font-size: 0.455em;"><strong>Shannon</strong> aproxima el inglés con n-gramas en
+          <em>A Mathematical Theory of Communication</em>. Predecir la siguiente letra ya es el problema.</span>
+      </div>
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-blue); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">1993</span>
+        <span style="font-size: 0.455em;"><strong>IBM Model 5</strong>, traducción estadística. 1.7 millones de parámetros.</span>
+      </div>
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-blue); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">2003</span>
+        <span style="font-size: 0.455em;"><strong>Bengio et al.</strong>, <em>A Neural Probabilistic Language Model</em>:
+          la primera red neuronal que aprende representaciones de palabras. 12 millones.</span>
+      </div>
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-orange); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">2007</span>
+        <span style="font-size: 0.455em;">Google titula un paper <strong style="color: var(--c-orange);">«Large Language
+          Models in Machine Translation»</strong> — 2 billones de tokens, 300 mil millones de n-gramas.
+          <span style="color: var(--c-text-dim);">El término ya existía, y no significaba esto.</span></span>
+      </div>
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-purple); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">2013</span>
+        <span style="font-size: 0.455em;"><strong>word2vec</strong> — el que ya viste en la unidad de embeddings.</span>
+      </div>
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-yellow); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">2017</span>
+        <span style="font-size: 0.455em;">El <strong>Transformer</strong>. La arquitectura que hizo barato entrenar en paralelo.</span>
+      </div>
+      <div class="fragment fade-up" style="display: flex; gap: 0.7em; align-items: baseline;">
+        <span style="color: var(--c-red); font-family: 'Fira Code', monospace; font-size: 0.52em; min-width: 3.4em;">2018→</span>
+        <span style="font-size: 0.455em;"><strong style="color: var(--c-red);">La escalada.</strong>
+          GPT-1, BERT, GPT-3, GPT-4… de 117 millones a ~3 billones en siete años: <strong>×25 000</strong>.</span>
+      </div>
+    </div>
+
+    <p class="fragment fade-up" style="font-size: 0.48em; text-align: center; margin-top: 0.7em;">
+      Lo nuevo <strong>no es la idea</strong>. Lo nuevo es el <strong style="color: var(--c-yellow);">tamaño</strong>.
+    </p>
+
+    <aside class="notes">
+      Diapositiva propia. Sirve para bajarle el aire de magia al tema: el objetivo de entrenamiento
+      (predecir el siguiente simbolo) es el mismo de 1948, lo que cambio es la escala y la arquitectura.
+
+      Las fechas y los tamanos de 1993, 2003, 2007, 2013 y 2017 salen del dataset de Epoch AI que se
+      grafica en la siguiente diapositiva, asi que los dos slides son consistentes entre si.
+
+      El dato de 2007 es el que mas gusta en clase: el paper de Brants et al. (Google, EMNLP 2007) se
+      llama literalmente "Large Language Models in Machine Translation" y su abstract dice, textual,
+      "train on up to 2 trillion tokens, resulting in language models having up to 300 billion n-grams".
+      Ese modelo NO era una red neuronal: eran conteos de n-gramas en una tabla gigante con suavizado
+      (ahi se introduce Stupid Backoff, comparado contra Kneser-Ney). El termino "large language model"
+      existia 15 anos antes de ChatGPT y queria decir otra cosa.
+
+      Ojo con los numeros en espanol: "2 trillion tokens" del abstract son 2 BILLONES (2x10^12) en
+      espanol, y "300 billion n-grams" son 300 MIL MILLONES (3x10^11). El "billion" ingles es nuestros
+      mil millones y el "trillion" ingles es nuestro billon. Vale la pena decirlo en voz alta porque
+      todo el material que van a leer despues esta en ingles.
+
+      1948: Shannon, "A Mathematical Theory of Communication", seccion de aproximaciones al ingles
+      (aproximaciones de primer y segundo orden por letra y por palabra).
+      Los seis ordenes de magnitud de 2018 a hoy: GPT-1 tiene 117 M y Grok 3 unos 3x10^12.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-escala">
+    <h2>Lo que Escaló fue el Tamaño</h2>
+    <img src="img/Clase_LLM_escala_parametros.png"
+         alt="Parámetros de 395 modelos de lenguaje publicados entre 1993 y 2026, en escala logarítmica"
+         style="max-width: 100%; max-height: 452px; border-radius: 8px;">
+    <div class="columns" style="margin-top: 0.35em;">
+      <div class="col-55">
+        <p style="font-size: 0.42em; text-align: left; margin: 0.1em 0;">
+          De <strong style="color: var(--c-green);">276 parámetros</strong> (una LSTM de 1999) a
+          <strong style="color: var(--c-red);">~3 billones</strong>: <strong>diez órdenes de magnitud</strong>.
+          Cada línea punteada es <strong>×1000</strong>.
+        </p>
+      </div>
+      <div class="col-40">
+        <p style="font-size: 0.42em; text-align: left; margin: 0.1em 0;">
+          El <strong style="color: var(--c-orange);">punto naranja de 2007</strong> es más grande que GPT-3.
+          No todos los «parámetros» son lo mismo.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align: center; margin-top: 0.35em; color: var(--c-text-dim);">
+      Datos: Epoch AI, <em>Data on AI Models</em> (CC-BY 4.0) — los 395 modelos de lenguaje del dataset con
+      tamaño y fecha conocidos.
+    </p>
+
+    <aside class="notes">
+      Grafica propia hecha con el dataset abierto de Epoch AI, "Data on AI Models"
+      (epoch.ai/data/ai-models, archivo notable_ai_models.csv, descargado en agosto de 2026), licencia
+      Creative Commons Attribution 4.0. Se filtro Domain = Language con Parameters y fecha conocidos:
+      quedan 395 modelos, de junio de 1993 a julio de 2026, de 276 parametros a 3x10^12. Cada punto
+      viene del CSV, ninguno esta inventado.
+
+      Para regenerarla (por ejemplo el proximo trimestre, con datos mas nuevos):
+      python3 scripts/gen_escala_parametros.py
+      El CSV que se uso queda versionado al lado del script, asi que los numeros de esta diapositiva
+      son reproducibles aunque Epoch actualice el suyo.
+
+      La unica excepcion, declarada en el pie de la grafica: Qwen2.5-1.5B (la estrella) no esta en el
+      dataset de Epoch y su tamano se tomo de su model card en Hugging Face. Se marca a proposito
+      porque es el modelo que los estudiantes corren en Colab en los notebooks 17 y 28: sirve para
+      situarlos: son unas 1000 veces mas chico que GPT-4 y aun asi hace las cinco tareas de la unidad.
+
+      DOS COSAS QUE VALE LA PENA SENALAR EN VIVO:
+
+      1) El punto naranja de 2007 (300 mil millones de n-gramas de Google) esta MAS ARRIBA que GPT-3
+         (175 mil millones, 2020). Si el tamano fuera lo unico que importa, ese modelo de 2007 deberia
+         haber sido mejor que GPT-3, y no lo era ni de lejos. La diferencia es QUE es un parametro:
+         en 2007 eran conteos de n-gramas en una tabla; en GPT-3 son pesos aprendidos de un
+         transformer, mas datos y muchisimo mas computo. El tamano solo no explica el salto.
+
+      2) La nube de la derecha no es solo "modelos mas grandes": son MUCHISIMOS mas modelos. Parte de
+         lo que se ve a partir de 2018 es que empezo a publicarse mucho mas.
+
+      Conecta hacia adelante con la seccion "Ocho Cosas que Saber sobre los LLMs", punto 1 ("escalar
+      funciona y se puede predecir"): esta grafica es el POR QUE alguien se molesto en escalar tanto.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Tokens: la Unidad de Trabajo</h2>
     <p style="font-size: 0.46em;">
@@ -7532,6 +7663,9 @@ Sentimiento:</code></pre>
       prediccion de GPT-4 sobre un rango de 10 mil millones de veces en computo. Subrayar que las
       innovaciones entre GPT y GPT-3 son casi todas de infraestructura de computo, no de diseno de
       modelos de lenguaje.
+
+      Conviene volver aqui a la grafica "Lo que Escalo fue el Tamano" del inicio de esta misma unidad:
+      ahi esta la escalada medida, y este punto explica por que alguien decidio pagarla.
     </aside>
   </section>
 
