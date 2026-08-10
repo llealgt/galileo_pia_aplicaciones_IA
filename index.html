@@ -5318,6 +5318,61 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-cubo">
+    <h2>Tres Dimensiones que Sí Entendemos</h2>
+    <p style="font-size: 0.4em; text-align:center; margin: 0.05em 0 0.25em 0;">
+      Antes de ver un embedding de verdad, inventemos uno de juguete con
+      <strong>tres dimensiones que sí entendemos</strong>: humano, femenino, realeza.
+    </p>
+    <div class="widget-container">
+      <canvas id="emb-cube-canvas" width="900" height="368"
+              style="width:100%; max-width:900px; display:block; margin:0 auto; cursor:grab;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn emb-cube-tab active" data-vista="2d">2 dimensiones</button>
+        <button class="widget-btn fi-btn emb-cube-tab" data-vista="3d">3 dimensiones</button>
+        <button class="widget-btn fi-btn emb-cube-tab" data-vista="real">espacio real</button>
+        <button class="widget-btn fi-btn" id="emb-cube-flechas">→ desplazamientos</button>
+        <button class="widget-btn fi-btn" id="emb-cube-giro" style="display:none;">⏸ pausar giro</button>
+      </div>
+    </div>
+    <p style="font-size: 0.35em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      Arrastra para girar. Las coordenadas del juguete las inventamos; las del
+      <strong>espacio real</strong> están medidas y proyectadas con PCA.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/embedding-cube-widget.js). Es la puerta de entrada a la unidad: la
+      pregunta "¿que hay dentro de un vector?" se responde mucho mejor con un espacio inventado que se
+      pueda leer, y despues se contrasta con el real.
+
+      GUION DE LAS TRES PESTANAS:
+
+      1) DOS DIMENSIONES. Con los ejes humano/animal y masculino/femenino, "rey" cae EXACTAMENTE encima
+         de "hombre" y "reina" encima de "mujer". Es la mejor respuesta a "¿por que 384 dimensiones y no
+         3?": porque cada concepto que quieras distinguir necesita lugar donde separarse. Preguntar a la
+         clase que eje agregarian antes de pasar a la siguiente pestana.
+
+      2) TRES DIMENSIONES. Ya se separan. Aqui el cubo tiene 8 vertices y solo 6 palabras: los dos
+         vacios son "animal + realeza", y preguntar que iria ahi funciona muy bien ("el rey de la
+         selva"). Con el boton de desplazamientos se ve lo importante: hombre->mujer, rey->reina y
+         leon->leona son EL MISMO vector (0,1,0). Por eso rey - hombre + mujer da (1,1,1), que es reina,
+         exacto y no aproximado. Esta es la intuicion que la siguiente diapositiva va a matizar.
+
+      3) EL ESPACIO REAL. Las seis palabras codificadas con
+         paraphrase-multilingual-MiniLM-L12-v2 y proyectadas a 3D con PCA; las tres componentes
+         explican el 89.7 % de la varianza, asi que el dibujo es fiel. Dos cosas que decir:
+
+         - La estructura SI esta ahi: PC1 separa leon/leona de los humanos, PC2 separa masculino de
+           femenino y PC3 separa realeza de comun. No es casualidad ni las escogimos: salen de PCA.
+         - Pero los ejes son componentes, no "el eje del sexo", y sobre todo los tres desplazamientos
+           YA NO SON PARALELOS: los cosenos medidos son 0.676 (hombre->mujer vs rey->reina), 0.411
+           (hombre->mujer vs leon->leona) y 0.401 (rey->reina vs leon->leona). En el juguete los tres
+           valen exactamente 1.000. Ahi esta la diferencia entre la caricatura y el modelo.
+
+      Con el boton de desplazamientos activado, las flechas salen verdes en el juguete y rojas en el
+      real justamente para que se vea que en uno son iguales y en el otro no.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>¿Qué Significa Cada Dimensión?</h2>
     <p style="font-size: 0.48em;">
@@ -6032,6 +6087,179 @@ print(res["documents"][0])</code></pre>
     <aside class="notes">Contenido propio. Chroma se instala con pip install chromadb y no requiere servidor.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-parecerse">
+    <h2>Parecerse No Es Contener la Respuesta</h2>
+    <p style="font-size: 0.46em; text-align:center; margin: 0.05em 0 0.4em 0;">
+      Seis documentos de RRHH. La pregunta:
+      <strong style="color: var(--c-yellow);">«¿cuántos días de vacaciones le tocan a un gerente de
+      ventas?»</strong> — para responderla hacen falta <strong>dos</strong> de ellos.
+    </p>
+    <table style="font-size: 0.42em; width: 96%; margin: 0 auto; border-collapse: collapse;">
+      <tr style="color: var(--c-text-dim);">
+        <th style="padding:0.15em 0.3em;">#</th><th style="padding:0.15em 0.3em;">cos</th>
+        <th style="text-align:left; padding:0.15em 0.3em;">documento</th>
+      </tr>
+      <tr><td style="padding:0.16em 0.3em;">1</td><td style="font-family:'Fira Code',monospace;">0.550</td>
+        <td style="text-align:left; padding:0.16em 0.3em; color: var(--c-red);">Política de vacaciones: las solicitudes se envían con 15 días de anticipación</td></tr>
+      <tr><td style="padding:0.16em 0.3em;">2</td><td style="font-family:'Fira Code',monospace;">0.537</td>
+        <td style="text-align:left; padding:0.16em 0.3em; color: var(--c-red);">Los empleados de categoría <strong>A</strong> acumulan <strong>18 días</strong> de vacaciones al año</td></tr>
+      <tr style="background: rgba(131,193,103,0.10);"><td style="padding:0.16em 0.3em;">3</td><td style="font-family:'Fira Code',monospace;">0.511</td>
+        <td style="text-align:left; padding:0.16em 0.3em; color: var(--c-green);">★ Los empleados de categoría <strong>B</strong> acumulan <strong>25 días</strong> de vacaciones al año</td></tr>
+      <tr><td style="padding:0.16em 0.3em;">4</td><td style="font-family:'Fira Code',monospace;">0.509</td>
+        <td style="text-align:left; padding:0.16em 0.3em; color: var(--c-text-dim);">El gerente de ventas reporta a la dirección comercial</td></tr>
+      <tr style="background: rgba(131,193,103,0.10);"><td style="padding:0.16em 0.3em;">5</td><td style="font-family:'Fira Code',monospace;">0.488</td>
+        <td style="text-align:left; padding:0.16em 0.3em; color: var(--c-green);">★ El puesto de gerente de ventas pertenece a la categoría <strong>B</strong></td></tr>
+      <tr><td style="padding:0.16em 0.3em;">6</td><td style="font-family:'Fira Code',monospace;">0.468</td>
+        <td style="text-align:left; padding:0.16em 0.3em; color: var(--c-text-dim);">Las vacaciones del personal de planta se programan en el calendario anual</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.45em; padding: 0.35em; background: rgba(252,98,85,0.10);">
+      Con <strong>top-2</strong> le entregas al LLM el procedimiento y la categoría
+      <strong style="color: var(--c-red);">equivocada</strong>. Va a responder
+      <strong style="color: var(--c-red);">«18 días»</strong>, con seguridad, y está mal.
+    </p>
+    <aside class="notes">
+      Contenido propio, medido con paraphrase-multilingual-MiniLM-L12-v2 (el modelo de la unidad). Los
+      seis documentos y los seis cosenos son los de la corrida real; el script esta en el scratchpad de
+      preparacion y el resultado se reproduce con cualquier corrida del mismo modelo.
+
+      ESTE ES EL PUNTO: la busqueda por similitud recupera lo que SE PARECE a la pregunta, no lo que
+      sirve para contestarla. Aqui la respuesta necesita dos saltos —gerente de ventas -> categoria B
+      -> 25 dias— y NINGUN documento se parece a la pregunta completa, porque cada uno tiene solo la
+      mitad del camino.
+
+      Lo que hay que hacer notar en clase, en este orden:
+
+      1) El primero (0.550) es el que mas se parece y es inutil: habla de vacaciones, de dias y de
+         solicitudes, pero no contiene ningun dato para responder.
+      2) El segundo (0.537) es peor que inutil: es la categoria A, 18 dias. Tiene la FORMA exacta de la
+         respuesta. Si el pipeline usa top-2, el LLM contesta "18 dias" con total seguridad. No es que
+         falte contexto: es que el contexto que llego es plausible y falso.
+      3) Los dos que si sirven quedan en las posiciones 3 y 5.
+
+      Y un detalle que vale la pena senalar: los seis puntajes caben en 0.082 (de 0.468 a 0.550). El
+      ranking es casi un empate, o sea que el orden es fragil y podria cambiar con cualquier reformulacion
+      de la pregunta. Cuando los puntajes se apinan asi, el top-k es practicamente arbitrario.
+
+      Enlaza con la siguiente diapositiva, que es la salida: reescribir la consulta.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-reescribir">
+    <h2>Por Eso se Reescribe la Consulta</h2>
+    <p style="font-size: 0.46em; text-align:center; margin: 0.05em 0 0.45em 0;">
+      Dos salidas para el mismo problema, las dos medidas sobre el caso anterior.
+    </p>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-55">
+        <p style="font-size: 0.48em; color: var(--c-green); text-align:left; margin:0 0 0.15em 0;">
+          <strong>Descomponer</strong> — una consulta por salto</p>
+        <p style="font-size: 0.40em; font-family:'Fira Code',monospace; text-align:left; margin:0.1em 0; color: var(--c-text-dim);">
+          «categoría contractual del puesto de gerente de ventas»</p>
+        <p style="font-size: 0.42em; text-align:left; margin:0 0 0.25em 0;">
+          → <strong style="color: var(--c-green);">0.822</strong> el documento correcto, en el puesto <strong>1</strong></p>
+        <p style="font-size: 0.40em; font-family:'Fira Code',monospace; text-align:left; margin:0.1em 0; color: var(--c-text-dim);">
+          «días de vacaciones al año de la categoría contractual B»</p>
+        <p style="font-size: 0.42em; text-align:left; margin:0;">
+          → <strong style="color: var(--c-green);">0.694</strong> el otro documento, también en el <strong>1</strong></p>
+        <p style="font-size: 0.43em; text-align:left; margin-top: 0.3em;">
+          Uniendo el top-1 de cada una tienes <strong style="color: var(--c-green);">los dos documentos</strong>
+          que hacían falta.</p>
+      </div>
+      <div class="col-40">
+        <p style="font-size: 0.48em; color: var(--c-yellow); text-align:left; margin:0 0 0.15em 0;">
+          <strong>Expandir</strong> — añadir vocabulario</p>
+        <p style="font-size: 0.40em; text-align:left; margin:0.1em 0; color: var(--c-text-dim);">
+          la misma pregunta + «categoría contractual, días acumulados al año»</p>
+        <p style="font-size: 0.42em; text-align:left; margin:0.15em 0;">
+          Los dos buenos suben a los puestos <strong>2</strong> y <strong>3</strong>…
+          pero la categoría <strong style="color: var(--c-red);">A sigue primera</strong>.</p>
+        <p style="font-size: 0.42em; text-align:left; margin:0.15em 0;">
+          Con top-2 <strong style="color: var(--c-red);">todavía no alcanza</strong>; con top-3 sí.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.5em;">
+      Expandir <strong>ayuda</strong>; descomponer <strong style="color: var(--c-green);">resuelve</strong>.
+      Las dos cuestan una llamada al LLM <em>antes</em> de buscar.
+    </p>
+    <aside class="notes">
+      Medido con el mismo modelo y el mismo corpus de la diapositiva anterior.
+
+      DESCOMPONER: 0.822 y 0.694, cada sub-consulta trae su documento en primer lugar. Notese que los
+      puntajes suben muchisimo respecto de los 0.47-0.55 de la pregunta original: cuando la consulta
+      pregunta UNA cosa, el coseno vuelve a discriminar. El problema nunca fue el modelo, era que la
+      pregunta mezclaba dos saltos.
+
+      EXPANDIR: los dos buenos suben a 2 y 3 (0.547 y 0.545) pero el distractor de la categoria A se
+      queda primero con 0.575. O sea que expandir mejora el ranking sin arreglar el fallo si el pipeline
+      usa top-2. Se dice tal cual: es una mejora, no una solucion.
+
+      El costo hay que decirlo: las dos tecnicas meten una llamada al LLM antes de la busqueda, o sea
+      mas latencia y mas dinero por consulta. Esa es la razon de que no se activen siempre.
+
+      Esto es la motivacion directa de la unidad "Recuperacion en Produccion", donde estan las
+      diapositivas de Query Rewriting y HyDE, y del notebook 21. Aqui solo se planta el problema.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-nosabe">
+    <h2>Lo que el Embedding No Sabe Hacer</h2>
+    <p style="font-size: 0.44em; text-align:center; margin: 0.05em 0 0.4em 0;">
+      Todo medido con el modelo de la unidad. En los cuatro casos el
+      <strong style="color: var(--c-red);">primer resultado es el equivocado</strong> o casi.
+    </p>
+    <table style="font-size: 0.42em; width: 97%; margin: 0 auto; border-collapse: collapse;">
+      <tr style="color: var(--c-text-dim);">
+        <th style="text-align:left; padding:0.2em 0.3em;">consulta</th>
+        <th style="text-align:left; padding:0.2em 0.3em;">lo que devuelve</th>
+        <th style="text-align:left; padding:0.2em 0.3em;">debería</th>
+      </tr>
+      <tr><td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13);">«reportes posteriores a <strong>2022</strong>»</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-red);">1.º el de <strong>2021</strong> (0.844)</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-green);">2026 y 2024</td></tr>
+      <tr><td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13);">«servidores de <strong>menos de 1000</strong> dólares»</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-red);">1.º el de <strong>5000</strong> (0.662)</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-green);">solo el de 500</td></tr>
+      <tr><td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13);">«manual del router <strong>XR-3000</strong>»</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-yellow);">el <strong>XR-3001</strong> a 0.948, casi empatado con el correcto (0.961)</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-green);">solo el XR-3000</td></tr>
+      <tr><td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13);">«vacaciones de <strong>Luis Gómez</strong>»</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-yellow);"><strong>Ana</strong> Gómez (0.778) por encima de <strong>Luis</strong> Pérez (0.743)</td>
+        <td style="text-align:left; padding:0.25em 0.3em; border-top:1px solid rgba(236,230,208,0.13); color: var(--c-green);">la persona, no el apellido</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.5em; padding: 0.35em; background: rgba(255,255,0,0.07);">
+      «Reporte del 15 de marzo de <strong>2024</strong>» y «…de <strong>2019</strong>» tienen coseno
+      <strong style="color: var(--c-red);">0.882</strong>. Dos frases de temas distintos:
+      <strong style="color: var(--c-green);">0.028</strong>. Para el modelo, cambiar el año
+      <strong>casi no cambia nada</strong> — y esa es exactamente la parte que el usuario quería filtrar.
+    </p>
+    <aside class="notes">
+      Contenido propio, todo medido con paraphrase-multilingual-MiniLM-L12-v2.
+
+      Las cuatro filas son de dos familias distintas, y conviene separarlas en voz alta:
+
+      IDENTIDAD (router y nombre propio). El embedding codifica el PARECIDO de la cadena, no la
+      identidad. "XR-3001" y "XR-3000" comparten casi todos los tokens, asi que salen casi empatados
+      (0.948 vs 0.961); si el catalogo tiene 40 versiones del mismo aparato, el orden entre ellas es
+      ruido. Con los nombres pasa lo mismo: "Ana Gomez" le gana a "Luis Perez" porque el apellido pesa
+      mas que la persona. Ojo con la honestidad: en ese caso el documento correcto SI salio primero
+      (0.892), el problema es el margen, no el top-1.
+
+      ORDEN Y MAGNITUD (fechas y numeros). Aqui el fallo es total, no de margen: el ranking sale mal.
+      "Posteriores a 2022" pone primero un documento de 2021, y "menos de 1000 dolares" pone primero el
+      de 5000. Un embedding no tiene ninguna nocion de mayor-que: 2019 y 2024 son dos cadenas parecidas,
+      igual que 500 y 5000.
+
+      EL NUMERO QUE MAS FUNCIONA EN CLASE es el del recuadro: 0.882 entre dos reportes que solo difieren
+      en el ano, contra 0.028 entre dos frases de temas distintos. En la escala de este modelo, cambiar
+      el ano es un movimiento casi nulo. Y ese "casi nulo" es justo el dato por el que el usuario
+      pregunta.
+
+      Estas dos familias motivan cosas distintas y ese es el puente:
+        - identidad  -> busqueda lexica/hibrida (BM25 ya lo vieron) y metadata exacta
+        - orden y magnitud -> filtros de metadata, que es la siguiente diapositiva, y self-query
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Filtros y Metadata: el Detalle que Duele</h2>
     <p style="font-size: 0.46em;">
@@ -6118,6 +6346,51 @@ filter: and(eq("genero","ciencia ficcion"),
             gt("anio", 2010),
             gt("calificacion", 8))               <- va como filtro</code></pre>
     <aside class="notes">Contenido propio, basado en la documentacion de LangChain. Es una aplicacion muy limpia de "usar el LLM para traducir lenguaje natural a algo estructurado".</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-sq-vivo">
+    <h2>Pruébalo en Vivo</h2>
+    <p style="font-size: 0.36em; text-align:center; margin: 0.05em 0 0.3em 0;">
+      Copia el prompt, pégalo en Claude y mira cómo parte la pregunta en
+      <strong style="color: var(--c-green);">query semántico</strong> +
+      <strong style="color: var(--c-blue);">filtros de metadata</strong>. Eso es exactamente lo que hace
+      un self-query retriever por dentro.
+    </p>
+    <div id="self-query-prompts" class="widget-container" style="padding: 0.5em 0.6em;"></div>
+    <aside class="notes">
+      Widget propio (js/widgets/self-query-prompts-widget.js). Hecho para correrse EN VIVO: el texto es
+      seleccionable y el boton verde copia instruccion + pregunta en un solo pegado, listo para Claude.
+      El boton amarillo revela la respuesta esperada, asi que conviene preguntarle a la clase primero.
+
+      El esquema de metadata que va dentro del prompt es el mismo catalogo de peliculas que se usa dos
+      diapositivas antes, para no cambiar de ejemplo a media unidad.
+
+      LOS CINCO CASOS ESTAN ESCOGIDOS PARA QUE CADA UNO ROMPA UNA SUPOSICION:
+
+      1. El caso feliz. Las tres condiciones son explicitas. Lo que hay que hacer notar: al buscador
+         vectorial le llegan tres palabras ("viajes en el tiempo") en vez de la frase entera, o sea que
+         "2010" y "8" ya no son ruido dentro del vector.
+
+      2. El query queda VACIO. La consulta es 100 % filtro. Sirve para matar la idea de que siempre hay
+         una parte semantica. Ademas "los anos noventa" se convierte en dos condiciones de rango, que es
+         justo lo que un embedding nunca haria (ver la diapositiva de las cuatro cosas que no sabe hacer).
+
+      3. Conversion de unidades: "hora y media" -> 90. Ninguna expresion regular hace eso; es la razon de
+         poner un LLM aqui y no un parser. Y el punto discutible: si el extractor convierte "divertido"
+         en genero = comedia, esta endureciendo un matiz en un filtro DURO que puede dejar fuera
+         resultados validos. Vale la pena correrlo dos veces: el modelo no siempre decide lo mismo.
+
+      4. "Las mejores" no es un filtro, es un ORDEN, y el esquema no tiene como expresarlo. Si el modelo
+         inventa calificacion > 8 se saco el umbral de la manga. Es la mejor pregunta para abrir debate:
+         mejor un extractor que ignore lo que no cabe, o uno que improvise.
+
+      5. No hay nada estructurado: la lista de filtros debe salir vacia. Si el modelo fuerza
+         genero = terror, descarta dramas y ciencia ficcion que si dan miedo.
+
+      Si en clase el modelo devuelve algo distinto de lo esperado, eso ES el contenido: el extractor es
+      un LLM y no es determinista, y por eso la siguiente diapositiva insiste en validar su salida
+      contra el esquema antes de mandarla a la base.
+    </aside>
   </section>
 
   <section data-transition="fade">
@@ -14469,6 +14742,8 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/grid-stuck-widget.js"></script>
 <script src="js/widgets/embeddings-data.js"></script>
 <script src="js/widgets/embedding-space-widget.js"></script>
+<script src="js/widgets/embedding-cube-widget.js"></script>
+<script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
 <script src="js/widgets/llm-trie-data.js"></script>
@@ -14626,6 +14901,18 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initKFoldWidget === 'function') {
       initKFoldWidget();
       widgetsInitialized.kfold = true;
+    }
+  }
+  if (slide.querySelector('#self-query-prompts') && !widgetsInitialized.sqPrompts) {
+    if (typeof initSelfQueryPromptsWidget === 'function') {
+      initSelfQueryPromptsWidget();
+      widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#emb-cube-canvas') && !widgetsInitialized.embCube) {
+    if (typeof initEmbeddingCubeWidget === 'function') {
+      initEmbeddingCubeWidget();
+      widgetsInitialized.embCube = true;
     }
   }
   if (slide.querySelector('#react-canvas') && !widgetsInitialized.reactLoop) {
