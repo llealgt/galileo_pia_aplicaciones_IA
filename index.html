@@ -5695,8 +5695,101 @@ with torch.no_grad():
     </div>
     <aside class="notes">
       Papers: ViT (arXiv 2010.11929), SimCLR (arXiv 2002.05709), FaceNet (arXiv 1503.03832), DINOv2
-      (arXiv 2304.07193). FaceNet es un buen ejemplo de embedding entrenado con triplet loss: acerca fotos
-      de la misma persona y aleja las de personas distintas.
+      (arXiv 2304.07193).
+
+      No adelantar FaceNet aqui: la diapositiva siguiente lo desarrolla, y ademas es la critica directa
+      del truco de quitar la ultima capa que se acaba de ensenar. Conviene dejar la tabla como esta y
+      pasar de largo.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-facenet">
+    <h2>FaceNet: Reconocer es Medir Distancia</h2>
+    <p style="font-size: 0.46em; text-align:center; margin: 0.05em 0 0.4em 0;">
+      La diapositiva anterior le quitaba la última capa a un clasificador. El paper de
+      <strong>FaceNet</strong> (Schroff et al., Google, 2015) dice que eso es indirecto: hay que
+      <strong style="color: var(--c-yellow);">optimizar el embedding directamente</strong>.
+    </p>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-55">
+        <p style="font-size: 0.48em; color: var(--c-orange); text-align:left; margin:0 0 0.1em 0;">
+          <strong>Cómo se entrena: tripletas</strong></p>
+        <p style="font-size: 0.44em; text-align:left; margin:0.1em 0;">
+          Se toman tres fotos: un <strong style="color: var(--c-blue);">ancla</strong>, una
+          <strong style="color: var(--c-green);">positiva</strong> (misma persona) y una
+          <strong style="color: var(--c-red);">negativa</strong> (otra persona). La red debe cumplir:
+        </p>
+        <p class="katex-block" style="font-size: 0.56em; margin: 0.2em 0;">\lVert f(a) - f(p) \rVert^2 + \alpha \;&lt;\; \lVert f(a) - f(n) \rVert^2</p>
+        <p style="font-size: 0.41em; text-align:left; margin:0.2em 0 0 0; color: var(--c-text-dim);">
+          El <strong>margen α</strong> obliga a que no baste con estar un poquito más cerca. La salida
+          son <strong>128 dimensiones</strong> normalizadas, y el paper presume de que caben en
+          <strong>128 bytes por cara</strong>.
+        </p>
+      </div>
+      <div class="col-40">
+        <p style="font-size: 0.48em; color: var(--c-green); text-align:left; margin:0 0 0.1em 0;">
+          <strong>Las tres tareas, ya resueltas</strong></p>
+        <p style="font-size: 0.42em; text-align:left; margin:0.18em 0;">
+          <strong>¿Son la misma persona?</strong><br>
+          <span style="color: var(--c-text-dim);">→ un umbral sobre la distancia</span></p>
+        <p style="font-size: 0.42em; text-align:left; margin:0.18em 0;">
+          <strong>¿Quién es esta persona?</strong><br>
+          <span style="color: var(--c-text-dim);">→ kNN contra la base de rostros</span></p>
+        <p style="font-size: 0.42em; text-align:left; margin:0.18em 0;">
+          <strong>¿Cuántas personas distintas hay?</strong><br>
+          <span style="color: var(--c-text-dim);">→ k-means sobre los vectores</span></p>
+        <p style="font-size: 0.39em; text-align:left; margin:0.3em 0 0 0; color: var(--c-text-dim);">
+          Las tres son las <em>mismas</em> herramientas de esta unidad, sin nada específico de caras.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.46em; text-align:center; margin-top: 0.45em; padding: 0.4em; background: rgba(131,193,103,0.10);">
+      Lo que esto cambia: <strong style="color: var(--c-green);">agregar una persona nueva no requiere
+      reentrenar nada</strong> — basta guardar su vector. Por eso tu teléfono te reconoce con cinco fotos.
+    </p>
+    <p style="font-size: 0.36em; text-align:center; color: var(--c-text-dim); margin-top: 0.3em;">
+      Lo que reporta el paper: <strong>99.63 %</strong> en LFW y <strong>95.12 %</strong> en YouTube
+      Faces. En su figura 1, un umbral de <strong>1.1</strong> sobre la distancia separa bien todos los
+      pares. <code>arXiv 1503.03832</code>
+    </p>
+    <aside class="notes">
+      Diapositiva propia. Va aqui, justo despues de "Embeddings de Imagenes", porque el paper de FaceNet
+      es exactamente la CRITICA de lo que esa diapositiva acaba de ensenar. Textual del paper sobre el
+      truco de quitar la ultima capa: "The downsides of this approach are its indirectness and its
+      inefficiency: one has to hope that the bottleneck representation generalizes well to new faces".
+      Vale la pena leerlo en voz alta: "uno tiene que ESPERAR que generalice". FaceNet no espera, lo
+      optimiza.
+
+      TODO LO CUANTITATIVO SALE DEL PAPER (Schroff, Kalenichenko y Philbin, arXiv 1503.03832), no de
+      memoria:
+        - 128-D, normalizado a la esfera unitaria; "128-bytes per face" es del abstract.
+        - LFW 99.63 % y YouTube Faces DB 95.12 %, y dice que recorta el error un 30 % contra el mejor
+          resultado publicado hasta entonces.
+        - El umbral de 1.1 es el de la Figura 1: son distancias L2 al cuadrado, 0.0 = identicas y 4.0 =
+          el extremo opuesto, y con 1.1 clasifica bien todos los pares de esa figura.
+        - Las tres tareas son cita del paper: "face verification simply involves thresholding the
+          distance between the two embeddings; recognition becomes a k-NN classification problem; and
+          clustering can be achieved using off-the-shelf techniques such as k-means".
+
+      EL PUNTO DIDACTICO, y por eso esta antes de busqueda semantica: reconocer una cara deja de ser un
+      clasificador de N clases y se convierte en una busqueda por vecino mas cercano. De ahi sale la
+      propiedad que sorprende: para dar de alta a alguien nuevo NO se reentrena, se guarda un vector.
+      Un clasificador con una neurona por persona necesitaria reentrenar cada vez que entra un empleado.
+
+      DOS ENGANCHES CON EL RESTO DEL CURSO:
+        1. El umbral es una DECISION, no un dato. Moverlo intercambia falsos positivos por falsos
+           negativos, que es exactamente el widget "Explora el Umbral de Decision" y la curva ROC de la
+           unidad 4. En biometria a esos dos errores les dicen FAR y FRR, pero son los mismos FP y FN.
+           En un control de acceso un falso positivo deja entrar a un desconocido; en el desbloqueo del
+           telefono un falso negativo solo molesta. El umbral depende del costo, igual que ahi.
+        2. La triple ancla/positiva/negativa es la misma idea del entrenamiento contrastivo que se ve
+           en la unidad 16 con el widget correspondiente, y la misma de CLIP dos diapositivas mas
+           adelante: acercar lo que va junto, alejar lo que no.
+
+      LIMITES QUE CONVIENE DECIR: el desempeno no es parejo entre grupos demograficos (hay literatura
+      amplia al respecto, y el NIST publica evaluaciones periodicas), y un vector de rostro es un dato
+      biometrico: no se puede cambiar como una contrasena si se filtra. Para un capstone que toque
+      esto, hay que mirar la regulacion local antes que el modelo.
     </aside>
   </section>
 
