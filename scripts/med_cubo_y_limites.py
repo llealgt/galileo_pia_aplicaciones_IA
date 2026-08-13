@@ -30,7 +30,9 @@ out = {}
 # =====================================================================
 # 1. Las seis palabras del cubo didactico, en el espacio REAL
 # =====================================================================
-PAL = ["hombre", "mujer", "rey", "reina", "león", "leona"]
+# tigre entra para ocupar el vertice de animal comun: en el cubo didactico
+# leon y leona llevan componente de REALEZA (el rey de la selva).
+PAL = ["hombre", "mujer", "rey", "reina", "león", "leona", "tigre"]
 E = emb(PAL)
 
 print("=" * 66)
@@ -65,6 +67,20 @@ print("  (en el cubo didactico los tres valdrian exactamente +1.000)")
 out["paralelismo"] = parc
 
 # --- la analogia clasica ---
+print()
+print("=" * 66)
+print("2b. ¿EL MODELO COMPARTE LA METAFORA DEL 'REY DE LA SELVA'?")
+print("=" * 66)
+# direccion de realeza medida, no supuesta: promedio de rey-hombre y reina-mujer
+real_dir = ((E[PAL.index("rey")] - E[PAL.index("hombre")]) +
+            (E[PAL.index("reina")] - E[PAL.index("mujer")])) / 2
+real_dir /= np.linalg.norm(real_dir)
+proy = {p: round(float(np.dot(E[i], real_dir)), 3) for i, p in enumerate(PAL)}
+for p_, v in sorted(proy.items(), key=lambda kv: -kv[1]):
+    print(f"  {p_:<8} {v:+.3f}")
+print("  -> leon queda por ENCIMA de tigre en esa direccion: la metafora esta en el corpus")
+out["realeza"] = proy
+
 print()
 print("=" * 66)
 print("3. rey - hombre + mujer = ?")

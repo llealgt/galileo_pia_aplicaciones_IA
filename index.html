@@ -5739,7 +5739,7 @@ with torch.no_grad():
     </aside>
   </section>
 
-  <section data-transition="fade">
+  <section data-transition="fade" id="sl-clip">
     <h2>Multimodales: CLIP</h2>
     <p style="font-size: 0.46em;">
       <strong>CLIP</strong> (Radford et al., 2021 — <em>Learning Transferable Visual Models From Natural
@@ -5779,6 +5779,12 @@ with torch.no_grad():
       (servicio en Bedrock) e <strong>ImageBind</strong> (2023, une <em>seis</em> modalidades — imagen,
       texto, audio, profundidad, térmico y movimiento — en un solo espacio).
     </blockquote>
+        <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(88,196,221,0.08);">
+      🔗 Para verlo funcionando: el <strong>notebook oficial de OpenAI</strong> corre CLIP en Colab —
+      codifica imágenes y textos y los compara.
+      <a href="https://colab.research.google.com/github/openai/clip/blob/master/notebooks/Interacting_with_CLIP.ipynb"
+         target="_blank" rel="noopener" style="font-size: 0.9em;">Interacting_with_CLIP.ipynb</a>
+    </p>
     <aside class="notes">
       CLIP: arXiv 2103.00020. SigLIP: arXiv 2303.15343. ImageBind: arXiv 2305.05665. El truco de ImageBind
       es que basta alinear cada modalidad con imagenes para que todas queden alineadas entre si.
@@ -6480,6 +6486,85 @@ docs = retriever.invoke(
       empeoró al cambiar de modelo.
     </p>
     <aside class="notes">Contenido propio. Enlaza con la unidad de evaluacion: recall@k es exactamente el mismo recall, restringido a los primeros k resultados.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-catalogo">
+    <h2>Modelos Listos para Usar</h2>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.1em;">
+      <div class="col-55">
+        <p style="font-size: 0.46em; color: var(--c-green); text-align:left; margin:0 0 0.15em 0;">
+          <strong>Abiertos</strong> — los descargas y corren en tu máquina</p>
+        <table style="font-size: 0.40em; width: 100%; border-collapse: collapse;">
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2" target="_blank" rel="noopener"><code>all-MiniLM-L6-v2</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">384 dim · inglés · el más usado</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">250 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" target="_blank" rel="noopener"><code>paraphrase-multilingual-MiniLM-L12-v2</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">384 dim · multilingüe · el de esta unidad</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">56 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/BAAI/bge-m3" target="_blank" rel="noopener"><code>BAAI/bge-m3</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">1024 dim · multilingüe · 8192 tokens</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">34 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/nomic-ai/nomic-embed-text-v1.5" target="_blank" rel="noopener"><code>nomic-embed-text-v1.5</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">768 dim · dimensión recortable</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">15 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/Qwen/Qwen3-Embedding-0.6B" target="_blank" rel="noopener"><code>Qwen3-Embedding-0.6B</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">1024 dim · 32k tokens · hay de 4B y 8B</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">8.1 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/jinaai/jina-embeddings-v3" target="_blank" rel="noopener"><code>jina-embeddings-v3</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">1024 dim · 8192 tokens</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">3.0 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/google/embeddinggemma-300m" target="_blank" rel="noopener"><code>embeddinggemma-300m</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">chico, pensado para on-device</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">2.4 M</td></tr>
+      <tr><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://huggingface.co/intfloat/multilingual-e5-large-instruct" target="_blank" rel="noopener"><code>multilingual-e5-large-instruct</code></a></td><td style="text-align:left; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">1024 dim · prefijos query:/passage:</td><td style="text-align:right; padding:0.2em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim); white-space:nowrap;">2.0 M</td></tr>
+        </table>
+        <p style="font-size: 0.35em; color: var(--c-text-dim); text-align:left; margin:0.25em 0 0 0;">
+          Descargas del último mes según la API de Hugging Face (agosto 2026); dimensión y contexto,
+          de su <code>config.json</code>.
+        </p>
+      </div>
+      <div class="col-40">
+        <p style="font-size: 0.46em; color: var(--c-orange); text-align:left; margin:0 0 0.15em 0;">
+          <strong>Por API</strong> — pagas por token, no administras nada</p>
+        <table style="font-size: 0.40em; width: 100%; border-collapse: collapse;">
+      <tr><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI <code>text-embedding-3</code></a></td><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">small y large; dimensión ajustable</td></tr>
+      <tr><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://docs.cohere.com/docs/cohere-embed" target="_blank" rel="noopener">Cohere <code>Embed</code></a></td><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">fuerte en multilingüe; también en Bedrock</td></tr>
+      <tr><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://docs.voyageai.com/docs/embeddings" target="_blank" rel="noopener">Voyage AI</a></td><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">variantes por dominio: código, legal, finanzas</td></tr>
+      <tr><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://ai.google.dev/gemini-api/docs/embeddings" target="_blank" rel="noopener">Gemini embeddings</a></td><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">Google; integrado a Vertex AI</td></tr>
+      <tr><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12);"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html" target="_blank" rel="noopener">Amazon Bedrock</a></td><td style="text-align:left; padding:0.24em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">Titan, Nova y Cohere desde una sola API</td></tr>
+        </table>
+        <p style="font-size: 0.44em; color: var(--c-purple); text-align:left; margin:0.45em 0 0.15em 0;">
+          <strong>Multimodales</strong> (texto + imagen)</p>
+        <p style="font-size: 0.40em; text-align:left; margin:0; color:var(--c-text-dim);">
+          <a href="https://github.com/openai/CLIP" target="_blank" rel="noopener">CLIP</a> ·
+          <a href="https://huggingface.co/google/siglip2-base-patch16-224" target="_blank" rel="noopener">SigLIP&nbsp;2</a>
+          — y el <a href="https://colab.research.google.com/github/openai/clip/blob/master/notebooks/Interacting_with_CLIP.ipynb" target="_blank" rel="noopener">notebook oficial de CLIP en Colab</a>.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:left; margin-top: 0.5em; padding: 0.4em 0.6em; background: rgba(255,255,0,0.07);">
+      <strong>Cómo se elige:</strong> igual que en <em>model selection</em> — armas un conjunto de consultas
+      con su respuesta correcta, mides con <strong>cross-validation</strong> sobre <em>tus</em> datos y
+      comparas. El <a href="https://huggingface.co/spaces/mteb/leaderboard" target="_blank" rel="noopener">MTEB
+      leaderboard</a> es el punto de partida, no la decisión: también pesan <strong>latencia</strong>,
+      <strong>costo por millón de tokens</strong>, la <strong>dimensión</strong> (lo que ocupa el índice),
+      la licencia y la privacidad. Y cambiar de modelo <strong style="color: var(--c-red);">obliga a
+      reindexar todo</strong>.
+    </p>
+    <aside class="notes">
+      Diapositiva de cierre de la unidad, pensada como referencia para el capstone. Complementa a
+      "Modelos que se Usan Hoy", que da el panorama; esta da los enlaces concretos.
+
+      TODO ESTA VERIFICADO, no copiado de un blog: los ocho identificadores de Hugging Face se
+      comprobaron contra su API (los ocho responden 200), las descargas del ultimo mes salen del campo
+      "downloads" de esa misma API, y la dimension y el contexto se leyeron del config.json de cada
+      modelo. Los enlaces de las cinco APIs se comprobaron uno por uno (los cinco responden 200).
+      Fecha de la consulta: agosto de 2026. Conviene rehacerla cada trimestre: esta lista envejece
+      mas rapido que cualquier otra cosa del curso.
+
+      LAS DESCARGAS SON UN DATO UTIL PERO NO SON CALIDAD. all-MiniLM-L6-v2 tiene 250 millones de
+      descargas al mes y no es el mejor de la lista ni de lejos: es el mas viejo, el mas chico y el
+      que sale en todos los tutoriales. Vale la pena decirlo en voz alta, porque el estudiante tiende
+      a leer la columna como un ranking.
+
+      EL COMENTARIO DEL RECUADRO ES EL PUNTO DE LA DIAPOSITIVA. La eleccion de un modelo de embeddings
+      es un problema de seleccion de modelos como el de la unidad 7, con el mismo metodo: un conjunto
+      de consultas con su documento correcto (known-item retrieval sirve, es lo que hacen los notebooks
+      de RAG), una metrica (recall@k, MRR), y cross-validation. Lo que cambia es que ademas hay
+      restricciones de ingenieria que no aparecen en el f1: cuanto tarda por consulta, cuanto cuesta el
+      millon de tokens, y cuanto ocupa el indice —que es lineal en la dimension: 1024 dimensiones
+      cuestan casi tres veces mas disco y RAM que 384 para el mismo corpus.
+
+      Y el costo escondido: cambiar de modelo obliga a RE-EMBEBER Y REINDEXAR el corpus completo. En un
+      capstone son minutos; en produccion con millones de documentos es un proyecto. Por eso conviene
+      medir antes de casarse con uno.
+    </aside>
   </section>
 
   <section data-transition="fade">

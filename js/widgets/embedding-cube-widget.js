@@ -1,24 +1,34 @@
 // ============================================================
 // Cubo de Embeddings
-// Tres vistas de las MISMAS seis palabras:
-//   2D    dos dimensiones inventadas -> rey y hombre caen encima
+// Tres vistas de las MISMAS siete palabras:
+//   2D    dos dimensiones inventadas -> rey cae encima de hombre,
+//         y leon encima de tigre
 //   3D    la tercera dimension los separa; el cubo de juguete
 //   real  proyeccion PCA de los embeddings de verdad (384 dims)
 //
 // El espacio de juguete es DIDACTICO: las coordenadas las asignamos
-// nosotros. El espacio real esta MEDIDO con
-// paraphrase-multilingual-MiniLM-L12-v2 (el mismo modelo del resto de
-// la unidad) y proyectado con PCA; sus tres componentes explican el
-// 89.7 % de la varianza de las seis palabras.
+// nosotros. Leon y leona llevan componente de REALEZA (el rey de la
+// selva) y tigre ocupa el vertice de animal comun. Asi quedan 7 de los
+// 8 vertices ocupados, y el que sobra —animal, femenino, comun— es
+// "tigresa": el cubo predice una palabra que no metimos.
 //
-// Los cosenos entre desplazamientos tambien estan medidos: en el
-// juguete los tres valen exactamente 1, en el real 0.68 / 0.41 / 0.40.
+// El espacio real esta MEDIDO con paraphrase-multilingual-MiniLM-L12-v2
+// (el mismo modelo del resto de la unidad) y proyectado con PCA; sus
+// tres componentes explican el 81.9 % de la varianza de las 7 palabras.
+//
+// Medido tambien: proyectando cada palabra sobre la direccion de
+// realeza (el promedio de rey-hombre y reina-mujer), leon da +0.239 y
+// tigre +0.154, o sea que el modelo SI coloca al leon mas cerca de la
+// realeza que al tigre. La metafora del rey de la selva esta en el
+// corpus. Los cosenos entre desplazamientos siguen siendo 0.676 / 0.411
+// / 0.401 donde el juguete da 1.000.
 // ============================================================
 
 // coordenadas inventadas: (humano, femenino, realeza)
 const CUBO_JUGUETE = [
-  { p: 'león',   c: [0, 0, 0], col: '#FF862F' },
-  { p: 'leona',  c: [0, 1, 0], col: '#FF862F' },
+  { p: 'tigre',  c: [0, 0, 0], col: '#5CD0B3' },
+  { p: 'león',   c: [0, 0, 1], col: '#FF862F' },
+  { p: 'leona',  c: [0, 1, 1], col: '#FF862F' },
   { p: 'hombre', c: [1, 0, 0], col: '#58C4DD' },
   { p: 'mujer',  c: [1, 1, 0], col: '#58C4DD' },
   { p: 'rey',    c: [1, 0, 1], col: '#FFFF00' },
@@ -27,12 +37,13 @@ const CUBO_JUGUETE = [
 
 // PCA de los embeddings reales; se reescala a [0,1] al dibujar
 const CUBO_REAL = [
-  { p: 'hombre', c: [0.2688, -0.3864,  0.2514], col: '#58C4DD' },
-  { p: 'mujer',  c: [0.3841,  0.3464,  0.1898], col: '#58C4DD' },
-  { p: 'rey',    c: [0.0262, -0.4312, -0.2891], col: '#FFFF00' },
-  { p: 'reina',  c: [0.2189,  0.1548, -0.1499], col: '#FFFF00' },
-  { p: 'león',   c: [-0.7049, -0.0182, 0.1965], col: '#FF862F' },
-  { p: 'leona',  c: [-0.1932, 0.3345, -0.1988], col: '#FF862F' },
+  { p: 'hombre', c: [-0.2313, -0.4048, -0.1320], col: '#58C4DD' },
+  { p: 'mujer',  c: [-0.4630,  0.1467,  0.3056], col: '#58C4DD' },
+  { p: 'rey',    c: [-0.0393, -0.3183, -0.3221], col: '#FFFF00' },
+  { p: 'reina',  c: [-0.3369,  0.0979,  0.0315], col: '#FFFF00' },
+  { p: 'león',   c: [ 0.5165,  0.3066, -0.2698], col: '#FF862F' },
+  { p: 'leona',  c: [-0.0338,  0.4258, -0.0338], col: '#FF862F' },
+  { p: 'tigre',  c: [ 0.5878, -0.2539,  0.4205], col: '#5CD0B3' },
 ];
 
 const CUBO_PARES = [['hombre', 'mujer'], ['rey', 'reina'], ['león', 'leona']];
@@ -113,17 +124,17 @@ function initEmbeddingCubeWidget() {
           ctx.beginPath(); ctx.moveTo(P1.x, P1.y); ctx.lineTo(P2.x, P2.y); ctx.stroke();
         }
       }
-      // los dos vertices vacios
-      ctx.fillStyle = 'rgba(236,230,208,0.22)';
-      [[0, 0, 1], [0, 1, 1]].forEach(v => {
-        const P = proy(v);
-        ctx.beginPath(); ctx.arc(P.x, P.y, 4, 0, Math.PI * 2); ctx.stroke();
-      });
-      ctx.font = 'italic 11px Lora, serif';
-      ctx.fillStyle = 'rgba(236,230,208,0.4)';
+      // el unico vertice vacio: animal, femenino, comun -> tigresa
+      ctx.strokeStyle = 'rgba(236,230,208,0.35)';
+      const Pv = proy([0, 1, 0]);
+      ctx.beginPath(); ctx.arc(Pv.x, Pv.y, 5, 0, Math.PI * 2); ctx.stroke();
+      // el vertice vacio coincide con la punta del eje "femenino":
+      // la etiqueta va al lado, no encima
+      ctx.font = 'italic 12px Lora, serif';
+      ctx.fillStyle = 'rgba(236,230,208,0.55)';
+      ctx.textAlign = 'right';
+      ctx.fillText('¿tigresa?', Pv.x - 11, Pv.y + 4);
       ctx.textAlign = 'center';
-      const Pv = proy([0, 0.5, 1]);
-      ctx.fillText('¿animal + realeza?', Pv.x, Pv.y - 12);
     }
 
     if (flechas) dibujarFlechas(D);
@@ -238,8 +249,9 @@ function initEmbeddingCubeWidget() {
       ctx.fillStyle = ROJO;
       ctx.fillText('Dos dimensiones no alcanzan', x0, y0);
       ctx.font = '12.5px Lora, serif'; ctx.fillStyle = FG;
-      envolver('«rey» cae exactamente encima de «hombre», y «reina» encima de '
-             + '«mujer»: con estos dos ejes son el mismo punto.', x0, y0 + 22, 278, 17);
+      envolver('«rey» cae exactamente encima de «hombre», «reina» sobre «mujer» y '
+             + '«león» sobre «tigre»: con estos dos ejes son el mismo punto.',
+        x0, y0 + 22, 278, 17);
       ctx.fillStyle = DIM;
       envolver('Hace falta un eje más para separarlos. Ese es todo el motivo de '
              + 'que un embedding real tenga cientos.', x0, y0 + 92, 278, 17);
@@ -250,22 +262,24 @@ function initEmbeddingCubeWidget() {
       ctx.fillStyle = VERDE;
       ctx.fillText('Aquí sí significan algo', x0, y0);
       ctx.font = '12.5px Lora, serif'; ctx.fillStyle = FG;
-      envolver('Las tres coordenadas las inventamos nosotros: humano, femenino, '
-             + 'realeza. Es un espacio de juguete.', x0, y0 + 22, 278, 17);
+      envolver('Las tres coordenadas las inventamos: humano, femenino, realeza. '
+             + 'El león la lleva — es el rey de la selva; el tigre no.',
+        x0, y0 + 22, 278, 17);
       ctx.font = '12.5px Fira Code, monospace';
       ctx.fillStyle = VERDE;
       ctx.fillText('rey − hombre + mujer', x0, y0 + 88);
       ctx.fillText('  = (1,1,1) = reina', x0, y0 + 106);
       ctx.font = '12.5px Lora, serif'; ctx.fillStyle = DIM;
-      envolver('Los tres desplazamientos son el MISMO vector (0,1,0). '
-             + 'La analogía sale exacta, no aproximada.', x0, y0 + 130, 278, 17);
+      envolver('Los tres desplazamientos son el MISMO vector (0,1,0). Y sobra un '
+             + 'vértice: el cubo predice «tigresa», que nunca metimos.',
+        x0, y0 + 130, 278, 17);
       return;
     }
 
     ctx.fillStyle = '#FF862F';
     ctx.fillText('El espacio real, proyectado', x0, y0);
     ctx.font = '12.5px Lora, serif'; ctx.fillStyle = FG;
-    envolver('384 dimensiones reducidas a 3 con PCA (89.7 % de la varianza). '
+    envolver('384 dimensiones reducidas a 3 con PCA (81.9 % de la varianza). '
            + 'Los ejes ya no son «femenino» ni «realeza»: son componentes.',
       x0, y0 + 22, 278, 17);
     ctx.font = '12px Fira Code, monospace';
@@ -278,7 +292,11 @@ function initEmbeddingCubeWidget() {
     });
     ctx.fillStyle = DIM;
     ctx.font = 'italic 12px Lora, serif';
-    ctx.fillText('en el juguete los tres valen 1.000', x0, y0 + 228);
+    ctx.fillText('en el juguete los tres valen 1.000', x0, y0 + 224);
+    ctx.fillStyle = '#83C167';
+    ctx.font = '11.5px Lora, serif';
+    envolver('Pero la metáfora sí está: sobre la dirección de realeza, león da '
+           + '+0.239 y tigre +0.154.', x0, y0 + 250, 278, 15);
   }
 
   function envolver(txt, x, y, ancho, alto) {

@@ -1,0 +1,281 @@
+{
+ "cos_palabras": {
+  "palabras": [
+   "hombre",
+   "mujer",
+   "rey",
+   "reina",
+   "león",
+   "leona",
+   "tigre"
+  ],
+  "matriz": [
+   [
+    1.0,
+    0.67,
+    0.778,
+    0.724,
+    0.424,
+    0.526,
+    0.429
+   ],
+   [
+    0.67,
+    1.0,
+    0.519,
+    0.853,
+    0.329,
+    0.699,
+    0.315
+   ],
+   [
+    0.778,
+    0.519,
+    1.0,
+    0.75,
+    0.521,
+    0.627,
+    0.497
+   ],
+   [
+    0.724,
+    0.853,
+    0.75,
+    1.0,
+    0.481,
+    0.814,
+    0.408
+   ],
+   [
+    0.424,
+    0.329,
+    0.521,
+    0.481,
+    1.0,
+    0.677,
+    0.546
+   ],
+   [
+    0.526,
+    0.699,
+    0.627,
+    0.814,
+    0.677,
+    1.0,
+    0.446
+   ],
+   [
+    0.429,
+    0.315,
+    0.497,
+    0.408,
+    0.546,
+    0.446,
+    1.0
+   ]
+  ]
+ },
+ "paralelismo": {
+  "hombre->mujer  vs  rey->reina": 0.676,
+  "hombre->mujer  vs  león->leona": 0.411,
+  "rey->reina  vs  león->leona": 0.401
+ },
+ "realeza": {
+  "hombre": -0.16,
+  "mujer": -0.286,
+  "rey": 0.433,
+  "reina": 0.165,
+  "león": 0.239,
+  "leona": 0.206,
+  "tigre": 0.154
+ },
+ "analogia": [
+  [
+   "reina",
+   0.822
+  ],
+  [
+   "mujer",
+   0.795
+  ],
+  [
+   "leona",
+   0.75
+  ],
+  [
+   "rey",
+   0.693
+  ],
+  [
+   "princesa",
+   0.692
+  ],
+  [
+   "corona",
+   0.587
+  ]
+ ],
+ "pca3d": {
+  "palabras": [
+   "hombre",
+   "mujer",
+   "rey",
+   "reina",
+   "león",
+   "leona",
+   "tigre"
+  ],
+  "coords": [
+   [
+    -0.2313,
+    -0.4048,
+    -0.132
+   ],
+   [
+    -0.463,
+    0.1467,
+    0.3056
+   ],
+   [
+    -0.0393,
+    -0.3183,
+    -0.3221
+   ],
+   [
+    -0.3369,
+    0.0979,
+    0.0315
+   ],
+   [
+    0.5165,
+    0.3066,
+    -0.2698
+   ],
+   [
+    -0.0338,
+    0.4258,
+    -0.0338
+   ],
+   [
+    0.5878,
+    -0.2539,
+    0.4205
+   ]
+  ],
+  "var": [
+   0.3889,
+   0.2483,
+   0.182
+  ]
+ },
+ "nombres": {
+  "consulta": "vacaciones de Luis Gómez",
+  "ranking": [
+   [
+    "Solicitud de vacaciones de Luis Gómez, aprobada",
+    0.892
+   ],
+   [
+    "Solicitud de vacaciones de Ana Gómez, aprobada",
+    0.778
+   ],
+   [
+    "Solicitud de vacaciones de Luis Pérez, aprobada",
+    0.743
+   ],
+   [
+    "Solicitud de vacaciones de Marta Rodríguez, aprobada",
+    0.702
+   ]
+  ]
+ },
+ "producto": {
+  "consulta": "manual del router XR-3000",
+  "ranking": [
+   [
+    "Manual de instalación del router XR-3000",
+    0.961
+   ],
+   [
+    "Manual de instalación del router XR-3001",
+    0.948
+   ],
+   [
+    "Manual de instalación del router XR-2000",
+    0.9
+   ],
+   [
+    "Manual de instalación del switch SG-450",
+    0.433
+   ]
+  ]
+ },
+ "fechas": {
+  "consulta": "reportes posteriores a 2022",
+  "ranking": [
+   [
+    "Reporte trimestral del 20 de agosto de 2021",
+    0.844
+   ],
+   [
+    "Reporte trimestral del 8 de enero de 2026",
+    0.837
+   ],
+   [
+    "Reporte trimestral del 15 de marzo de 2024",
+    0.83
+   ],
+   [
+    "Reporte trimestral del 15 de marzo de 2019",
+    0.728
+   ]
+  ]
+ },
+ "numeros": {
+  "consulta": "servidores de menos de 1000 dólares al mes",
+  "ranking": [
+   [
+    "El servidor cuesta 5000 dólares al mes",
+    0.662
+   ],
+   [
+    "El servidor cuesta 500 dólares al mes",
+    0.651
+   ],
+   [
+    "El servidor cuesta 50000 dólares al mes",
+    0.597
+   ]
+  ]
+ },
+ "pares": {
+  "pares": [
+   [
+    "Reporte del 15 de marzo de 2024",
+    "Reporte del 15 de marzo de 2019",
+    0.882
+   ],
+   [
+    "El servidor cuesta 500 dólares",
+    "El servidor cuesta 50000 dólares",
+    0.827
+   ],
+   [
+    "Manual del router XR-3000",
+    "Manual del router XR-2000",
+    0.935
+   ],
+   [
+    "Solicitud de Luis Gómez",
+    "Solicitud de Luis Pérez",
+    0.858
+   ],
+   [
+    "Reunión del lunes",
+    "Reunión del martes",
+    0.881
+   ]
+  ],
+  "referencia": 0.028
+ }
+}
