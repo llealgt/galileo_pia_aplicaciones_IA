@@ -8056,6 +8056,51 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     <aside class="notes">Fuente: RAG_M1 ("Why LLMs Hallucinate" y "What LLMs don't know").</aside>
   </section>
 
+  <section data-transition="fade" id="sl-aluc">
+    <h2>La Duda Existe, pero no Sale</h2>
+    <div class="widget-container">
+      <canvas id="aluc-canvas" width="900" height="400"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn aluc-btn" data-i="0">lo sabe</button>
+        <button class="widget-btn fi-btn aluc-btn" data-i="1">no puede saberlo</button>
+        <button class="widget-btn fi-btn aluc-btn" data-i="2">no existe</button>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/hallucination-widget.js), datos en js/widgets/alucinacion-data.js.
+      Medido con Qwen2.5-1.5B-Instruct y su plantilla de chat, mirando la distribucion del PRIMER token
+      de la respuesta, que es donde el modelo tiene que comprometerse con el hecho.
+
+      LO QUE SALE, y hay que correrlo en ese orden:
+
+        lo sabe            «¿capital de Francia?»  -> "París".  entropia 0.70 bits, top-1 0.898
+        no puede saberlo   «¿vacaciones de Textiles del Valle S.A.?» -> "15".  entropia 3.56, top-1 0.243
+        no existe          «¿elemento de numero atomico 141?» -> "Argon-141".  entropia 4.69, top-1 0.192
+
+      EL SEGUNDO CASO ES EL QUE HAY QUE DETENERSE A MIRAR. La lista de candidatos es 1, 3, 5, 2, 4, 8,
+      6, 7, 9: esta eligiendo un DIGITO practicamente al azar, y contesta "15" con la misma cara con la
+      que contesto "Paris". Y fijarse en que "No" (el principio de "No tengo informacion") estaba ahi,
+      con 0.043 de probabilidad. Podia haberse negado. No se nego porque el decodificado voraz toma el
+      mas probable, y 0.243 le gana a 0.043.
+
+      LA MORALEJA ES PRECISA, y conviene decirla asi: la duda SI esta dentro del modelo —de 0.70 a 4.69
+      bits hay una diferencia enorme— pero NO llega a la respuesta. Elegir el token mas probable la
+      borra. Por eso no se puede detectar una alucinacion leyendo lo que el modelo escribe.
+
+      UN AVISO PARA QUIEN QUIERA USAR LA ENTROPIA COMO DETECTOR: se probo primero con continuaciones
+      sueltas en vez de la plantilla de chat, y salio al REVES de lo esperado — mas entropia en el caso
+      que sabia (6.00) que en el que no (5.47). El motivo es que en esa posicion al modelo le tocaba
+      elegir un articulo, no un hecho. O sea que la confianza del siguiente token mide incertidumbre
+      GRAMATICAL, y solo sirve de senal si se mira exactamente en el token donde se juega el dato. Eso
+      esta anotado en la cabecera del script que genera los datos.
+
+      Conecta con Bowman punto 4 (no hay tecnicas fiables de control) y es la motivacion mas directa de
+      RAG: RAG no vuelve humilde al modelo, cambia lo que tiene en el contexto para que la respuesta
+      firme sea ademas la correcta.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>La Ventana de Contexto</h2>
     <p style="font-size: 0.46em;">
@@ -15188,6 +15233,8 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/context-vector-widget.js"></script>
 <script src="js/widgets/tokens-data.js"></script>
 <script src="js/widgets/tokens-widget.js"></script>
+<script src="js/widgets/alucinacion-data.js"></script>
+<script src="js/widgets/hallucination-widget.js"></script>
 <script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
@@ -15352,6 +15399,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSelfQueryPromptsWidget === 'function') {
       initSelfQueryPromptsWidget();
       widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#aluc-canvas') && !widgetsInitialized.alucinacion) {
+    if (typeof initHallucinationWidget === 'function') {
+      initHallucinationWidget();
+      widgetsInitialized.alucinacion = true;
     }
   }
   if (slide.querySelector('#tok-canvas') && !widgetsInitialized.tokens) {
