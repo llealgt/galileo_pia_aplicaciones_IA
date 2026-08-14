@@ -5931,6 +5931,48 @@ with torch.no_grad():
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-clip-matriz">
+    <h2>La Matriz de CLIP, con Números Reales</h2>
+    <div class="widget-container">
+      <canvas id="clip-canvas" width="900" height="330"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em;">
+        <button class="widget-btn fi-btn" id="clip-softmax">× temperatura y softmax →</button>
+      </div>
+    </div>
+    <p style="font-size: 0.34em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      Tres imágenes contra seis descripciones en español. La similitud imagen–texto se calcula
+      <strong>igual que entre dos textos</strong>: un coseno. Eso es lo que significa «mismo espacio».
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/clip-matrix-widget.js), datos en js/widgets/clip-data.js. Medido con
+      openai/clip-vit-base-patch32 sobre tres imagenes locales: la pagoda y la flor de scikit-learn y
+      el retrato de Grace Hopper que trae matplotlib. Ninguna descarga.
+
+      EL GUION TIENE DOS TIEMPOS, y el segundo es el que vale:
+
+      1. Coseno crudo. Los 18 numeros van de 0.12 a 0.26: a ojo parecen todos iguales, y ese suele ser
+         el momento en que alguien pregunta si CLIP de verdad funciona. Pero el maximo de cada fila YA
+         es el correcto en los tres casos (0.260 el templo, 0.240 la flor, 0.234 el retrato).
+
+      2. Se aprieta el boton. CLIP no usa el coseno crudo: lo multiplica por una temperatura APRENDIDA
+         durante el entrenamiento (el logit_scale del modelo, que sale en unos 100) y despues aplica
+         softmax por fila. La misma matriz se convierte en 1.000, 0.953 y 0.997. Eso es exactamente la
+         clasificacion zero-shot que promete la diapositiva anterior: sin entrenar nada, se le dan
+         candidatos en texto y elige.
+
+      LO QUE HAY QUE SUBRAYAR: no hay ningun clasificador aqui. Las seis descripciones son texto libre
+      que escribimos ahora; se podrian cambiar por otras seis y el modelo volveria a elegir. Comparar
+      con la diapositiva del corte de la cabeza, donde el clasificador estaba clavado a 1000 clases
+      fijas de ImageNet.
+
+      Y una honestidad util: que los cosenos crudos de CLIP vivan en un rango tan estrecho es normal en
+      este modelo y NO significa que dude. Por eso la temperatura es parte del modelo y no un truco de
+      presentacion; si se comparan cosenos de CLIP con cosenos de un modelo de texto, los rangos no son
+      comparables.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Modelos que se Usan Hoy</h2>
     <div class="columns" style="align-items: flex-start;">
@@ -15023,6 +15065,8 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/semantic-search-flow-widget.js"></script>
 <script src="js/widgets/cut-head-data.js"></script>
 <script src="js/widgets/cut-head-widget.js"></script>
+<script src="js/widgets/clip-data.js"></script>
+<script src="js/widgets/clip-matrix-widget.js"></script>
 <script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
@@ -15187,6 +15231,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSelfQueryPromptsWidget === 'function') {
       initSelfQueryPromptsWidget();
       widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#clip-canvas') && !widgetsInitialized.clipMatriz) {
+    if (typeof initClipMatrixWidget === 'function') {
+      initClipMatrixWidget();
+      widgetsInitialized.clipMatriz = true;
     }
   }
   if (slide.querySelector('#corte-canvas') && !widgetsInitialized.corteCabeza) {
