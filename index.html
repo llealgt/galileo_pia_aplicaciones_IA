@@ -5544,6 +5544,41 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-w2v-widget">
+    <h2>Explora la Ventana Deslizante</h2>
+    <div class="widget-container">
+      <canvas id="w2v-canvas" width="900" height="300"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn" id="w2v-auto">⏸ pausar</button>
+        <button class="widget-btn fi-btn" id="w2v-prev">◀</button>
+        <button class="widget-btn fi-btn" id="w2v-next">▶</button>
+        <button class="widget-btn fi-btn" id="w2v-radio">radio 2</button>
+        <button class="widget-btn fi-btn" id="w2v-modo">skip-gram</button>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/window-pairs-widget.js). El algoritmo esta implementado de verdad, no
+      hay tabla precalculada: mover la ventana o cambiar el radio recalcula los pares y el total. El
+      nucleo (w2vPares y w2vTotal) esta declarado fuera de la funcion de init justamente para poder
+      cargarlo desde Node, y se verifico contra un conteo por fuerza bruta independiente: radio 1 da 18
+      pares, radio 2 da 34 y radio 3 da 48 en esta frase de 10 palabras.
+
+      LO QUE TIENE QUE QUEDAR: la etiqueta no la escribio nadie, la produce la POSICION. Diez palabras
+      sueltas generan 34 ejemplos de entrenamiento. Multiplicado por los 100 mil millones de palabras
+      de Google News, ahi esta el dataset que nadie tuvo que anotar.
+
+      Dos cosas para jugar en clase:
+        - Subir el radio a 3 y ver como sube el total: mas contexto por palabra, pero tambien pares mas
+          debiles, porque una palabra a tres posiciones de distancia dice menos.
+        - Cambiar a CBOW: son los MISMOS pares con las flechas al reves. Es la misma ventana leida en
+          la otra direccion, y eso suele aclarar la diferencia mejor que la definicion.
+
+      En los bordes de la frase la ventana se recorta y salen menos pares; se ve al pasar por la
+      primera y la ultima palabra.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="slide-elmo">
     <h2>Cómo se Entrena ELMo</h2>
     <p style="font-size: 0.44em;">
@@ -5587,6 +5622,43 @@ avion = [-0.8,  0.1, ..., -0.5]</code></pre>
       ELMo se EJECUTA. Eso explica de una vez por que los contextuales son mas caros y por que
       resuelven la polisemia. Buen momento para adelantar que la unidad de LLMs entrena con este
       mismo objetivo, solo que con transformers y a otra escala.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-ctx-widget">
+    <h2>El Vector Depende de la Frase</h2>
+    <div class="widget-container">
+      <canvas id="ctx-canvas" width="900" height="310"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn ctx-pal-btn" data-p="planta">planta</button>
+        <button class="widget-btn fi-btn ctx-pal-btn" data-p="banco">banco</button>
+        <button class="widget-btn fi-btn" id="ctx-estatico">comparar con estático →</button>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/context-vector-widget.js). Izquierda: el esquema del modelo
+      bidireccional que acaba de describir la diapositiva anterior — una pasada hacia adelante, otra
+      hacia atras, dos capas, y la suma pesada que produce el vector. Derecha: la prueba, medida.
+
+      LOS NUMEROS SON REALES, medidos con mDeBERTa-v3-base (bidireccional, ya en cache) tomando el
+      vector de la palabra en cada frase:
+        planta (la que se riega) contra planta (de ensamblaje):  0.576
+        planta (la que se riega) contra planta (del pie):        0.696
+        banco (del parque) contra banco (de arena):              0.682
+
+      El boton de la derecha es el remate: con un embedding estatico tipo Word2Vec los tres cosenos
+      valdrian 1.000, porque es literalmente el mismo vector. No es que Word2Vec se equivoque de
+      sentido: es que no tiene forma de tener dos. El sentido lo pone quien lee.
+
+      Enlaza hacia atras con "Por Que Importa el Contexto" y hacia adelante con la unidad de LLMs: el
+      transformer lleva esta misma idea al extremo, y la diapositiva de atencion muestra COMO se
+      reparte ese contexto.
+
+      Ojo con una pregunta que sale sola: ¿por que 0.576 y no algo cercano a cero, si son dos sentidos
+      distintos? Porque el vector sigue codificando que es la misma cadena, la misma categoria
+      gramatical y un contexto en espanol. La parte que cambia es la del significado, y con eso basta
+      para que la busqueda las distinga.
     </aside>
   </section>
 
@@ -15067,6 +15139,8 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/cut-head-widget.js"></script>
 <script src="js/widgets/clip-data.js"></script>
 <script src="js/widgets/clip-matrix-widget.js"></script>
+<script src="js/widgets/window-pairs-widget.js"></script>
+<script src="js/widgets/context-vector-widget.js"></script>
 <script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
@@ -15231,6 +15305,18 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSelfQueryPromptsWidget === 'function') {
       initSelfQueryPromptsWidget();
       widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#w2v-canvas') && !widgetsInitialized.w2vVentana) {
+    if (typeof initWindowPairsWidget === 'function') {
+      initWindowPairsWidget();
+      widgetsInitialized.w2vVentana = true;
+    }
+  }
+  if (slide.querySelector('#ctx-canvas') && !widgetsInitialized.ctxVector) {
+    if (typeof initContextVectorWidget === 'function') {
+      initContextVectorWidget();
+      widgetsInitialized.ctxVector = true;
     }
   }
   if (slide.querySelector('#clip-canvas') && !widgetsInitialized.clipMatriz) {
