@@ -15361,6 +15361,53 @@ trozos  = RecursiveCharacterTextSplitter(
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-react-codigo">
+    <h2>El Bucle ReAct, en Código</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.2em;">
+      Son <strong>veinte líneas</strong>. No hay framework: el bucle es un <code>for</code> y la
+      "decisión" del agente es una expresión regular sobre el texto que produjo.
+    </p>
+    <pre style="font-size: 0.355em; max-width: 92%; margin: 0.25em auto;"><code class="language-python">def agente(pregunta, max_pasos=4):
+    mensajes = [{"role": "system", "content": SISTEMA_REACT},
+                {"role": "user",   "content": pregunta}]
+    traza = []
+    for paso in range(max_pasos):                      # 3) tope de pasos
+        salida = generar(mensajes, max_new_tokens=100)
+        accion = re.search(r"Acci[oó]n:\s*(\w+)\[(.*?)\]", salida)
+        fin    = re.search(r"Respuesta:\s*(.+)", salida)
+
+        if accion:
+            nombre, argumento = accion.group(1), accion.group(2).strip('"')
+            if nombre not in HERRAMIENTAS:             # 1) lista blanca
+                obs = f"ERROR: '{nombre}' no existe. Hay: {', '.join(HERRAMIENTAS)}"
+            else:
+                obs = HERRAMIENTAS[nombre][0](argumento)
+            traza.append((nombre, argumento, obs))
+            mensajes.append({"role": "assistant", "content": salida})
+            mensajes.append({"role": "user", "content": f"Observacion: {obs}"})
+            continue                                   # 2) el error vuelve como observación
+
+        if fin:
+            return fin.group(1), traza
+        break
+    return None, traza</code></pre>
+    <aside class="notes">
+      Codigo real del notebook 28, recortado solo en los prints. Conviene proyectarlo DESPUES del
+      widget de trazas: primero se ve el comportamiento, y aqui se ve que lo produce.
+
+      LOS TRES NUMEROS MARCADOS EN LOS COMENTARIOS SON LAS TRES REGLAS de la diapositiva siguiente, y
+      estan puestas a proposito en el orden en que aparecen en el codigo.
+
+      Lo que mas sorprende al proyectarlo: no hay ninguna magia. "Elegir una herramienta" es que el
+      modelo escriba la cadena Accion: nombre[argumento] y que un re.search la encuentre. Si el modelo
+      escribe otra cosa, el bucle simplemente no ve accion y termina. Por eso el formato del prompt de
+      sistema es tan rigido.
+
+      El continue es importante: despues de ejecutar una herramienta NO se sale del bucle, se vuelve
+      arriba con la observacion metida en los mensajes. Ese ida y vuelta es todo el "razonamiento".
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-19-vs">
     <h2>Nativo contra ReAct: Medido</h2>
     <p style="font-size: 0.44em;">
@@ -15424,6 +15471,57 @@ trozos  = RecursiveCharacterTextSplitter(
     <aside class="notes">Los dos fallos son de corridas reales del notebook 28 y estan ahi a proposito. El de la recuperacion del error es el mas util: un error devuelto es recuperable, una excepcion no.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-tres-reglas">
+    <h2>Las Tres Reglas que No se Negocian</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.2em;">
+      Los dos fallos anteriores no se arreglan con un prompt mejor. Se arreglan en el bucle,
+      y son tres líneas.
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.1em;">
+      <div class="col-55">
+        <pre style="font-size: 0.34em; margin: 0;"><code class="language-python"># 1. lista blanca: el nombre contra el registro
+if nombre not in HERRAMIENTAS:
+    obs = f"ERROR: '{nombre}' no existe."
+
+# 2. el error VUELVE como observación,
+#    no se lanza como excepción
+mensajes.append({"role": "user",
+                 "content": f"Observacion: {obs}"})
+
+# 3. tope de pasos
+for paso in range(max_pasos):</code></pre>
+      </div>
+      <div class="col-40">
+        <p style="font-size: 0.4em; text-align:left; margin:0.1em 0;">
+          <strong style="color: var(--c-blue);">1</strong> — sin esto, el agente que inventó
+          <code>saludo[bonjour]</code> te tumba el proceso.</p>
+        <p style="font-size: 0.4em; text-align:left; margin:0.1em 0;">
+          <strong style="color: var(--c-green);">2</strong> — devolver el error como texto es lo que
+          le permite <strong>corregirse solo</strong>. Con un <code>raise</code> se acaba la corrida.</p>
+        <p style="font-size: 0.4em; text-align:left; margin:0.1em 0;">
+          <strong style="color: var(--c-red);">3</strong> — el agente atascado repitió la misma
+          búsqueda cuatro veces. Solo lo detuvo el tope.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.07);">
+      Un agente sin las tres no es un agente: es un <code>while True</code> con una API de por medio.
+    </p>
+    <aside class="notes">
+      Contenido propio, destilado de lo que se midio al preparar el notebook 28. Las tres reglas salen
+      directamente de los dos fallos de la diapositiva anterior, y por eso van aqui y no antes.
+
+      La regla 2 es la menos obvia y la mas importante: la reaccion natural de un programador es lanzar
+      una excepcion cuando la herramienta no existe. Si se hace eso, la corrida se muere. Al devolver
+      el error COMO OBSERVACION, el agente lo lee en el siguiente paso y se corrige — y eso esta
+      medido: en la traza "inventa una" del widget se ve al modelo pedir saludo[bonjour], recibir el
+      error y arreglarlo en el paso siguiente.
+
+      La regla 3 no es paranoia: en la traza "se atasca" el agente repitio
+      buscar_documentos[politicas_vacaciones] cuatro veces y gasto MAS llamadas al LLM que el caso que
+      si respondio, sin devolver nada. Sin el tope, eso es una factura abierta.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-19-ragagentico">
     <h2>RAG Agéntico</h2>
     <p style="font-size: 0.44em;">
@@ -15456,6 +15554,49 @@ trozos  = RecursiveCharacterTextSplitter(
       volver a buscar.
     </p>
     <aside class="notes">Tabla y papers del deck del ano pasado. El notebook 28 implementa la version minima: recuperar, evaluar con el LLM, reformular y reintentar.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-ragag-codigo">
+    <h2>RAG Agéntico, en Código</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.2em;">
+      La diferencia con el RAG de siempre cabe en un <code>if</code>: alguien <strong>juzga si el
+      contexto alcanza</strong>, y si no, reformula y vuelve a buscar.
+    </p>
+    <pre style="font-size: 0.36em; max-width: 90%; margin: 0.25em auto;"><code class="language-python">def evaluador(pregunta, contexto):
+    r = generar([{"role": "user", "content":
+        f"¿Este contexto contiene la informacion para responder?\n\n"
+        f"CONTEXTO: {contexto}\n\nPREGUNTA: {pregunta}\n\nResponde SOLO: si o no"}])
+    return r.strip().lower().startswith("si")
+
+def rag_agentico(pregunta, max_intentos=2):
+    consulta = pregunta
+    for intento in range(max_intentos):
+        contexto = buscar_documentos(consulta)
+        if evaluador(pregunta, contexto):
+            break                                  # alcanza: a generar
+        consulta = generar([{"role": "user", "content":
+            f"Reescribe esto como palabras clave:\n{pregunta}"}])
+    return generar([{"role": "system", "content": "Responde SOLO con el contexto."},
+                    {"role": "user", "content": f"CONTEXTO: {contexto}\n\n{pregunta}"}])</code></pre>
+    <p style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Tres llamadas al LLM en vez de una — y el <code>max_intentos</code> otra vez, por lo mismo.
+    </p>
+    <aside class="notes">
+      Codigo real del notebook 28. Es la version minima de lo que la diapositiva anterior describe con
+      cajas: recuperar, evaluar, reformular y reintentar.
+
+      LO QUE HAY QUE HACER NOTAR: el evaluador es el MISMO modelo respondiendo "si o no". No hay un
+      juez entrenado aparte. Eso explica a la vez por que es tan facil de montar y por que hay que
+      desconfiar: si el modelo no supo responder la pregunta, tampoco es obvio que sepa juzgar si el
+      contexto alcanza.
+
+      EL COSTO ES EL ARGUMENTO EN CONTRA, y conviene decirlo con numeros: un RAG normal hace UNA
+      llamada al LLM; este hace una por evaluacion, una por reformulacion y una por la respuesta. Con
+      dos intentos son cuatro. Enlaza con "Cuando un Agente NO es la Respuesta", que viene justo
+      despues, y con la diapositiva de la factura de la unidad 18.
+
+      El break esta a proposito donde esta: si el primer contexto alcanza, no se paga la reformulacion.
+    </aside>
   </section>
 
   <section data-transition="fade" id="sl-19-cuando">
