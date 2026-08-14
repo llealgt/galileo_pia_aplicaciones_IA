@@ -5703,6 +5703,53 @@ with torch.no_grad():
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-corte">
+    <h2>Córtale la Cabeza a la Red</h2>
+    <div class="widget-container">
+      <canvas id="corte-canvas" width="900" height="330"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn" id="corte-btn">✂ cortar el clasificador</button>
+        <button class="widget-btn fi-btn corte-img-btn" data-i="0">china</button>
+        <button class="widget-btn fi-btn corte-img-btn" data-i="1">volteada</button>
+        <button class="widget-btn fi-btn corte-img-btn" data-i="2">recortada</button>
+        <button class="widget-btn fi-btn corte-img-btn" data-i="3">flor</button>
+        <button class="widget-btn fi-btn corte-img-btn" data-i="4">flor volt.</button>
+      </div>
+    </div>
+    <p style="font-size: 0.34em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      ResNet-50 de verdad: las etiquetas y los cosenos están <strong>medidos</strong>, no dibujados.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/cut-head-widget.js), datos en js/widgets/cut-head-data.js. Es la
+      version visual del codigo de la diapositiva anterior: ahi se ve
+      nn.Sequential(*list(modelo.children())[:-1]) y aqui se ve QUE hace ese [:-1].
+
+      GUION: empezar con la cabeza puesta y una imagen cualquiera. La red devuelve una de las 1000
+      clases de ImageNet y nada mas. Preguntar a la clase: ¿y si mi problema no es ninguna de esas
+      1000 clases? Con la flor se ve solo: la mejor etiqueta es "daisy" con 0.08 de probabilidad, o
+      sea que el clasificador practicamente no se compromete. Entonces se corta.
+
+      Al cortar, la cabeza se cae y la capa de 2048 queda resaltada como salida. El panel cambia de
+      etiquetas a cosenos, y ahi esta el contenido: la MISMA red que apenas sabia decir "daisy 0.08"
+      separa las escenas casi perfecto. Misma escena 0.905 a 0.976 (volteada, recortada), escena
+      distinta 0.021. No hubo reentrenamiento: es la misma red, solo que leida una capa antes.
+
+      TODO ESTA MEDIDO con ResNet-50 y los pesos por defecto de torchvision. Las imagenes son las dos
+      que trae scikit-learn (load_sample_images, sin descargas) mas variantes generadas en el canvas.
+      Son CC-BY 2.0 de danielbuechele y vultilion en Flickr, y la atribucion va impresa en el propio
+      widget. Se regenera con scripts/gen_cut_head_data.py.
+
+      DOS COSAS QUE CONVIENE DECIR:
+        1. Que el volteo horizontal baje el coseno a 0.967 y el recorte a 0.905 no es ruido: son
+           imagenes distintas para la red, y aun asi quedan lejisimos de la flor (0.02). Ese margen es
+           lo que hace utilizable el embedding.
+        2. Este es exactamente el mecanismo del transfer learning de la unidad 11 (feature extraction:
+           congelar todo y entrenar solo la cabeza) visto desde el otro lado: alli se cambia la cabeza,
+           aqui se quita. Y es lo que FaceNet critica dos diapositivas mas adelante por indirecto.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-facenet">
     <h2>FaceNet: Reconocer es Medir Distancia</h2>
     <p style="font-size: 0.46em; text-align:center; margin: 0.05em 0 0.4em 0;">
@@ -6025,6 +6072,57 @@ E = E / np.linalg.norm(E, axis=1, keepdims=True)</code></pre>
     <aside class="notes">
       Widget propio con similitudes reales. Consultas 0 y 3: solapamiento lexico maximo = 0.000. Es el
       argumento mas contundente de toda la unidad.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-busq-flow">
+    <h2>Búsqueda Semántica, Paso a Paso</h2>
+    <div class="widget-container">
+      <canvas id="busq-flow-canvas" width="900" height="400"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.3em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn" id="busq-sig">▶ siguiente</button>
+        <button class="widget-btn fi-btn" id="busq-reset">↺</button>
+        <button class="widget-btn fi-btn busq-q-btn" data-q="0">salsa</button>
+        <button class="widget-btn fi-btn busq-q-btn" data-q="1">partido</button>
+        <button class="widget-btn fi-btn busq-q-btn" data-q="2">satélites</button>
+        <button class="widget-btn fi-btn busq-q-btn" data-q="3">ahorrar</button>
+        <button class="widget-btn fi-btn busq-q-btn" data-q="4">tarjeta</button>
+      </div>
+    </div>
+    <p style="font-size: 0.34em; text-align:center; color: var(--c-text-dim); margin-top: 0.2em;">
+      13 documentos y 5 consultas codificados de verdad. Los puntajes son cosenos
+      <strong>reales en 384 dimensiones</strong>, no la distancia del dibujo.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/semantic-search-flow-widget.js), datos en
+      js/widgets/semantic-search-data.js. Es la respuesta visual a "¿que hace realmente un buscador
+      semantico?", y conviene correrlo entero antes de entrar a kNN y ANN, que son el COMO.
+
+      LOS CINCO PASOS, que es el guion:
+        1. El corpus ya esta indexado. Insistir en que esto se calculo UNA vez, no por consulta.
+        2. Llega la consulta y todavia es texto: el indice no sabe que hacer con ella.
+        3. La codifica EL MISMO modelo que codifico los documentos. Este es el punto que mas se
+           olvida: si se cambia de modelo hay que reindexar todo, porque los dos vectores tienen que
+           vivir en el mismo espacio. La animacion muestra la consulta viajando desde la caja de texto
+           hasta su posicion en el espacio.
+        4. Se mide contra TODOS. Aqui son 13 lineas; decir en voz alta que en produccion son millones y
+           que por eso existe ANN, que es la diapositiva de mas adelante.
+        5. Se queda con los k mas cercanos, y esos son los que van al prompt.
+
+      LO QUE HAY QUE HACER NOTAR: ninguna de las cinco consultas comparte palabras con los documentos
+      que recupera. "¿como preparo la salsa?" trae "sazonar la carne con sal gruesa" (0.452) y
+      "cuantos satelites tiene el planeta mas grande" trae "Jupiter tiene al menos noventa lunas"
+      (0.598), donde ni "satelite" ni "planeta" aparecen en el documento. Eso es exactamente lo que
+      BM25 no puede hacer.
+
+      SOBRE EL DIBUJO, y esto es importante decirlo: la posicion 2D es una PROYECCION, pero no se
+      eligio a ojo. Se probaron PCA, MDS con cinco semillas y t-SNE con tres perplejidades, y en cada
+      una se midio cuanto coincide el vecino mas cercano del dibujo con el vecino mas cercano real por
+      coseno. PCA acertaba el 40 % de las veces; t-SNE con perplexity 5 acierta el 100 %, con 93 % de
+      solape en el top-3 y 100 % de pureza por tema. Por eso este dibujo se puede leer sin mentir,
+      mientras que el de "Explora el Espacio de Embeddings" lleva la advertencia de que la cercania en
+      pantalla no es la cercania real. El script que lo decide es scripts/elige_proyeccion_2d.py.
     </aside>
   </section>
 
@@ -14921,6 +15019,10 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/embeddings-data.js"></script>
 <script src="js/widgets/embedding-space-widget.js"></script>
 <script src="js/widgets/embedding-cube-widget.js"></script>
+<script src="js/widgets/semantic-search-data.js"></script>
+<script src="js/widgets/semantic-search-flow-widget.js"></script>
+<script src="js/widgets/cut-head-data.js"></script>
+<script src="js/widgets/cut-head-widget.js"></script>
 <script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
@@ -15085,6 +15187,18 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSelfQueryPromptsWidget === 'function') {
       initSelfQueryPromptsWidget();
       widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#corte-canvas') && !widgetsInitialized.corteCabeza) {
+    if (typeof initCutHeadWidget === 'function') {
+      initCutHeadWidget();
+      widgetsInitialized.corteCabeza = true;
+    }
+  }
+  if (slide.querySelector('#busq-flow-canvas') && !widgetsInitialized.busqFlow) {
+    if (typeof initSemanticSearchFlowWidget === 'function') {
+      initSemanticSearchFlowWidget();
+      widgetsInitialized.busqFlow = true;
     }
   }
   if (slide.querySelector('#emb-cube-canvas') && !widgetsInitialized.embCube) {
