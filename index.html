@@ -7428,6 +7428,51 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     <aside class="notes">Fuente: RAG_M1 (slide "Token"). El tokenizador tipico es BPE o SentencePiece.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-tokens">
+    <h2>Lo que el Modelo Ve de Verdad</h2>
+    <div class="widget-container">
+      <canvas id="tok-canvas" width="900" height="400"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn tok-btn" data-i="0">común</button>
+        <button class="widget-btn fi-btn tok-btn" data-i="1">rara</button>
+        <button class="widget-btn fi-btn tok-btn" data-i="2">números</button>
+        <button class="widget-btn fi-btn tok-btn" data-i="3">código</button>
+        <button class="widget-btn fi-btn tok-btn" data-i="4">inglés</button>
+        <button class="widget-btn fi-btn tok-btn" data-i="5">emoji</button>
+        <button class="widget-btn fi-btn" id="tok-ids">ver los ids</button>
+      </div>
+    </div>
+    <aside class="notes">
+      Widget propio (js/widgets/tokens-widget.js), datos en js/widgets/tokens-data.js. Las seis
+      tokenizaciones son reales, hechas con el tokenizador de Qwen2.5-1.5B-Instruct, o sea el modelo
+      que los estudiantes corren en los notebooks 17 y 28. Se regenera con
+      scripts/gen_tokens_data.py.
+
+      TRES COSAS QUE SOLO SE VEN AQUI:
+
+      1. "gato" se parte en " g" + "ato". Una palabra corriente del espanol, dos tokens. Sirve para
+         matar la idea de que token = palabra, que es la confusion mas comun de toda la unidad.
+
+      2. LOS NUMEROS VAN DIGITO POR DIGITO: 4471 son cuatro tokens (4|4|7|1) y 1250.75 son siete. El
+         modelo NUNCA ve el numero 4471, ve una secuencia de cifras sueltas. Esto conviene enlazarlo
+         directamente con la diapositiva "Un Modelo Moderno Acierta Mas, no Distinto", donde el modelo
+         falla 3947 x 6213 por 14,200: no es que no sepa multiplicar, es que ni siquiera recibe los
+         numeros como numeros. Y con el notebook 28, donde una calculadora como herramienta lo
+         resuelve exacto.
+
+      3. EL ESPANOL CUESTA MAS QUE EL INGLES. "El gato duerme en el sofa de la sala" son 36 caracteres
+         y 13 tokens; su traduccion "The cat is sleeping on the sofa in the living room" son 50
+         caracteres y 11 tokens. O sea que la frase espanola es 28 % mas corta y aun asi gasta MAS
+         tokens. La barra de la derecha lo ordena: ingles 4.55 caracteres por token, espanol comun
+         2.77, numeros 1.94. Como se paga por token y la ventana de contexto se mide en tokens, esto
+         es plata y latencia en el capstone.
+
+      El simbolo ␣ marca los espacios que van DENTRO del token: casi todas las piezas empiezan con
+      espacio, que es como el tokenizador codifica los limites de palabra.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>La Idea Central: es un Clasificador</h2>
     <p style="font-size: 0.46em;">
@@ -15141,6 +15186,8 @@ trozos  = RecursiveCharacterTextSplitter(
 <script src="js/widgets/clip-matrix-widget.js"></script>
 <script src="js/widgets/window-pairs-widget.js"></script>
 <script src="js/widgets/context-vector-widget.js"></script>
+<script src="js/widgets/tokens-data.js"></script>
+<script src="js/widgets/tokens-widget.js"></script>
 <script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
@@ -15305,6 +15352,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSelfQueryPromptsWidget === 'function') {
       initSelfQueryPromptsWidget();
       widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#tok-canvas') && !widgetsInitialized.tokens) {
+    if (typeof initTokensWidget === 'function') {
+      initTokensWidget();
+      widgetsInitialized.tokens = true;
     }
   }
   if (slide.querySelector('#w2v-canvas') && !widgetsInitialized.w2vVentana) {
