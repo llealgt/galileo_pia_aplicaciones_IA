@@ -5992,8 +5992,8 @@ with torch.no_grad():
       texto, audio, profundidad, térmico y movimiento — en un solo espacio).
     </blockquote>
         <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(88,196,221,0.08);">
-      🔗 Para verlo funcionando: el <strong>notebook 29 del curso</strong> —el oficial de OpenAI en
-      español, más comparación texto↔texto y búsqueda semántica— o el original:
+      🔗 Para verlo funcionando: el <strong>notebook oficial de OpenAI</strong> corre CLIP en Colab —
+      codifica imágenes y textos y los compara.
       <a href="https://colab.research.google.com/github/openai/clip/blob/master/notebooks/Interacting_with_CLIP.ipynb"
          target="_blank" rel="noopener" style="font-size: 0.9em;">Interacting_with_CLIP.ipynb</a>
     </p>
@@ -16122,5 +16122,26 @@ Reveal.on('slidechanged', function(event) {
 });
 </script>
 
+
+<script>
+var Q = new URLSearchParams(location.search);
+Reveal.on("ready", function () {
+  setTimeout(function () {
+    var cid=Q.get("c");
+    var cv=document.getElementById(cid);
+    var sl=cv.closest("section");
+    var ix=Reveal.getIndices(sl); Reveal.slide(ix.h, ix.v);
+    setTimeout(function(){
+      var n=parseInt(Q.get("pasos")||"0",10);
+      for(var i=0;i<n;i++){
+        var b=[].slice.call(sl.querySelectorAll("button"))
+                 .filter(function(x){return /siguiente|paso|token/i.test(x.textContent);})[0];
+        if(b) b.click();
+      }
+      Reveal.layout();
+    }, 800);
+  }, 700);
+});
+</script>
 </body>
 </html>
