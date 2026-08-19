@@ -6398,6 +6398,71 @@ print(res["documents"][0])</code></pre>
     <aside class="notes">Contenido propio. Chroma se instala con pip install chromadb y no requiere servidor.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-guatemala">
+    <h2>Alta Similitud, Cero Respuesta</h2>
+    <p style="font-size: 0.44em; text-align:center; margin: 0.05em 0 0.35em 0;">
+      Un corpus de geografía centroamericana. La pregunta:
+      <strong style="color: var(--c-yellow);">«¿Cuál es la capital de Guatemala?»</strong> —
+      y <strong>ningún documento la responde</strong>.
+    </p>
+    <table style="font-size: 0.4em; width: 94%; margin: 0 auto; border-collapse: collapse;">
+      <tr style="color: var(--c-text-dim);">
+        <th style="padding:0.15em 0.3em;">#</th><th style="padding:0.15em 0.3em;">cos</th>
+        <th style="text-align:left; padding:0.15em 0.3em;">documento</th>
+        <th style="text-align:left; padding:0.15em 0.3em;">qué tiene</th>
+      </tr>
+      <tr><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12);">1</td><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-red);">0.738</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-red);">La capital de Guatemala es susceptible a temblores</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color: var(--c-text-dim); font-size:0.9em;">el país correcto, el tema equivocado</td></tr>
+      <tr><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12);">2</td><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-red);">0.571</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-red);">La capital de El Salvador es San Salvador</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color: var(--c-text-dim); font-size:0.9em;">la forma correcta, el país equivocado</td></tr>
+      <tr><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12);">3</td><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim);">0.514</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">La capital de Honduras es Tegucigalpa</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color: var(--c-text-dim); font-size:0.9em;">otro país</td></tr>
+      <tr><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12);">4</td><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim);">0.258</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">Costa Rica abolió su ejército en 1948</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color: var(--c-text-dim); font-size:0.9em;">otro tema</td></tr>
+      <tr><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12);">5</td><td style="padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); font-family:'Fira Code',monospace; color:var(--c-text-dim);">0.081</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color:var(--c-text-dim);">La temporada de lluvias va de mayo a octubre</td><td style="text-align:left; padding:0.18em 0.3em; border-top:1px solid rgba(236,230,208,0.12); color: var(--c-text-dim); font-size:0.9em;">sin relación</td></tr>
+    </table>
+    <p style="font-size: 0.4em; text-align:center; margin-top: 0.35em;">
+      Con <strong>top-2</strong> el LLM recibe los dos primeros. Uno tiene el país; el otro, la frase
+      «la capital de … es …». <strong>Entre los dos parece que está la respuesta.</strong>
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.44em; text-align:center; margin-top: 0.4em; padding: 0.35em; background: rgba(252,98,85,0.12);">
+      Y con la instrucción «responde SOLO con el contexto; si no alcanza, dilo», contestó:<br>
+      <strong style="color: var(--c-red); font-size: 1.15em;">«La capital de Guatemala es San Pedro Sula.»</strong>
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em; color: var(--c-yellow);">
+      San Pedro Sula <strong>ni siquiera aparece en el contexto</strong> — y está en Honduras.
+    </p>
+    <aside class="notes">
+      Contenido propio, medido con paraphrase-multilingual-MiniLM-L12-v2 para la recuperacion y
+      Qwen2.5-1.5B-Instruct para la respuesta. El corpus, la pregunta y los cinco cosenos son los de la
+      corrida real.
+
+      ESTA DIAPOSITIVA VA ANTES DE "PARECERSE NO ES CONTENER LA RESPUESTA" porque es la version corta
+      del mismo problema: alli hacen falta dos saltos y aqui basta una pregunta de primaria.
+
+      EL GUION, en tres tiempos:
+
+      1. Leer los dos primeros en voz alta sin dar el puntaje. La clase suele decir que se ven
+         relevantes: uno habla de la capital de Guatemala y el otro tiene exactamente la forma
+         "la capital de X es Y". Entre los dos PARECE que esta la respuesta.
+      2. Senalar que ninguno la contiene. El primero habla de temblores; el segundo es de otro pais.
+         El retriever hizo su trabajo —devolvio lo mas parecido— y aun asi el contexto es inutil.
+      3. Revelar la respuesta del modelo. Y aqui esta lo que sorprende: no contesto "San Salvador",
+         que seria el error esperable de copiar el segundo documento. Contesto "San Pedro Sula", que
+         NO ESTA EN EL CONTEXTO y ademas es de Honduras. O sea que mezclo el contexto con lo que
+         traia en los pesos y produjo un tercer error nuevo.
+
+      DOS COSAS QUE HAY QUE DECIR PARA NO SOBREVENDER EL EJEMPLO:
+
+        - El prompt SI llevaba la instruccion de negarse. No sirvio. Las instrucciones bajan la tasa de
+          alucinacion, no la eliminan, y esto es la unidad 12 punto 4 de Bowman otra vez.
+        - Es un modelo de 1.5B; uno grande se habria negado con mas frecuencia. Pero el fallo de
+          RECUPERACION es independiente del modelo: el corpus no tiene la respuesta y el retriever
+          devuelve k documentos igual, porque devolver k es lo unico que sabe hacer.
+
+      LA MORALEJA OPERATIVA: un retriever siempre devuelve algo. No existe el "no encontre nada" a
+      menos que tu lo programes — un umbral minimo de similitud, o un paso que verifique que el
+      contexto realmente responde. Eso ultimo es el evaluador del RAG agentico de la unidad 19, y las
+      metricas de faithfulness de la unidad 17.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-parecerse">
     <h2>Parecerse No Es Contener la Respuesta</h2>
     <p style="font-size: 0.46em; text-align:center; margin: 0.05em 0 0.4em 0;">

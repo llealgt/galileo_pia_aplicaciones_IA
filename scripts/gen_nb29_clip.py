@@ -559,6 +559,174 @@ plt.tight_layout(); plt.show()
 """)
 
 md(r"""
+---
+
+# 11. Reducir dimensiones para poder ver  *(sección nueva)*
+
+Los vectores tienen **512 dimensiones**. Nadie puede mirar eso. Para verlos hay que proyectarlos a
+2D, y ahí aparece la trampa de siempre: **el dibujo miente un poco, siempre**. Lo que se puede hacer
+es elegir la proyección **midiendo** cuánto miente, en vez de a ojo.
+
+Dos formas:
+
+* **PCA** — busca las direcciones donde los datos más se estiran. Es lineal, determinista y te dice
+  qué porcentaje de la varianza conservó. Barata y honesta.
+* **t-SNE** — no conserva distancias globales, pero se esfuerza en que los **vecinos sigan siendo
+  vecinos**. Suele verse mejor, a costa de que las distancias entre grupos lejanos no signifiquen nada.
+""")
+
+code(r"""
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+X = v_corpus.numpy()
+
+pca = PCA(n_components=2, random_state=0)
+C_pca = pca.fit_transform(X)
+print(f"PCA · varianza conservada en 2 componentes: {pca.explained_variance_ratio_.sum():.1%}")
+print(f"      (de {X.shape[1]} dimensiones a 2)")
+
+C_tsne = TSNE(n_components=2, perplexity=5, random_state=0, init="pca").fit_transform(X)
+
+# ¿cuál miente menos? se mide: ¿el vecino más cercano EN EL DIBUJO
+# es el mismo que el vecino más cercano REAL en 512 dimensiones?
+S = X @ X.T; np.fill_diagonal(S, -9)
+vecino_real = S.argmax(axis=1)
+
+def fidelidad(C, nombre):
+    D = ((C[:, None, :] - C[None, :, :]) ** 2).sum(-1)
+    np.fill_diagonal(D, 9e9)
+    vecino_2d = D.argmin(axis=1)
+    igual = (vecino_2d == vecino_real).sum()
+    tema_ok = sum(TEMA[int(vecino_2d[i])] == TEMA[i] for i in range(len(C)))
+    print(f"  {nombre:<8} vecino real conservado {igual}/{len(C)}   "
+          f"vecino del mismo tema {tema_ok}/{len(C)}")
+    return igual
+
+print("\n¿Qué tanto miente cada proyección?")
+f_pca  = fidelidad(C_pca,  "PCA")
+f_tsne = fidelidad(C_tsne, "t-SNE")
+""")
+
+code(r"""
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+for ax, C, nombre, fid in [(axes[0], C_pca,  "PCA", f_pca),
+                           (axes[1], C_tsne, "t-SNE", f_tsne)]:
+    for tema, color in COLOR_TEMA.items():
+        idx = [i for i, t in enumerate(TEMA) if t == tema]
+        ax.scatter(C[idx, 0], C[idx, 1], s=170, c=color, label=tema,
+                   edgecolors="white", linewidths=1.2, zorder=3)
+    for i, t in enumerate(CORPUS):
+        corto = " ".join(t.split()[:3])
+        ax.annotate(corto, (C[i, 0], C[i, 1]), fontsize=7.5,
+                    xytext=(0, 11), textcoords="offset points",
+                    ha="center", color="#444")
+    ax.set_title(f"{nombre}  —  conserva el vecino real en {fid} de {len(CORPUS)}", fontsize=12)
+    ax.set_xticks([]); ax.set_yticks([])
+    for lado in ("top", "right", "left", "bottom"): ax.spines[lado].set_visible(False)
+axes[0].legend(frameon=False, fontsize=9, loc="best")
+plt.suptitle("Los mismos 14 textos, dos proyecciones distintas", fontsize=13)
+plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+Los cuatro temas se separan — **ese es el punto**: nadie le dijo al modelo que "café" y "pasta" van
+juntos, y aun así caen cerca. Los grupos salen de la geometría, no de una etiqueta.
+
+Fíjate en cuál conserva mejor los vecinos, porque la diferencia es **grande**: al correrlo, PCA
+conservó el vecino real en 5 de 14 y t-SNE en 14 de 14. La razón está en la línea anterior — PCA
+solo pudo meter un **28 %** de la varianza en dos componentes, así que tira el 72 % restante y con él
+se va buena parte de la vecindad.
+
+Curiosamente las dos aciertan casi igual en *tema* (13 de 14). O sea que **PCA sirve para ver los
+grupos y t-SNE para ver quién está pegado a quién**, y conviene saber cuál de las dos preguntas estás
+haciendo.
+
+> **Advertencia que hay que tomarse en serio:** en t-SNE **la distancia entre grupos no significa
+> nada**. Que dos grupos queden lejos en el dibujo no quiere decir que estén lejos en las 512
+> dimensiones. Lo único fiable es quién está pegado a quién.
+""")
+
+md(r"""
+## 11.1  Y ahora, imágenes y textos en el MISMO mapa
+
+Como los dos codificadores comparten espacio, se pueden proyectar juntos. La expectativa razonable
+sería que **cada imagen quedara pegada a su descripción**. Vamos a medirlo antes de dibujarlo.
+""")
+
+code(r"""
+ii = (v_img @ v_img.T).numpy()
+tt = (v_txt @ v_txt.T).numpy()
+it = (v_img @ v_txt.T).numpy()
+fuera = ~np.eye(len(ii), dtype=bool)
+
+print("Coseno medio dentro de cada modalidad y entre modalidades:")
+print(f"  imagen ↔ imagen          : {ii[fuera].mean():+.3f}")
+print(f"  texto  ↔ texto           : {tt[fuera].mean():+.3f}")
+print(f"  imagen ↔ texto           : {it.mean():+.3f}")
+print(f"  imagen ↔ SU descripción  : {np.diag(it).mean():+.3f}")
+print()
+print(f"Distancia entre el centro de las imágenes y el de los textos: "
+      f"{np.linalg.norm(v_img.numpy().mean(0) - v_txt.numpy().mean(0)):.3f}")
+""")
+
+code(r"""
+X2 = np.vstack([v_img.numpy(), v_txt.numpy()])
+modalidad = ["imagen"] * len(v_img) + ["texto"] * len(v_txt)
+C2 = TSNE(n_components=2, perplexity=5, random_state=0, init="pca").fit_transform(X2)
+
+D2 = ((C2[:, None, :] - C2[None, :, :]) ** 2).sum(-1); np.fill_diagonal(D2, 9e9)
+misma_mod = sum(modalidad[int(D2[i].argmin())] == modalidad[i] for i in range(len(C2)))
+
+fig, ax = plt.subplots(figsize=(11, 7))
+n = len(v_img)
+for i in range(n):                                   # une cada imagen con SU descripción
+    ax.plot([C2[i, 0], C2[n + i, 0]], [C2[i, 1], C2[n + i, 1]],
+            color="#bbb", lw=1, ls="--", zorder=1)
+ax.scatter(C2[:n, 0], C2[:n, 1], s=210, marker="s", c=OKABE[0],
+           edgecolors="white", linewidths=1.4, label="imagen", zorder=3)
+ax.scatter(C2[n:, 0], C2[n:, 1], s=170, marker="o", c=OKABE[1],
+           edgecolors="white", linewidths=1.4, label="su descripción", zorder=3)
+for i, g in enumerate(glosas):
+    ax.annotate(g, (C2[i, 0], C2[i, 1]), fontsize=7.5, xytext=(0, 13),
+                textcoords="offset points", ha="center", color=OKABE[0])
+    ax.annotate(g, (C2[n + i, 0], C2[n + i, 1]), fontsize=7.5, xytext=(0, 12),
+                textcoords="offset points", ha="center", color=OKABE[1])
+ax.set_xticks([]); ax.set_yticks([])
+for lado in ("top", "right", "left", "bottom"): ax.spines[lado].set_visible(False)
+ax.legend(frameon=False, fontsize=10)
+ax.set_title("Imágenes y descripciones en el mismo espacio\n"
+             f"el vecino más cercano es de la MISMA modalidad en {misma_mod} de {len(C2)} puntos",
+             fontsize=12)
+plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+### La brecha de modalidad
+
+Las líneas punteadas unen cada imagen con su descripción, y **casi ninguna es corta**. Los cuadrados
+se juntan con cuadrados y los círculos con círculos: el vecino más cercano de cada punto es de su
+propia modalidad, en los 16 casos.
+
+Los números lo explican. Una imagen se parece a otra imagen (**+0.46**) mucho más de lo que se parece
+a su propia descripción (**+0.32**), y los centros de las dos nubes están a **0.88** de distancia
+sobre vectores unitarios, que es muchísimo. Eso tiene nombre en la literatura: la **brecha de
+modalidad** (*modality gap*, Liang et al. 2022) — las dos modalidades viven en **conos separados**
+del mismo espacio.
+
+Esto no rompe nada de lo anterior, pero **corrige cómo hay que leerlo**:
+
+* Lo que funciona es **comparar dentro de una fila**: de estas ocho imágenes, ¿cuál va con este texto?
+  Ahí la diagonal ganó 8 de 8.
+* Lo que **no** funciona es tratar el coseno imagen–texto como una distancia absoluta. Un 0.32 entre
+  una foto y su descripción correcta puede ser más bajo que un 0.46 entre dos fotos que no tienen nada
+  que ver.
+* Por eso, si mezclas imágenes y textos en el mismo índice vectorial y buscas por cercanía cruda,
+  **te van a salir primero todos los de la misma modalidad que la consulta**. La solución práctica es
+  buscar por modalidad y fusionar después, no tirar todo al mismo saco.
+""")
+
+md(r"""
 ## Conceptos clave
 
 * **Un espacio, dos puertas.** Imagen y texto salen como vectores de 512 dimensiones que se comparan
@@ -572,6 +740,11 @@ md(r"""
   de oraciones, y en español se cae más. Si tu problema es solo texto, usa un modelo de texto; CLIP
   es el puente cuando hay imágenes de por medio.
 * **No modela negaciones.** `"a cat"` y `"not a cat"` quedan casi encima.
+* **Hay una brecha de modalidad.** Imágenes y textos ocupan zonas separadas del mismo espacio: una
+  imagen se parece más a otra imagen (+0.46) que a su propia descripción (+0.32). El coseno
+  imagen–texto sirve para **ordenar dentro de una fila**, no como distancia absoluta.
+* **Para ver 512 dimensiones hay que proyectar, y la proyección miente.** Elige cuál usar midiendo
+  si conserva los vecinos, y recuerda que en t-SNE la distancia entre grupos no significa nada.
 
 ### Para seguir
 
