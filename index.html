@@ -6832,7 +6832,25 @@ docs = retriever.invoke(
       reintenta <strong>sin el filtro</strong> y avísale al usuario. Es preferible a una pantalla vacía por
       un filtro mal generado.
     </blockquote>
-    <aside class="notes">Contenido propio. El modo de fallo mas comun es que el LLM invente un valor de categoria que no existe en la metadata; por eso conviene enumerar los valores validos en la description.</aside>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(88,196,221,0.08);">
+      📓 <strong>Para practicarlo:</strong>
+      <a href="https://colab.research.google.com/drive/1mjMEes27_KtAfaZfzsUdj9oUQYhuu-li?usp=sharing"
+         target="_blank" rel="noopener">notebook de self-query en Colab</a>
+      &nbsp;·&nbsp; y en el repo del curso, el <strong>25</strong> (self-query implementado a mano) y la
+      <strong>tarea 30</strong>.
+    </p>
+    <aside class="notes">
+      Contenido propio. El modo de fallo mas comun es que el LLM invente un valor de categoria que no
+      existe en la metadata; por eso conviene enumerar los valores validos en la description.
+
+      El enlace de Colab es el notebook complementario de self-query. Conviene abrirlo en clase justo
+      despues de esta diapositiva, cuando ya se discutio cuando conviene y cuando no: asi el estudiante
+      lo lee con el criterio puesto y no como una receta.
+
+      En el repo del curso hay dos piezas mas sobre lo mismo: el notebook 25 lo implementa a mano sobre
+      ChromaDB, y la tarea 30 lo pide como ejercicio —el estudiante escribe el prompt del extractor y
+      el parseo tolerante del JSON—.
+    </aside>
   </section>
 
   <section data-transition="fade">
