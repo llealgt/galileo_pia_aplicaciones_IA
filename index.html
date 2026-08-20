@@ -7128,6 +7128,58 @@ docs = retriever.invoke(
     <aside class="notes">Ese ultimo punto tiene nombre: catastrophic forgetting. Es el error mas caro del fine-tuning y el mas facil de evitar: entrenar la cabeza primero, y solo entonces descongelar.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-congelar">
+    <h2>Qué se Congela y Qué se Entrena</h2>
+    <div class="widget-container">
+      <canvas id="congelar-canvas" width="900" height="290"
+              style="width:100%; max-width:900px; display:block; margin:0 auto;"></canvas>
+      <div class="widget-controls" style="justify-content:center; margin-top:0.25em; flex-wrap:wrap; gap:0.3em;">
+        <button class="widget-btn fi-btn congelar-btn" data-modo="cero">desde cero</button>
+        <button class="widget-btn fi-btn congelar-btn" data-modo="extrac">feature extraction</button>
+        <button class="widget-btn fi-btn congelar-btn" data-modo="fino">fine-tuning</button>
+        <span id="congelar-slider-caja" class="widget-label" style="font-size:0.62em; margin-left:0.5em; display:inline-flex; align-items:center; gap:0.3em; white-space:nowrap;">
+          bloques descongelados <span class="widget-value" id="congelar-slider-valor">2</span>
+          <input type="range" id="congelar-slider" class="widget-slider" min="1" max="8" step="1"
+                 value="2" style="width:110px; margin-left:0.3em;">
+        </span>
+      </div>
+    </div>
+    <p style="font-size: 0.34em; text-align:center; color: var(--c-text-dim); margin-top: 0.15em;">
+      Los 19 bloques y sus parámetros están medidos con <code>torchvision</code>; el contador se
+      calcula al mover el slider, no está interpolado.
+    </p>
+    <aside class="notes">
+      Widget propio (js/widgets/frozen-layers-widget.js). Va aqui, entre "Las Dos Estrategias" —que las
+      describe con palabras— y "Explora la Decision" —que ayuda a elegir—: en medio hace falta VER que
+      significa congelar.
+
+      LOS NUMEROS SON MEDIDOS con torchvision sobre mobilenet_v2 con los pesos por defecto: 19 bloques
+      en features que suman 2,223,872 parametros, mas la cabeza binaria de 1,281 de los notebooks 13 y
+      14. Total 2,225,153. La aritmetica del widget se verifico contra esa medicion en Node antes de
+      darla por buena.
+
+      TRES COSAS QUE SE VEN Y NO SE PUEDEN CONTAR CON PALABRAS:
+
+      1. EL ANCHO DE LOS BLOQUES. Es proporcional a sus parametros, y ahi esta la sorpresa: los cuatro
+         ultimos bloques concentran el 51 % del modelo. Cuando alguien dice "descongele solo las
+         ultimas capitas" en realidad descongelo medio modelo. Con el slider en 2 ya van 887,361
+         parametros, o sea 40 % del total.
+
+      2. EL GRADIENTE QUE SE DETIENE. La flecha roja retrocede desde la cabeza y se para en la linea de
+         corte. Eso es literalmente lo que hace requires_grad=False: no es que los pesos "no cambien
+         por buena voluntad", es que el backprop no llega. Y por eso feature extraction es tan rapido:
+         no se calculan gradientes de 2.2 millones de parametros.
+
+      3. EL LEARNING RATE CAMBIA CON LA ESTRATEGIA. En feature extraction la cabeza es nueva y aleatoria,
+         asi que 1e-3 esta bien. En fine-tuning los pesos ya son buenos y un paso grande los destroza:
+         de 10 a 100 veces mas chico. Es el error mas caro de esta unidad.
+
+      Y el panel de accuracy repite lo medido en los notebooks para que la comparacion quede a la vista:
+      feature extraction entrena 1,281 parametros y acierta 94.8 %, mientras que la CNN desde cero
+      entrena 2.2 millones y se queda en 67.3 %.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Explora la Decisión</h2>
     <div class="widget-container">
@@ -15786,6 +15838,7 @@ def rag_agentico(pregunta, max_intentos=2):
 <script src="js/widgets/tokens-widget.js"></script>
 <script src="js/widgets/alucinacion-data.js"></script>
 <script src="js/widgets/hallucination-widget.js"></script>
+<script src="js/widgets/frozen-layers-widget.js"></script>
 <script src="js/widgets/self-query-prompts-widget.js"></script>
 <script src="js/widgets/semantic-search-widget.js"></script>
 <script src="js/widgets/transfer-widget.js"></script>
@@ -15950,6 +16003,12 @@ Reveal.on('slidechanged', function(event) {
     if (typeof initSelfQueryPromptsWidget === 'function') {
       initSelfQueryPromptsWidget();
       widgetsInitialized.sqPrompts = true;
+    }
+  }
+  if (slide.querySelector('#congelar-canvas') && !widgetsInitialized.congelar) {
+    if (typeof initFrozenLayersWidget === 'function') {
+      initFrozenLayersWidget();
+      widgetsInitialized.congelar = true;
     }
   }
   if (slide.querySelector('#aluc-canvas') && !widgetsInitialized.alucinacion) {
