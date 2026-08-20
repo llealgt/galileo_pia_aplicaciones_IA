@@ -6801,9 +6801,24 @@ docs = retriever.invoke(
       Con <code>verbose=True</code> ves exactamente qué generó el LLM — imprescindible para depurar, porque
       cuando falla suele ser por una <strong>descripción ambigua</strong> de un campo.
     </p>
+    <p class="fragment fade-up" style="font-size: 0.38em; text-align:center; margin-top: 0.25em; padding: 0.28em; background: rgba(88,196,221,0.08);">
+      📓 Este mismo código, corriendo:
+      <a href="https://colab.research.google.com/github/elastic/elasticsearch-labs/blob/main/notebooks/langchain/self-query-retriever-examples/chatbot-example.ipynb"
+         target="_blank" rel="noopener">ejemplo de Elastic en Colab</a> —
+      el mismo <code>SelfQueryRetriever</code> sobre Elasticsearch en vez de Chroma.
+    </p>
     <aside class="notes">
       Fuente: documentacion de LangChain (SelfQueryRetriever). Requiere que el vectorstore soporte filtros
       estructurados (Chroma, Qdrant, Weaviate, Pinecone y varios mas los soportan).
+
+      El notebook enlazado es el de elasticsearch-labs: monta el mismo SelfQueryRetriever con
+      AttributeInfo y metadata_field_info, pero sobre ElasticsearchStore. Sirve para ver que la parte
+      de self-query es identica y lo unico que cambia es el vectorstore de abajo.
+
+      AVISO ANTES DE MANDARLO: ese notebook NO cumple la regla del curso de correr sin llaves. Necesita
+      una clave de OpenAI (usa ChatOpenAI y OpenAIEmbeddings) y ademas una instancia de Elasticsearch.
+      Se enlaza como lectura y como referencia de la API; para practicar sin pagar nada estan el
+      notebook 25 y la tarea 30, que hacen lo mismo con el modelo local.
     </aside>
   </section>
 
@@ -6833,23 +6848,16 @@ docs = retriever.invoke(
       un filtro mal generado.
     </blockquote>
     <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(88,196,221,0.08);">
-      📓 <strong>Para practicarlo:</strong>
-      <a href="https://colab.research.google.com/drive/1mjMEes27_KtAfaZfzsUdj9oUQYhuu-li?usp=sharing"
-         target="_blank" rel="noopener">notebook de self-query en Colab</a>
-      &nbsp;·&nbsp; y en el repo del curso, el <strong>25</strong> (self-query implementado a mano) y la
-      <strong>tarea 30</strong>.
+      📓 <strong>Para practicarlo:</strong> el notebook <strong>25</strong> lo implementa a mano sobre
+      ChromaDB, y la <strong>tarea 30</strong> te pide escribir el extractor y el parseo.
     </p>
     <aside class="notes">
       Contenido propio. El modo de fallo mas comun es que el LLM invente un valor de categoria que no
       existe en la metadata; por eso conviene enumerar los valores validos en la description.
 
-      El enlace de Colab es el notebook complementario de self-query. Conviene abrirlo en clase justo
-      despues de esta diapositiva, cuando ya se discutio cuando conviene y cuando no: asi el estudiante
-      lo lee con el criterio puesto y no como una receta.
-
-      En el repo del curso hay dos piezas mas sobre lo mismo: el notebook 25 lo implementa a mano sobre
-      ChromaDB, y la tarea 30 lo pide como ejercicio —el estudiante escribe el prompt del extractor y
-      el parseo tolerante del JSON—.
+      Las dos piezas del curso sobre lo mismo: el notebook 25 lo implementa a mano sobre ChromaDB, y la
+      tarea 30 lo pide como ejercicio —el estudiante escribe el prompt del extractor y el parseo
+      tolerante del JSON—. El ejemplo con el framework esta enlazado en la diapositiva anterior.
     </aside>
   </section>
 
