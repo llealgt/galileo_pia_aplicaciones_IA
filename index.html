@@ -10042,9 +10042,7 @@ WHERE fecha_publicacion = '2023-10-01'
 
   <section data-transition="fade">
     <h2>TF-IDF</h2>
-    <div class="katex-block" style="font-size: 0.62em; margin: 0.3em 0;">
-      \[ \text{tf-idf}(t, d) \;=\; \underbrace{\frac{f(t,d)}{|d|}}_{\text{qué tanto aparece aquí}} \;\times\; \underbrace{\log\frac{N}{\text{df}(t)}}_{\text{qué tan raro es en general}} \]
-    </div>
+    <div class="katex-block" style="font-size: 0.62em; margin: 0.3em 0;">\text{tf-idf}(t, d) \;=\; \underbrace{\frac{f(t,d)}{|d|}}_{\text{qué tanto aparece aquí}} \;\times\; \underbrace{\log\frac{N}{\text{df}(t)}}_{\text{qué tan raro es en general}}</div>
     <p style="font-size: 0.42em; text-align:center; color: var(--c-text-dim);">
       El puntaje de un documento es la <strong>suma</strong> de esto sobre todos los términos de la consulta.
     </p>
@@ -10138,9 +10136,7 @@ WHERE fecha_publicacion = '2023-10-01'
 
   <section data-transition="fade">
     <h2>La Fórmula de BM25</h2>
-    <div class="katex-block" style="font-size: 0.5em; margin: 0.25em 0;">
-      \[ \text{BM25}(t,d) = \underbrace{\log\!\left(1 + \frac{N - \text{df} + 0.5}{\text{df} + 0.5}\right)}_{\text{IDF}} \cdot \frac{f(t,d)\,(k_1+1)}{f(t,d) + k_1\!\left(1 - b + b\,\frac{|d|}{\text{avgdl}}\right)} \]
-    </div>
+    <div class="katex-block" style="font-size: 0.5em; margin: 0.25em 0;">\text{BM25}(t,d) = \underbrace{\log\!\left(1 + \frac{N - \text{df} + 0.5}{\text{df} + 0.5}\right)}_{\text{IDF}} \cdot \frac{f(t,d)\,(k_1+1)}{f(t,d) + k_1\!\left(1 - b + b\,\frac{|d|}{\text{avgdl}}\right)}</div>
     <table style="font-size: 0.37em; width: 96%; margin: 0.2em auto;">
       <tr><th>Parámetro</th><th>Controla</th><th>Rango típico</th><th>Efecto</th></tr>
       <tr class="fragment fade-up"><td><strong style="color: var(--c-yellow);">k₁</strong></td>
@@ -10437,9 +10433,7 @@ for doc, s in sorted(zip(documentos, puntajes), key=lambda x: -x[1]):
 
   <section data-transition="fade">
     <h2>Reciprocal Rank Fusion</h2>
-    <div class="katex-block" style="font-size: 0.55em; margin: 0.2em 0;">
-      \[ \text{RRF}(d) \;=\; \beta \cdot \frac{1}{k + \text{rank}_{\text{sem}}(d)} \;+\; (1-\beta) \cdot \frac{1}{k + \text{rank}_{\text{kw}}(d)} \]
-    </div>
+    <div class="katex-block" style="font-size: 0.55em; margin: 0.2em 0;">\text{RRF}(d) \;=\; \beta \cdot \frac{1}{k + \text{rank}_{\text{sem}}(d)} \;+\; (1-\beta) \cdot \frac{1}{k + \text{rank}_{\text{kw}}(d)}</div>
     <p style="font-size: 0.41em; text-align:center; color: var(--c-text-dim);">
       Cada lista da puntos según la <strong>posición</strong>: 1º vale más que 2º, que vale más que 3º.
       Se suman los puntos de todas las listas y se reordena.
@@ -10599,12 +10593,12 @@ top = rrf(kw_ids, sem_ids, k=10, beta=0.5)[:5]</code></pre>
     <div class="columns" style="font-size: 0.4em;">
       <div class="col">
         <p style="margin:0.1em 0;"><strong style="color: var(--c-yellow);">Precisión</strong> — de lo que traje, ¿cuánto servía?</p>
-        <div class="katex-block" style="font-size: 0.85em; margin:0.15em 0;">\[ P = \frac{\text{relevantes recuperados}}{\text{total recuperados}} \]</div>
+        <div class="katex-block" style="font-size: 0.85em; margin:0.15em 0;">P = \frac{\text{relevantes recuperados}}{\text{total recuperados}}</div>
         <p style="margin:0.1em 0; color: var(--c-text-dim);">Castiga traer basura.</p>
       </div>
       <div class="col">
         <p style="margin:0.1em 0;"><strong style="color: var(--c-green);">Recall</strong> — de lo que servía, ¿cuánto traje?</p>
-        <div class="katex-block" style="font-size: 0.85em; margin:0.15em 0;">\[ R = \frac{\text{relevantes recuperados}}{\text{total relevantes}} \]</div>
+        <div class="katex-block" style="font-size: 0.85em; margin:0.15em 0;">R = \frac{\text{relevantes recuperados}}{\text{total relevantes}}</div>
         <p style="margin:0.1em 0; color: var(--c-text-dim);">Castiga dejar cosas fuera.</p>
       </div>
     </div>
