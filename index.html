@@ -7694,6 +7694,80 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     <aside class="notes">Fuente: RAG_M1 (slides del ciclo Process / Calculate / Select y "Autoregressive").</aside>
   </section>
 
+  <section data-transition="fade" id="sl-bucle-codigo">
+    <h2>El Mismo Bucle, en Código</h2>
+    <p style="font-size: 0.42em; text-align:center; margin: 0.05em 0 0.3em 0;">
+      Sin imports ni librerías. Los números de los comentarios son los cuatro pasos de la
+      diapositiva anterior.
+    </p>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-52" style="min-width:0; flex:0 0 52%;">
+        <pre style="font-size: 0.35em; margin: 0;"><code class="language-python">texto = "Qué día tan bonito, el sol está"
+
+for _ in range(max_tokens):
+
+    logits = modelo(texto)          # 1. procesa TODO el texto
+    probs  = softmax(logits / T)    # 2. una prob/token
+    siguiente = muestrear(probs)    # 3. tira el dado
+
+    texto = texto + siguiente       # 4. y vuelve a empezar
+
+    if siguiente == FIN_DE_TEXTO:
+        break</code></pre>
+        <p style="font-size: 0.36em; text-align:left; margin-top: 0.35em; color: var(--c-text-dim);">
+          <code>T</code> es la temperatura. Con <code>T→0</code> el paso 3 deja de ser un dado y
+          siempre sale el más probable: eso es <em>greedy</em>.
+        </p>
+      </div>
+      <div class="col-40" style="min-width:0; flex:0 0 40%;">
+        <p style="font-size: 0.38em; color: var(--c-orange); text-align:left; margin:0 0 0.15em 0;">
+          <strong>Y «muestrear» es esto</strong></p>
+        <pre style="font-size: 0.35em; margin: 0;"><code class="language-python">def muestrear(probs):
+    dado = random()   # en [0, 1)
+    acum = 0
+    for token, p in probs:
+        acum += p
+        if acum >= dado:
+            return token</code></pre>
+        <p style="font-size: 0.36em; text-align:left; margin-top: 0.35em; color: var(--c-text-dim);">
+          Una ruleta: cada token ocupa un tramo del <code>[0,1)</code> del tamaño de su probabilidad.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.35em; padding: 0.3em; background: rgba(255,255,0,0.07);">
+      Fíjate en la línea 1 del bucle: <strong>procesa el texto entero cada vuelta</strong>. Ahí está el
+      costo — y por qué existe el <em>KV cache</em>, que guarda lo ya calculado para no repetirlo.
+    </p>
+    <aside class="notes">
+      Contenido propio. Es la misma diapositiva anterior escrita en Python, para quien lee codigo mas
+      rapido que prosa. A proposito no lleva imports ni tensores: no es codigo ejecutable, es el
+      esqueleto.
+
+      LO QUE HAY QUE SENALAR, en este orden:
+
+      1. Que el bucle sea un for de cuatro lineas suele sorprender. Toda la magia esta dentro de
+         modelo(), y modelo() no decide nada: devuelve numeros. Quien elige es muestrear().
+
+      2. La linea "texto = texto + siguiente" es la autorregresion. Es literalmente concatenar. Si
+         alguien pregunta como el modelo "recuerda" lo que dijo, la respuesta es esa linea: no lo
+         recuerda, se lo vuelven a pasar entero.
+
+      3. modelo(texto) reprocesa TODO en cada vuelta. Ahi esta el costo cuadratico de la atencion que
+         se ve en la unidad 17, y la razon de que exista el KV cache. Conviene decir que en una
+         implementacion real esa linea recibe solo el ultimo token mas el cache, pero que
+         conceptualmente es lo mismo.
+
+      4. La temperatura aparece dividiendo los logits ANTES del softmax, que es exactamente donde va.
+         Con T tendiendo a 0 el softmax se vuelve un argmax y el dado deja de importar: eso es greedy.
+         Enlaza con el widget de generacion token por token, donde el slider de T hace precisamente
+         esta division.
+
+      La funcion muestrear es la ruleta que dibuja ese widget: se recorre la lista acumulando
+      probabilidad hasta pasar el numero aleatorio. Vale la pena hacer notar que si la distribucion es
+      picuda, el primer token se lleva casi todo el intervalo y casi siempre gana.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Entrenar = Aprendizaje Supervisado Ordinario</h2>
     <p style="font-size: 0.46em;">
