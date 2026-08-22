@@ -7710,10 +7710,10 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
 <section data-transition="fade">
     <h2>Para Qué se Usa un LLM en la Práctica</h2>
     <div style="text-align:center; margin:0.2em 0;">
-      <svg viewBox="0 0 760 118" style="width:100%; max-width:760px; max-height:120px;" role="img"><text x="380" y="11" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">te dan un texto y lo transforma</text><rect x="2" y="18" width="102" height="26" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.2"/><text x="53" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">resumir</text><rect x="111" y="18" width="102" height="26" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.2"/><text x="162" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">clasificar</text><rect x="220" y="18" width="102" height="26" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.2"/><text x="271" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">extraer</text><rect x="329" y="18" width="102" height="26" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.2"/><text x="380" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">reescribir</text><rect x="438" y="18" width="102" height="26" rx="6" fill="#5CD0B3" fill-opacity="0.16" stroke="#5CD0B3" stroke-width="1.2"/><text x="489" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">responder</text><rect x="547" y="18" width="102" height="26" rx="6" fill="#E48BB0" fill-opacity="0.16" stroke="#E48BB0" stroke-width="1.2"/><text x="598" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">redactar</text><rect x="656" y="18" width="102" height="26" rx="6" fill="#FFFF00" fill-opacity="0.16" stroke="#FFFF00" stroke-width="1.2"/><text x="707" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">código</text><text x="380" y="64" text-anchor="middle" fill="#FFFF00" font-size="10.5" font-family="Fira Code,monospace">decide dentro de un sistema — su salida la lee tu código</text><rect x="44" y="71" width="128" height="26" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.2"/><text x="108" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">enrutar</text><rect x="181" y="71" width="128" height="26" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.2"/><text x="245" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">self-query</text><rect x="318" y="71" width="128" height="26" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.2"/><text x="382" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">reformular</text><rect x="455" y="71" width="128" height="26" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.2"/><text x="519" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">herramientas</text><rect x="592" y="71" width="128" height="26" rx="6" fill="#E48BB0" fill-opacity="0.16" stroke="#E48BB0" stroke-width="1.2"/><text x="656" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">juzgar</text><text x="380" y="112" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">las doce son la misma operación: texto entra, texto sale</text></svg>
+      <svg viewBox="0 0 760 118" style="width:100%; max-width:760px; max-height:120px;" role="img"><text x="380" y="11" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">te dan un texto y lo transforma</text><rect x="1" y="18" width="88" height="26" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.2"/><text x="45" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">resumir</text><rect x="96" y="18" width="88" height="26" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.2"/><text x="140" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">clasificar</text><rect x="191" y="18" width="88" height="26" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.2"/><text x="235" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">extraer</text><rect x="286" y="18" width="88" height="26" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.2"/><text x="330" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">reescribir</text><rect x="381" y="18" width="88" height="26" rx="6" fill="#5CD0B3" fill-opacity="0.16" stroke="#5CD0B3" stroke-width="1.2"/><text x="425" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">responder</text><rect x="476" y="18" width="88" height="26" rx="6" fill="#E48BB0" fill-opacity="0.16" stroke="#E48BB0" stroke-width="1.2"/><text x="520" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">redactar</text><rect x="571" y="18" width="88" height="26" rx="6" fill="#FFFF00" fill-opacity="0.16" stroke="#FFFF00" stroke-width="1.2"/><text x="615" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">código</text><rect x="666" y="18" width="88" height="26" rx="6" fill="#5CD0B3" fill-opacity="0.16" stroke="#5CD0B3" stroke-width="1.2"/><text x="710" y="35" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">transcripción</text><text x="380" y="64" text-anchor="middle" fill="#FFFF00" font-size="10.5" font-family="Fira Code,monospace">decide dentro de un sistema — su salida la lee tu código</text><rect x="44" y="71" width="128" height="26" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.2"/><text x="108" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">enrutar</text><rect x="181" y="71" width="128" height="26" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.2"/><text x="245" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">self-query</text><rect x="318" y="71" width="128" height="26" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.2"/><text x="382" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">reformular</text><rect x="455" y="71" width="128" height="26" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.2"/><text x="519" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">herramientas</text><rect x="592" y="71" width="128" height="26" rx="6" fill="#E48BB0" fill-opacity="0.16" stroke="#E48BB0" stroke-width="1.2"/><text x="656" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">juzgar</text><text x="380" y="112" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">las trece son la misma operación: texto entra, texto sale</text></svg>
     </div>
     <p style="font-size: 0.43em;">
-      Casi todo lo que se le pide a un LLM en producción cae en <strong>doce usos</strong>
+      Casi todo lo que se le pide a un LLM en producción cae en <strong>trece usos</strong>
       repartidos en dos grupos. Ninguno requiere entrenar nada: sólo
       <strong>escribir bien la instrucción</strong>.
     </p>
@@ -7727,6 +7727,7 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-teal);">Responder</strong> <span style="color: var(--c-text-dim);">— pregunta + documento → respuesta</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-pink);">Redactar</strong> <span style="color: var(--c-text-dim);">— puntos clave → texto completo</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-yellow);">Generar código</strong> <span style="color: var(--c-text-dim);">— descripción → función que corre</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-teal);">Analizar una reunión</strong> <span style="color: var(--c-text-dim);">— transcripción → acta accionable</span></div>
       </div>
       <div class="col" style="text-align:left;">
         <p style="margin:0 0 0.1em 0;"><strong>2 · es una pieza del sistema</strong></p>
@@ -8031,6 +8032,75 @@ Requisitos:
     <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. Es el uso que los estudiantes ya hacen a diario y que conviene nombrar explicitamente en el curso en vez de dejarlo como habito informal. Engancha con la unidad 20, donde el Agent SDK usa exactamente esto con herramientas de archivo.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-uso-transcripcion">
+    <h2>Analizar la Transcripción de una Reunión</h2>
+    <div class="columns" style="font-size: 0.285em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.92em; position:relative;"><code class="language-text">Analiza la transcripción y devuelve TRES secciones:
+RESUMEN — máx. 4 líneas, para quien no asistió.
+DECISIONES — sólo lo que quedó CERRADO, y quién lo cerró.
+NEXT STEPS — tarea, responsable y fecha. Si no se dijo,
+  pon "sin responsable" o "sin fecha". NO los inventes.
+Al final, lista aparte lo que quedó ABIERTO.
+
+TRANSCRIPCIÓN — junta de proyecto, 18 ago 2026
+[00:04] ANA: el piloto con Comercial arrancó el lunes.
+        De 40 usuarios entraron 31.
+[02:10] LUIS: ¿31? Yo tengo 28 en el tablero.
+[02:18] ANA: el tablero no cuenta Quetzaltenango.
+[05:47] MARCOS: me preocupa la latencia: en hora pico
+        pasamos de 4 s. Con el modelo chico bajamos a
+        1.2, pero se cae la calidad en tickets largos.
+[09:12] LUIS: propongo dejar el chico por defecto y
+        escalar al grande si el ticket pasa de 500
+        palabras.
+[09:40] ANA: me parece. ¿Lo tienes para el viernes?
+[09:44] MARCOS: para el viernes sí.
+[14:02] LUIS: falta el presupuesto de infra, pero sin
+        Patricia no avanzamos.
+[15:20] ANA: lo dejamos para la próxima.</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><strong style="color:var(--c-blue);">RESUMEN</strong> — arrancó el piloto con Comercial: 31 de 40 usuarios. El tablero marcaba 28 porque no cuenta Quetzaltenango. Preocupa la latencia en hora pico.<br><strong style="color:var(--c-green);">DECISIONES</strong> — modelo chico por defecto y escalar al grande sobre 500 palabras <em>(propuesto por Luis, aceptado por Ana)</em>.<br><strong style="color:var(--c-orange);">NEXT STEPS</strong> — implementarlo · <strong>Marcos</strong> · viernes.<br><strong style="color:var(--c-red);">ABIERTO</strong> — presupuesto de infraestructura, bloqueado sin Patricia.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Es el primero que pide tres cosas a la vez:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Resumir</strong> + <strong>extraer</strong> + <strong>estructurar</strong>, en un solo prompt</li>
+          <li>Separar <strong>lo decidido de lo discutido</strong> es una instrucción, no magia</li>
+          <li>“<strong>sin fecha</strong>” explícito evita que invente compromisos</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>El riesgo propio de las transcripciones:</strong> el modelo tiende a convertir en
+      decisión <strong>todo lo que se discutió</strong>, y a repartir tareas que nadie aceptó.
+      Aquí lo del presupuesto <strong>no se decidió</strong> — si sale en DECISIONES, el prompt falló.
+    </p>
+    <aside class="notes">
+      Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que el
+      resto del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce
+      Claude delante de la clase.
+
+      LA TRANSCRIPCION TIENE DOS TRAMPAS PUESTAS A PROPOSITO, y conviene no adelantarlas:
+
+      1. El dato se contradice: Ana dice 31 usuarios y Luis dice 28. No es un error de tipeo — la
+         propia transcripcion lo resuelve dos lineas despues (el tablero no cuenta Quetzaltenango).
+         Un buen resumen tiene que reconciliarlo, no elegir uno al azar ni promediarlos.
+      2. Lo del presupuesto se DISCUTE y se aplaza. Es la prueba de fuego del prompt: si aparece en
+         DECISIONES, el modelo convirtio conversacion en compromiso. Ese es el fallo mas caro de este
+         caso de uso, porque las actas se leen despues como si fueran acuerdos.
+
+      Buen ejercicio en clase: correrlo primero SIN la ultima linea ("lista aparte lo que quedo
+      ABIERTO") y despues con ella, y comparar. Tambien vale quitar el "NO los inventes" y ver si
+      aparece una fecha para el presupuesto.
+
+      Es ademas el caso de uso con el retorno mas obvio para el capstone: cualquier organizacion
+      tiene horas de reuniones grabadas y nadie las lee.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-uso-transicion">
     <h2>El LLM También Decide, no sólo Redacta</h2>
     <div style="text-align:center; margin:0.3em 0;">
@@ -8039,7 +8109,7 @@ Requisitos:
       </svg>
     </div>
     <p style="font-size: 0.43em;">
-      En los siete casos anteriores la salida la leía una persona. En los cinco que siguen,
+      En los ocho casos anteriores la salida la leía una persona. En los cinco que siguen,
       la salida <strong>entra a tu programa</strong>: es una etiqueta que elige una rama, un JSON que
       alimenta una consulta, el nombre de una función que se va a ejecutar.
     </p>
@@ -8280,7 +8350,7 @@ El sesgo de longitud no es folclore, esta documentado en la literatura de LLM-as
         con sus datos etiquetados y su despliegue.
       </div>
       <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
-        ● Hoy es <strong>el mismo modelo</strong> con doce instrucciones distintas. Eso es lo que
+        ● Hoy es <strong>el mismo modelo</strong> con trece instrucciones distintas. Eso es lo que
         cambió de verdad.
       </div>
       <div class="fragment fade-up" style="text-align:left; margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
