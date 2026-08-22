@@ -48,7 +48,7 @@
   <section data-transition="fade">
     <h3 style="margin-bottom: 0.05em;">Índice</h3>
     <p style="font-size: 0.42em; color: var(--c-text-dim); text-align: center; margin: 0 0 0.7em 0;">
-      20 unidades en <strong>5 bloques</strong>
+      21 unidades en <strong>5 bloques</strong> — la última es un anexo opcional
     </p>
     <div class="toc-grid toc-bloques">
 
@@ -91,10 +91,11 @@
           <a class="toc-item" onclick="Reveal.slide(17, 0)"><span class="toc-num">17</span>RAG en Producción</a>
         </div>
         <div class="toc-group" style="--g: var(--c-green);">
-          <div class="toc-group-head">Orquestación y Agentes <span class="toc-range">18 – 19</span></div>
+          <div class="toc-group-head">Orquestación y Agentes <span class="toc-range">18 – 20</span></div>
           <p class="toc-group-sub">componer varias llamadas, y dejar que el modelo decida el flujo</p>
           <a class="toc-item" onclick="Reveal.slide(18, 0)"><span class="toc-num">18</span>Componer y Orquestar: Chains y LangChain</a>
           <a class="toc-item" onclick="Reveal.slide(19, 0)"><span class="toc-num">19</span>Agentes y RAG Agéntico</a>
+          <a class="toc-item" onclick="Reveal.slide(20, 0)"><span class="toc-num">20</span>Anexo opcional: Agentes con Anthropic</a>
         </div>
       </div>
 
@@ -7556,6 +7557,742 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-cat-canales">
+    <h2>Cómo Llega un Modelo a tu Código</h2>
+    <div style="text-align:center; margin:0.25em 0;">
+      <svg viewBox="0 0 760 160" style="width:100%; max-width:760px; max-height:164px;" role="img">
+<rect x="6" y="34" width="176" height="86" rx="9" fill="#FC6255" fill-opacity="0.12" stroke="#FC6255"/><text x="94" y="56" text-anchor="middle" fill="#FC6255" font-size="12.5" font-family="Fira Code,monospace">API del creador</text><text x="94" y="76" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">api.anthropic.com</text><text x="94" y="92" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">api.openai.com</text><text x="94" y="110" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">pagas por token</text><rect x="196" y="34" width="176" height="86" rx="9" fill="#FF862F" fill-opacity="0.12" stroke="#FF862F"/><text x="284" y="56" text-anchor="middle" fill="#FF862F" font-size="12.5" font-family="Fira Code,monospace">la nube que ya usas</text><text x="284" y="76" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">Bedrock · Vertex AI</text><text x="284" y="92" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">Azure · Foundry</text><text x="284" y="110" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">misma factura y permisos</text><rect x="386" y="34" width="176" height="86" rx="9" fill="#83C167" fill-opacity="0.12" stroke="#83C167"/><text x="474" y="56" text-anchor="middle" fill="#83C167" font-size="12.5" font-family="Fira Code,monospace">descargar los pesos</text><text x="474" y="76" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">Hugging Face</text><text x="474" y="92" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">tú pones la GPU</text><text x="474" y="110" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">gratis, si tienes dónde</text><rect x="576" y="34" width="178" height="86" rx="9" fill="#58C4DD" fill-opacity="0.12" stroke="#58C4DD"/><text x="665" y="56" text-anchor="middle" fill="#58C4DD" font-size="12.5" font-family="Fira Code,monospace">alquilar uno abierto</text><text x="665" y="76" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">OpenRouter · Together</text><text x="665" y="92" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">Groq · Fireworks</text><text x="665" y="110" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">pesos abiertos, sin GPU</text><text x="380" y="18" text-anchor="middle" fill="#8a86a0" font-size="11" font-family="Lora,serif" font-style="italic">el mismo modelo puede llegarte por varios de estos caminos a la vez</text><text x="380" y="145" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif">lo que decide el camino no es el modelo: es dónde vive tu dato y quién paga la GPU</text>
+      </svg>
+    </div>
+    <p style="font-size: 0.42em;">
+      Y una advertencia antes de la lista: <strong>de los modelos cerrados nadie publica el número de
+      parámetros</strong>. Lo que circula en internet son estimaciones. Las tablas que siguen ponen
+      <em>"no publicado"</em> donde no hay dato.
+    </p>
+    <aside class="notes">
+      Diapositiva propia. Los cuatro canales son la taxonomia que importa para el capstone, y no es un
+      detalle administrativo: si el dato del cliente no puede salir de su cuenta de AWS, el camino ya
+      esta decidido antes de comparar calidades.
+
+      Los enlaces de los cuatro canales se comprobaron con curl (200) el 21 de agosto de 2026.
+
+      La advertencia del final es la parte importante para el metodo del curso: en las tablas que vienen,
+      la columna de parametros dice "no publicado" para Claude, GPT, Gemini, Nova y Grok. Cualquier
+      cifra que el estudiante encuentre para esos modelos es una estimacion de terceros. Es el mismo
+      criterio que con las descargas de Hugging Face: se dice de donde sale el numero, o no se pone.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-cat-cerrados">
+    <h2>Los Cerrados: sólo por API</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.2em;">
+      No te dan los pesos. A cambio, no administras nada: mandas texto y recibes texto.
+    </p>
+    <table style="font-size: 0.355em; width: 100%; max-width: 860px; margin: 0.2em auto;">
+      <tr><th style="text-align:left;">Familia</th><th>Creador</th><th>Parámetros</th>
+          <th style="text-align:left;">Cómo se consume</th></tr>
+      <tr><td style="text-align:left;"><strong>Claude Fable 5 · Opus 5 · Sonnet 5 · Haiku 4.5</strong></td><td>Anthropic</td><td style="color:var(--c-red);">no publicado</td><td style="text-align:left; font-size:0.92em;">API propia · Bedrock · Google Cloud · Microsoft Foundry</td></tr>
+      <tr><td style="text-align:left;"><strong>GPT-5.6 Sol · Terra · Luna</strong></td><td>OpenAI</td><td style="color:var(--c-red);">no publicado</td><td style="text-align:left; font-size:0.92em;">API propia · Azure</td></tr>
+      <tr><td style="text-align:left;"><strong>Gemini 3.7 Flash · 3.1 Pro</strong></td><td>Google</td><td style="color:var(--c-red);">no publicado</td><td style="text-align:left; font-size:0.92em;">Gemini API · Vertex AI</td></tr>
+      <tr><td style="text-align:left;"><strong>Amazon Nova Micro · Lite · Pro · Premier</strong></td><td>Amazon</td><td style="color:var(--c-red);">no publicado</td><td style="text-align:left; font-size:0.92em;">solo Amazon Bedrock</td></tr>
+      <tr><td style="text-align:left;"><strong>Grok</strong></td><td>xAI</td><td style="color:var(--c-red);">no publicado</td><td style="text-align:left; font-size:0.92em;">API propia</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.35em; background: rgba(255,255,0,0.07);">
+      Fíjate en la última columna: <strong>Claude se consume por cuatro caminos distintos</strong> y
+      Nova por uno solo. Eso no es un detalle comercial — decide si tu dato sale o no de tu nube.
+    </p>
+    <aside class="notes">
+      Los nombres y los canales salen de la documentacion oficial de cada proveedor, consultada el 21 de
+      agosto de 2026: platform.claude.com/docs (modelos y plataformas), developers.openai.com/api/docs/models,
+      ai.google.dev/gemini-api/docs/models y docs.aws.amazon.com/nova.
+
+      Advertir en clase: esta tabla es la que mas rapido envejece de todo el deck. Entre que se preparo y
+      que se da la clase pueden haber salido dos versiones nuevas. El nombre exacto se consulta siempre
+      en la pagina del proveedor; lo que NO cambia tan rapido son los canales y el hecho de que el
+      tamano no se publica.
+
+      Nova solo por Bedrock es un buen ejemplo de estrategia: Amazon no vende el modelo, vende la nube.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-cat-grandes">
+    <h2>Los Abiertos: te Dan los Pesos</h2>
+    <p style="font-size: 0.4em; margin-bottom: 0.15em;">
+      Estos sí publican el tamaño, porque publican el modelo entero. Se descargan de Hugging Face
+      — y los grandes también se alquilan por API en agregadores, en Bedrock y en Vertex.
+    </p>
+    <table style="font-size: 0.315em; width: 100%; max-width: 880px; margin: 0.15em auto;">
+      <tr><th style="text-align:left;">Modelo</th><th>Creador</th><th>Parámetros</th>
+          <th style="text-align:left;">Nota</th><th>Licencia</th></tr>
+      <tr><td style="text-align:left;"><strong>Kimi K3</strong></td><td>Moonshot AI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">2.78 T</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 896 expertos</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>Qwen3.8-2.4T-A95B</strong></td><td>Alibaba</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">2.45 T</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 95 B activos</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>DeepSeek-V4-Pro</strong></td><td>DeepSeek</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">1.60 T</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 384 expertos</td><td style="font-size:0.9em;">MIT</td></tr>
+      <tr><td style="text-align:left;"><strong>Kimi K2.7-Code</strong></td><td>Moonshot AI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">1.03 T</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">especializado en código</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>GLM-5.2</strong></td><td>Z.ai</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">753 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 256 expertos</td><td style="font-size:0.9em;">MIT</td></tr>
+      <tr><td style="text-align:left;"><strong>Mistral Large 3</strong></td><td>Mistral AI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">675 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Nemotron 3 Ultra</strong></td><td>NVIDIA</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">561 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 55 B activos</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>Llama 4 Maverick</strong></td><td>Meta</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">402 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 17 B activos</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>MiniMax-M2.7</strong></td><td>MiniMax</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">229 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 256 expertos</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>Command A+ (05-2026)</strong></td><td>Cohere</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">219 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Mistral Medium 3.5</strong></td><td>Mistral AI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">128 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>gpt-oss-120b</strong></td><td>OpenAI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">117 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 4 expertos/token</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Llama 4 Scout</strong></td><td>Meta</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">109 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 17 B activos</td><td style="font-size:0.9em;">propia</td></tr>
+    </table>
+    <p style="font-size: 0.375em; margin-top: 0.2em; color: var(--c-text-dim);">
+      Contados de los metadatos de cada repositorio en Hugging Face, no de un blog.
+      <strong>MoE</strong> = sólo una fracción de los parámetros se activa por token.
+    </p>
+    <aside class="notes">
+      TODAS las cifras salen de `safetensors.total` de la API de Hugging Face, consultada el 21 de agosto
+      de 2026 (script: scripts/med_catalogo_llms.py). Se hizo asi a proposito: las busquedas en blogs
+      comparativos devolvieron nombres de modelos que no existen, y ese fue el motivo de bajar a la API.
+
+      Tres cosas que vale la pena senalar al proyectarlo:
+
+      1. MoE cambia la lectura de la tabla. Llama 4 Maverick tiene 402 B pero activa 17 B por token: en
+         computo se parece a un modelo de 17 B, en memoria a uno de 402 B. Por eso la columna de
+         parametros ya no dice por si sola lo que cuesta correrlo.
+      2. La geografia: de los trece, seis son chinos (Moonshot, Alibaba, DeepSeek, Z.ai, MiniMax). Hace
+         tres anos esta tabla habria sido casi toda estadounidense.
+      3. Meta no publica un modelo nuevo desde abril de 2025 (Llama 4). Lo dice la propia API de Hugging
+         Face al ordenar sus repos por fecha. Llama sigue siendo el nombre que todo el mundo conoce, y
+         ya no es el que lidera — buen antidoto contra elegir por marca.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-cat-chicos">
+    <h2>Los que Caben en tu Máquina</h2>
+    <table style="font-size: 0.305em; width: 100%; max-width: 880px; margin: 0.15em auto;">
+      <tr><th style="text-align:left;">Modelo</th><th>Creador</th><th>Parámetros</th>
+          <th style="text-align:left;">Nota</th><th>Licencia</th></tr>
+      <tr><td style="text-align:left;"><strong>Olmo 3.1 32B</strong></td><td>Allen AI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">32.2 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">abierto de verdad: datos y receta</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Nemotron 3 Nano 30B-A3B</strong></td><td>NVIDIA</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">31.6 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE, 3 B activos</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>Gemma 4 31B</strong></td><td>Google</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">31.3 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Qwen3.8-27B</strong></td><td>Alibaba</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">27.8 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">denso</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>gpt-oss-20b</strong></td><td>OpenAI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">21.5 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">MoE</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Phi-4</strong></td><td>Microsoft</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">14.7 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">entrenado con datos sintéticos</td><td style="font-size:0.9em;">MIT</td></tr>
+      <tr><td style="text-align:left;"><strong>Gemma 4 12B</strong></td><td>Google</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">12.0 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Granite 4.1 8B</strong></td><td>IBM</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">8.79 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">orientado a empresa</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Falcon-H1R 7B</strong></td><td>TII (Emiratos)</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">7.59 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">híbrido Mamba + atención</td><td style="font-size:0.9em;">propia</td></tr>
+      <tr><td style="text-align:left;"><strong>Olmo 3 7B</strong></td><td>Allen AI</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">7.30 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Qwen3-4B-Instruct</strong></td><td>Alibaba</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">4.02 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>SmolLM3-3B</strong></td><td>Hugging Face</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">3.08 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">—</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Qwen2.5-1.5B-Instruct</strong></td><td>Alibaba</td><td style="color:#FFFF00; font-weight:bold; font-family:'Fira Code',monospace;">1.54 B</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">★ el de nuestros notebooks</td><td style="font-size:0.9em;">Apache 2.0</td></tr>
+      <tr><td style="text-align:left;"><strong>Gemma 3 270M</strong></td><td>Google</td><td style="color:var(--c-green); font-family:'Fira Code',monospace;">268 M</td><td style="text-align:left; font-size:0.9em; color:var(--c-text-dim);">cabe en un teléfono</td><td style="font-size:0.9em;">propia</td></tr>
+    </table>
+    <p style="font-size: 0.385em; margin-top: 0.25em;">
+      La cuenta para saber si cabe: <strong>parámetros × 2 bytes</strong> en precisión normal.
+      Un modelo de 27 B pide unos <strong>56 GB</strong> de VRAM… y cuantizado a 4 bits, unos
+      <strong>14 GB</strong>. Ahí es donde entra una GPU de escritorio.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.385em; margin-top: 0.15em; padding: 0.3em; background: rgba(255,255,0,0.07);">
+      El <strong>Qwen2.5-1.5B</strong> de nuestros notebooks está en esta tabla a propósito: con
+      1.54 B corre en la GPU gratuita de Colab. Es <strong>1,800 veces más chico que Kimi K3</strong>
+      — y resuelve las cinco tareas del notebook 17.
+    </p>
+    <aside class="notes">
+      Mismas fuentes y mismo script que la tabla anterior. La cuenta de VRAM es aritmetica, no una
+      medicion: 27.8e9 x 2 bytes = 55.6 GB en bf16, y a 4 bits (0.5 bytes) unos 13.9 GB. En la practica
+      hay que sumarle la cache de atencion, que crece con el contexto — eso ya esta medido en la
+      unidad 15 (recuperacion en produccion).
+
+      El cierre con Qwen2.5-1.5B es el que amarra la unidad: el estudiante ya corrio ese modelo, y aqui
+      ve exactamente donde queda en el panorama. 2.78e12 / 1.54e9 = 1,805.
+
+      Gemma 3 270M esta en la lista para que se vea el otro extremo: hay modelos utiles de menos de mil
+      millones de parametros. No sirven para conversar, si para clasificar o extraer campos, que es
+      justo lo que pide media pipeline de produccion.
+    </aside>
+  </section>
+<section data-transition="fade">
+    <h2>Para Qué se Usa un LLM en la Práctica</h2>
+    <div style="text-align:center; margin:0.2em 0;">
+      <svg viewBox="0 0 760 118" style="width:100%; max-width:760px; max-height:120px;" role="img"><text x="380" y="11" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">te dan un texto y lo transforma</text><rect x="2" y="18" width="102" height="26" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.2"/><text x="53" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">resumir</text><rect x="111" y="18" width="102" height="26" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.2"/><text x="162" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">clasificar</text><rect x="220" y="18" width="102" height="26" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.2"/><text x="271" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">extraer</text><rect x="329" y="18" width="102" height="26" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.2"/><text x="380" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">reescribir</text><rect x="438" y="18" width="102" height="26" rx="6" fill="#5CD0B3" fill-opacity="0.16" stroke="#5CD0B3" stroke-width="1.2"/><text x="489" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">responder</text><rect x="547" y="18" width="102" height="26" rx="6" fill="#E48BB0" fill-opacity="0.16" stroke="#E48BB0" stroke-width="1.2"/><text x="598" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">redactar</text><rect x="656" y="18" width="102" height="26" rx="6" fill="#FFFF00" fill-opacity="0.16" stroke="#FFFF00" stroke-width="1.2"/><text x="707" y="35" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">código</text><text x="380" y="64" text-anchor="middle" fill="#FFFF00" font-size="10.5" font-family="Fira Code,monospace">decide dentro de un sistema — su salida la lee tu código</text><rect x="44" y="71" width="128" height="26" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.2"/><text x="108" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">enrutar</text><rect x="181" y="71" width="128" height="26" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.2"/><text x="245" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">self-query</text><rect x="318" y="71" width="128" height="26" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.2"/><text x="382" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">reformular</text><rect x="455" y="71" width="128" height="26" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.2"/><text x="519" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">herramientas</text><rect x="592" y="71" width="128" height="26" rx="6" fill="#E48BB0" fill-opacity="0.16" stroke="#E48BB0" stroke-width="1.2"/><text x="656" y="88" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">juzgar</text><text x="380" y="112" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">las doce son la misma operación: texto entra, texto sale</text></svg>
+    </div>
+    <p style="font-size: 0.43em;">
+      Casi todo lo que se le pide a un LLM en producción cae en <strong>doce usos</strong>
+      repartidos en dos grupos. Ninguno requiere entrenar nada: sólo
+      <strong>escribir bien la instrucción</strong>.
+    </p>
+    <div class="columns" style="font-size: 0.35em; align-items: flex-start; margin-top:0.25em;">
+      <div class="col" style="text-align:left;">
+        <p style="margin:0 0 0.1em 0;"><strong>1 · te dan un texto</strong></p>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-blue);">Resumir</strong> <span style="color: var(--c-text-dim);">— texto largo → texto corto</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-green);">Clasificar</strong> <span style="color: var(--c-text-dim);">— texto → una etiqueta de un conjunto cerrado</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-orange);">Extraer</strong> <span style="color: var(--c-text-dim);">— texto libre → JSON</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-purple);">Corregir y reescribir</strong> <span style="color: var(--c-text-dim);">— mismo contenido, otro registro</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-teal);">Responder</strong> <span style="color: var(--c-text-dim);">— pregunta + documento → respuesta</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-pink);">Redactar</strong> <span style="color: var(--c-text-dim);">— puntos clave → texto completo</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-yellow);">Generar código</strong> <span style="color: var(--c-text-dim);">— descripción → función que corre</span></div>
+      </div>
+      <div class="col" style="text-align:left;">
+        <p style="margin:0 0 0.1em 0;"><strong>2 · es una pieza del sistema</strong></p>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-green);">Enrutar</strong> <span style="color: var(--c-text-dim);">— a qué rama del sistema va esto</span> <span style="color: var(--c-yellow); font-size:0.85em;">u.18</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-orange);">Self-query</strong> <span style="color: var(--c-text-dim);">— pregunta → consulta + filtros</span> <span style="color: var(--c-yellow); font-size:0.85em;">u.10</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-blue);">Reformular</strong> <span style="color: var(--c-text-dim);">— arreglar la consulta antes de buscar</span> <span style="color: var(--c-yellow); font-size:0.85em;">u.14</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-purple);">Elegir herramienta</strong> <span style="color: var(--c-text-dim);">— qué función invocar y con qué</span> <span style="color: var(--c-yellow); font-size:0.85em;">u.19</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-pink);">Juzgar</strong> <span style="color: var(--c-text-dim);">— comparar dos salidas y dar veredicto</span> <span style="color: var(--c-yellow); font-size:0.85em;">u.16</span></div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
+      Fíjate en algo: <strong>todas son transformaciones de texto en texto</strong>. Por eso
+      un solo modelo las hace todas, y la diferencia entre un uso y otro es <strong>la instrucción</strong>.
+    </p>
+    <aside class="notes">Contenido propio. MANTENIMIENTO: hasta agosto de 2026 esta diapositiva se contradecia — el SVG anunciaba cinco familias (incluida "responder", que no tenia diapositiva) y la lista de abajo enumeraba otras cinco. Ahora el SVG, la lista y las diapositivas que siguen dicen lo mismo: si se agrega un uso, hay que tocar los tres. Estas familias son las que aparecen una y otra vez en proyectos reales, y las cuatro primeras se resolvian antes con un modelo entrenado a proposito por cada tarea. Buen momento para preguntarle al grupo cual de las cinco necesita su capstone.</aside>
+  </section>
+<section data-transition="fade">
+    <h2>Resumir</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Resume el siguiente ticket de soporte en
+una sola frase, indicando el problema y
+lo que pide el cliente.
+
+TICKET:
+Buenas tardes, compré una licuadora el
+12 de marzo con el pedido #A-4471 y desde
+la segunda semana hace un ruido muy fuerte
+y huele a quemado. Ya intenté con menos
+carga y sigue igual. Todavía está en
+garantía. Quisiera saber si me la pueden
+cambiar o si tengo que llevarla a algún
+taller.</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);">Licuadora del pedido #A-4471 con ruido
+          y olor a quemado dentro del período de garantía; el cliente pide cambio o
+          indicación de a dónde llevarla.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que controlas con la instrucción:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Longitud</strong>: "en una frase", "en 3 viñetas", "máximo 50 palabras"</li>
+          <li><strong>Foco</strong>: "resalta solo las fechas y montos"</li>
+          <li><strong>Formato</strong>: prosa, viñetas, tabla</li>
+          <li><strong>Fidelidad</strong>: "no agregues nada que no esté en el texto"</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>El riesgo propio de resumir:</strong> el modelo puede <strong>agregar</strong> cosas
+      que no estaban. Por eso la última instrucción no es opcional en contextos serios.
+    </p>
+    <aside class="notes">Contenido propio. Las salidas de estas cinco diapositivas son EJEMPLOS ilustrativos escritos a mano, no salidas medidas de un modelo — el gpt2 en espanol que usamos en los widgets es demasiado pequeno para seguir instrucciones. Distincion util: resumen extractivo (copia frases del original, mas seguro) vs abstractivo (redacta de nuevo, mas legible y mas riesgoso).</aside>
+  </section>
+<section data-transition="fade">
+    <h2>Clasificar</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Clasifica el ticket en UNA de estas
+categorías, y responde solo con la
+categoría:
+
+garantia | envio | facturacion | otro
+
+TICKET:
+Buenas tardes, compré una licuadora el 12
+de marzo con el pedido #A-4471 y hace un
+ruido muy fuerte y huele a quemado.
+Todavía está en garantía.
+
+CATEGORÍA:</code></pre>
+        <p style="margin-top:0.4em;">
+          Nota los tres detalles que hacen que esto funcione en producción:
+        </p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Conjunto cerrado</strong> de etiquetas, escrito explícitamente</li>
+          <li><strong>"responde solo con la categoría"</strong> — si no, redacta un párrafo</li>
+          <li>El prompt <strong>termina</strong> en <code>CATEGORÍA:</code>, así la
+            continuación natural es la etiqueta</li>
+        </ul>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.35em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
+          <strong style="color: var(--c-blue);">Por qué esto funciona</strong><br>
+          <span style="color: var(--c-text-dim);">Un LLM ya <em>es</em> un clasificador sobre el
+          siguiente token. Al terminar el prompt en <code>CATEGORÍA:</code>, la clasificación que
+          hace de forma natural coincide con la que tú quieres.</span>
+        </div>
+        <div class="fragment fade-up" style="margin-top:0.4em; padding:0.35em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+          <strong>El truco de producción</strong><br>
+          En vez de dejarlo escribir, se mira la <strong>probabilidad de cada etiqueta</strong> y se
+          toma la mayor. Así <strong>nunca</strong> devuelve algo fuera del conjunto…
+          y de paso obtienes una <strong>confianza</strong> con la que decidir si escalas a un humano.
+        </div>
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. El truco de leer las probabilidades de las etiquetas en vez de generar texto es lo que hace un clasificador con LLM fiable, y conecta directo con el slide "La Idea Central: es un Clasificador", que ahora viene DESPUES en esta misma unidad porque el bloque de casos de uso se subio antes de la maquinaria: conviene anunciarlo aqui y retomarlo alli. En la unidad de LLMs y generacion (RAG_M4) esto reaparece como logit_bias.</aside>
+  </section>
+<section data-transition="fade">
+    <h2>Extraer Datos Estructurados</h2>
+    <div class="columns" style="font-size: 0.35em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Extrae los datos del correo en JSON con
+EXACTAMENTE este esquema. Si un dato no
+aparece, usa null. No inventes valores.
+
+{"cliente": str, "pedido": str,
+ "fecha_compra": "AAAA-MM-DD",
+ "monto": number, "en_garantia": bool}
+
+CORREO:
+Buenas, soy Marta Solís. El 12/03/2026
+compré la licuadora del pedido A-4471,
+pagué Q. 899.00 y sigue en garantía.
+
+JSON:</code></pre>
+      </div>
+      <div class="col-40">
+        <pre style="margin:0; font-size:0.94em;"><code class="language-json">{
+  "cliente": "Marta Solís",
+  "pedido": "A-4471",
+  "fecha_compra": "2026-03-12",
+  "monto": 899.0,
+  "en_garantia": true
+}</code></pre>
+        <p style="margin-top:0.4em;">
+          Es probablemente <strong>el caso de uso con mejor retorno</strong>: convierte texto
+          libre en algo que tu base de datos puede consultar.
+        </p>
+        <p class="fragment fade-up" style="margin-top:0.3em; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
+          Fíjate en <strong>"12/03/2026" → "2026-03-12"</strong>: no solo extrae, también
+          <strong>normaliza</strong>. Eso es lo que antes costaba un montón de expresiones regulares.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.25em; text-align:center;">
+      En producción no se confía en que el JSON salga bien: las APIs traen
+      <strong>salida estructurada</strong> (structured outputs / JSON mode) que
+      <strong>garantiza</strong> que la respuesta cumpla el esquema.
+    </p>
+    <aside class="notes">Contenido propio. Las dos instrucciones criticas son "usa null si no aparece" y "no inventes valores": sin ellas el modelo rellena huecos con datos plausibles. Ese invento tiene nombre —alucinacion— y se estudia mas adelante en esta misma unidad; aqui basta con senalar que es el fallo mas peligroso porque entra directo a la base de datos. La salida estructurada con esquema (function calling / JSON schema) es lo que se usa hoy en produccion.</aside>
+  </section>
+<section data-transition="fade">
+    <h2>Corregir y Cambiar el Estilo</h2>
+    <div style="text-align:center; margin:0.3em 0;">
+      <svg viewBox="0 0 760 114" style="width:100%; max-width:760px; max-height:88px;" role="img">
+<rect x="20" y="26" width="340" height="58" rx="7" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.4"/><text x="190" y="50" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif" dominant-baseline="middle">«oye mandame el reporte ya»</text><text x="190" y="68" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">lo que escribió alguien</text><rect x="400" y="26" width="340" height="58" rx="7" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.4"/><text x="570" y="50" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif" dominant-baseline="middle">«¿Podrías enviarme el reporte?»</text><text x="570" y="68" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">lo que sale</text><text x="380" y="106" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">el contenido no cambia; cambia el registro. Es transformación, no conocimiento</text>
+      </svg>
+    </div>
+    <pre data-copiable style="margin:0.25em auto; font-size:0.3em; max-width:88%; position:relative;"><code class="language-text">Reescribe el mensaje del cliente en TRES versiones, sin cambiar el significado:
+  1. corregido  — sólo ortografía y puntuación, mismo tono
+  2. formal     — para un correo de la empresa
+  3. cercano    — para un chat de soporte
+
+MENSAJE
+aser el pedido fue muy dificil, la pagina nunca cargo y ademas nadie contesto el telefono</code></pre>
+    <div class="columns" style="font-size: 0.34em;">
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-purple);">Corregir</strong></p>
+        <div style="padding:0.3em 0.5em; background: rgba(252,98,85,0.07); border-left: 3px solid var(--c-red); margin-bottom:0.25em;">
+          <span style="color: var(--c-text-dim);">"aser el pedido fue muy dificil, la pagina
+          nunca cargo y ademas nadie contesto el telefono"</span>
+        </div>
+        <div style="padding:0.3em 0.5em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
+          "Hacer el pedido fue muy difícil: la página nunca cargó y además nadie contestó
+          el teléfono."
+        </div>
+        <p style="margin-top:0.3em; color: var(--c-text-dim);">
+          Instrucción típica: <em>"corrige ortografía y puntuación, <strong>sin cambiar
+          el significado ni el tono</strong>"</em>.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0.1em 0;"><strong style="color: var(--c-pink);">Cambiar el estilo</strong></p>
+        <div style="padding:0.3em 0.5em; background: rgba(228,139,176,0.07); border-left: 3px solid var(--c-pink); margin-bottom:0.25em;">
+          <strong>→ formal:</strong> "Estimado cliente: lamentamos los inconvenientes presentados
+          durante su proceso de compra."
+        </div>
+        <div style="padding:0.3em 0.5em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue); margin-bottom:0.25em;">
+          <strong>→ cercano:</strong> "¡Qué pena que te costara tanto! Ya estamos viendo qué pasó
+          con la página."
+        </div>
+        <div style="padding:0.3em 0.5em; background: rgba(255,134,47,0.07); border-left: 3px solid var(--c-orange);">
+          <strong>→ técnico:</strong> "Se reporta fallo de carga en el frontend de pedidos
+          y falta de respuesta en el canal telefónico."
+        </div>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+      Las dos son la misma operación con distinta instrucción. Y en las dos hay que decir
+      <strong>qué NO debe cambiar</strong> — si no, el modelo "mejora" cosas que no le pediste.
+    </p>
+    <aside class="notes">Contenido propio. El cambio de estilo es lo que mas se subestima: permite escribir una sola vez el contenido y adaptarlo a cada canal (correo, chat, resumen ejecutivo). Y la advertencia de decir que NO cambiar aplica a las cinco familias.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-responder">
+    <h2>Responder Preguntas sobre un Documento</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Responde la pregunta usando ÚNICAMENTE la política de abajo.
+Si la respuesta no está en el texto, contesta exactamente:
+"No está en la política."
+
+POLÍTICA DE GARANTÍA
+Los electrodomésticos pequeños tienen 12 meses de garantía
+desde la fecha de compra. Cubre defectos de fábrica. Incluye
+cambio por unidad nueva durante los primeros 30 días; después
+de ese plazo se repara en taller autorizado. No cubre daños
+por uso inadecuado ni por caídas.
+
+PREGUNTA
+Compré una licuadora hace cinco meses y huele a quemado.
+¿Me la cambian por una nueva?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);">No. El cambio por unidad nueva sólo aplica los primeros 30 días; a los cinco meses corresponde reparación en taller autorizado.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que controlas con la instrucción:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Fuente</strong>: “únicamente el texto de abajo”</li>
+          <li><strong>Salida de escape</strong>: qué decir si no está</li>
+          <li><strong>Cita</strong>: “indica la frase que lo respalda”</li>
+          <li><strong>Alcance</strong>: no opinar, no aconsejar de más</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Sin la salida de escape</strong>, el modelo contesta con lo que sabe del mundo en vez de decir que no está en el documento. Esa línea es la diferencia entre un asistente útil y uno que inventa políticas de tu empresa.
+    </p>
+    <aside class="notes">Contenido propio. Esta es la quinta familia que el SVG de la portada ya anunciaba ("responder") y que hasta ahora no tenia diapositiva. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. ES LA DIAPOSITIVA QUE ABRE RAG: si la respuesta tiene que salir de un documento, alguien tiene que elegir QUE documento meter en el prompt — y eso es exactamente el retriever de la unidad 13. Conviene decirlo aqui en voz alta.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-redactar">
+    <h2>Redactar desde Puntos Clave</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Redacta la respuesta al cliente a partir de estos puntos.
+Tono cordial y directo, máximo 90 palabras. No agregues
+ninguna información que no esté en los puntos.
+
+PUNTOS
+- pedido #A-4471, licuadora, comprada el 12 de marzo
+- la garantía sí cubre el defecto
+- pasaron más de 30 días: corresponde reparación, no cambio
+- taller autorizado: 5a avenida 12-34, zona 10
+- puede llevarla sin cita, de lunes a viernes</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);">Estimado cliente: revisamos su pedido #A-4471. La falla que describe sí está cubierta por la garantía. Como han pasado más de 30 días desde la compra del 12 de marzo, corresponde reparación en taller autorizado…</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que controlas con la instrucción:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Longitud</strong>: “máximo 90 palabras”</li>
+          <li><strong>Tono</strong>: cordial, formal, seco</li>
+          <li><strong>Estructura</strong>: correo, mensaje corto, viñetas</li>
+          <li><strong>Fidelidad</strong>: “nada que no esté en los puntos”</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Es la operación más peligrosa de todas</strong>: aquí el modelo tiene que producir <strong>más</strong> texto del que recibe, y todo lo que agregue de más es invención. Resumir recorta; redactar rellena.
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. El contraste con la diapositiva de Resumir es el punto: alli el peligro era agregar, aqui agregar es literalmente el encargo, y por eso la instruccion de fidelidad pasa de recomendable a obligatoria. Buen momento para pedirle a la clase que adivine que pasa si se quita esa ultima linea del prompt — y luego quitarla en vivo.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-codigo">
+    <h2>Generar y Explicar Código</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Escribe una función de Python que reciba una lista de tickets
+(cada uno un dict con "id", "fecha" en formato AAAA-MM-DD y
+"texto") y devuelva cuántos tickets hay por mes.
+
+Requisitos:
+- sólo librería estándar, nada de pandas
+- docstring corto y un ejemplo de uso
+- explica en dos frases por qué elegiste esa estructura</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><code>def tickets_por_mes(tickets):</code> … con <code>collections.Counter</code> y <code>t["fecha"][:7]</code> como llave.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que controlas con la instrucción:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Dependencias</strong>: “sólo librería estándar”</li>
+          <li><strong>Versión y estilo</strong>: type hints, docstring</li>
+          <li><strong>Pruebas</strong>: “agrega tres casos borde”</li>
+          <li><strong>Explicación</strong>: cuánta, y para quién</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>El código que sale compila y parece correcto — y puede estar mal.</strong> Se lee antes de pegarlo, igual que el de un compañero. La confianza la da la prueba que corres, no lo bien redactado que se ve.
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. Es el uso que los estudiantes ya hacen a diario y que conviene nombrar explicitamente en el curso en vez de dejarlo como habito informal. Engancha con la unidad 20, donde el Agent SDK usa exactamente esto con herramientas de archivo.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-transicion">
+    <h2>El LLM También Decide, no sólo Redacta</h2>
+    <div style="text-align:center; margin:0.3em 0;">
+      <svg viewBox="0 0 760 128" style="width:100%; max-width:760px; max-height:130px;" role="img">
+<text x="190" y="16" text-anchor="middle" fill="#8a86a0" font-size="11.5" font-family="Fira Code,monospace">lo que vimos hasta ahora</text><rect x="42" y="30" width="120" height="40" rx="7" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD"/><text x="102" y="54" text-anchor="middle" fill="#58C4DD" font-size="11.5" font-family="Fira Code,monospace">el LLM</text><line x1="162" y1="50" x2="218" y2="50" stroke="#8a86a0" stroke-width="1.4"/><polygon points="218,50 210,46 210,54" fill="#8a86a0"/><rect x="220" y="30" width="120" height="40" rx="7" fill="#ece6d0" fill-opacity="0.07" stroke="#8a86a0"/><text x="280" y="48" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">lo lee</text><text x="280" y="62" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">una persona</text><text x="190" y="94" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Lora,serif" font-style="italic">si sale algo raro, el humano lo nota</text><line x1="380" y1="14" x2="380" y2="118" stroke="#8a86a0" stroke-width="1" stroke-dasharray="4 4"/><text x="570" y="16" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Fira Code,monospace">lo que viene ahora</text><rect x="422" y="30" width="120" height="40" rx="7" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD"/><text x="482" y="54" text-anchor="middle" fill="#58C4DD" font-size="11.5" font-family="Fira Code,monospace">el LLM</text><line x1="542" y1="50" x2="598" y2="50" stroke="#FFFF00" stroke-width="1.4"/><polygon points="598,50 590,46 590,54" fill="#FFFF00"/><rect x="600" y="30" width="130" height="40" rx="7" fill="#83C167" fill-opacity="0.14" stroke="#83C167"/><text x="665" y="48" text-anchor="middle" fill="#83C167" font-size="11" font-family="Fira Code,monospace">lo lee</text><text x="665" y="62" text-anchor="middle" fill="#83C167" font-size="11" font-family="Fira Code,monospace">TU CÓDIGO</text><text x="570" y="94" text-anchor="middle" fill="#FC6255" font-size="10.5" font-family="Lora,serif" font-style="italic">si sale algo raro, revienta una función</text><text x="380" y="120" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif">mismo modelo, misma instrucción — pero ahora el formato no es cosmético</text>
+      </svg>
+    </div>
+    <p style="font-size: 0.43em;">
+      En los siete casos anteriores la salida la leía una persona. En los cinco que siguen,
+      la salida <strong>entra a tu programa</strong>: es una etiqueta que elige una rama, un JSON que
+      alimenta una consulta, el nombre de una función que se va a ejecutar.
+    </p>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.42em; margin-top:0.25em;">
+      <div class="step fragment fade-up" style="text-align:left;">El <strong>formato deja de ser
+        cosmético</strong>: “responde sólo con la categoría” es un requisito, no un capricho.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Hay que <strong>validar la salida</strong>
+        antes de usarla — el modelo puede devolver algo que no está en tu lista.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Y cada uno de los cinco
+        <strong>se detalla más adelante en el curso</strong>. Aquí sólo se ven de lejos.</div>
+    </div>
+    <aside class="notes">
+      Contenido propio. Diapositiva bisagra del bloque, y la que le da sentido a la segunda mitad.
+
+      El cambio que hay que hacer explicito: cuando la salida la lee una persona, un formato raro es
+      una molestia; cuando la lee tu codigo, es una excepcion en produccion. De ahi salen las tres
+      reglas que se repiten en toda la segunda mitad — conjunto cerrado, validar contra ese conjunto,
+      y una ruta de escape.
+
+      Las cinco que siguen son ademas el mapa del resto del curso: enrutar (unidad 18), self-query
+      (unidad 10), reescribir la consulta (unidad 14), herramientas (unidad 19) y juzgar (unidad 16).
+      Vale la pena decir eso aqui: el estudiante entiende por que el curso sigue como sigue.
+    </aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-router">
+    <h2>Router: a Dónde Mandar Esto</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Eres el enrutador de un sistema de soporte. Lee el mensaje y
+responde SOLO con una de estas rutas, sin explicar nada:
+
+  garantia_taller | cambio_inmediato | facturacion | humano
+
+Reglas:
+- defecto y más de 30 días desde la compra  -> garantia_taller
+- defecto y 30 días o menos                 -> cambio_inmediato
+- cobros, facturas o reembolsos             -> facturacion
+- enojado, amenaza legal, o no encaja arriba -> humano
+
+MENSAJE
+Compré una licuadora el 12 de marzo, pedido #A-4471, y ya
+huele a quemado. Todavía está en garantía.</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><code style="color:var(--c-green);">garantia_taller</code></span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Por qué es distinto de clasificar:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>La etiqueta <strong>elige una rama de código</strong></li>
+          <li>Conviene el modelo <strong>más chico y barato</strong></li>
+          <li>Necesita una <strong>ruta de escape</strong> a humano</li>
+          <li>Se mide por costo y latencia, no sólo por acierto</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      Es la misma operación que <em>clasificar</em>, con otra consecuencia: aquí la etiqueta no se le muestra a nadie, <strong>enciende un camino</strong>. Por eso lleva regla explícita y ruta a humano. <span style="color:var(--c-text-dim);">Se detalla en la unidad 18.</span>
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. El punto economico es el que sorprende: el router corre en TODAS las peticiones, asi que es donde mas se nota elegir un modelo barato. Es el ejemplo canonico de la unidad 18 (un modelo chico decide la rama y uno grande hace el trabajo).</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-selfquery">
+    <h2>Extractor de Self-Query</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Separa la pregunta en DOS partes y responde sólo con JSON.
+
+  "query":   lo que hay que buscar por SIGNIFICADO dentro del
+             texto del ticket. Si no queda nada, usa "".
+  "filtros": condiciones sobre estos campos, y sólo estos:
+               fecha      AAAA-MM-DD
+               categoria  garantia | envio | facturacion
+               estado     abierto | cerrado
+               prioridad  entero de 1 a 5
+             Operadores: eq, ne, gt, gte, lt, lte, in
+
+PREGUNTA
+tickets de garantía abiertos de este año en los que el
+cliente se queje de olor a quemado</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><code>{"query": "olor a quemado", "filtros": [categoria eq garantia, estado eq abierto, fecha gte 2026-01-01]}</code></span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que hace que funcione:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>El <strong>esquema va en el prompt</strong>: campos, tipos y valores permitidos</li>
+          <li>El LLM <strong>nunca ve los datos</strong>, sólo el esquema</li>
+          <li><code>query</code> vacío es una respuesta <strong>válida</strong></li>
+          <li>La salida se <strong>valida</strong> antes de ejecutarla</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      Aquí se ve por qué el formato importa: ese JSON <strong>se convierte en una consulta</strong>. Si el modelo inventa un valor que no existe —<code>categoria: "quemado"</code>— la búsqueda devuelve cero y nadie sabe por qué. <span style="color:var(--c-text-dim);">Unidad 10.</span>
+    </p>
+    <aside class="notes">Contenido propio, con el mismo caso del ticket para no cambiar de dominio a mitad del bloque. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. La unidad 10 ya trae un widget con cinco prompts de self-query listos para pegar en Claude, con casos que rompen suposiciones distintas; este es el aperitivo. El detalle de 'este ano' -> fecha gte 2026-01-01 es bueno para senalar que el extractor tambien resuelve referencias temporales relativas, y que por eso conviene pasarle la fecha de hoy.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-reescribir">
+    <h2>Reescribir la Consulta del Usuario</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Reescribe la consulta para buscarla en la base de documentación.
+Responde sólo con JSON:
+
+  "corregida": la consulta con la ortografía arreglada
+  "expandida": la misma intención, con los términos que usaría
+               la documentación oficial
+  "variantes": 3 formas alternas de preguntar lo mismo
+
+CONSULTA
+la licuadora ase ruido raro y guele a quemado, la puedo
+canbiar?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><code>corregida</code>: “la licuadora hace ruido raro y huele a quemado, ¿la puedo cambiar?” · <code>expandida</code>: “falla por sobrecalentamiento, cambio o reparación bajo garantía”</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Para qué sirve cada campo:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li><strong>Corregida</strong> — el usuario no escribe como la documentación</li>
+          <li><strong>Expandida</strong> — acerca su vocabulario al del corpus</li>
+          <li><strong>Variantes</strong> — se busca con las tres y se fusionan</li>
+          <li>Todo esto pasa <strong>antes</strong> de tocar el índice</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      Y hay que <strong>medirlo, no suponerlo</strong>: expandir de más trae ruido y puede empeorar la búsqueda. <span style="color:var(--c-text-dim);">Se retoma, ya con números, en la unidad 14.</span>
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. Conecta con dos cosas que el curso ya midio: el contraejemplo de busqueda semantica de la unidad 10 (donde la consulta original apinaba seis cosenos en 0.082 y el top-k salia casi arbitrario) y la expansion de consulta de la unidad 14. Insistir en la ultima frase: en aquella medicion expandir mejoro el ranking pero NO arreglo el fallo con top-2. No es una bala de plata.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-herramientas">
+    <h2>Elegir Qué Herramienta Invocar</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Tienes estas herramientas:
+
+  buscar_pedido(numero)       datos y fecha de compra
+  consultar_garantia(dias)    qué cubre la garantía a X días
+  crear_orden_taller(pedido)  agenda una reparación
+
+Lee el mensaje y responde SOLO con la llamada que hay que
+hacer PRIMERO, en el formato  herramienta(argumento).
+Si no hace falta ninguna, responde  ninguna.
+
+MENSAJE
+Buenas, mi pedido #A-4471 huele a quemado. ¿Qué procede?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><code style="color:var(--c-green);">buscar_pedido("#A-4471")</code></span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que hay que entender aquí:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>El modelo <strong>no ejecuta nada</strong>: emite un nombre y un argumento</li>
+          <li><strong>Tu código</strong> lo ejecuta — y decide si lo permite</li>
+          <li>El resultado vuelve al modelo, que decide el siguiente paso</li>
+          <li>Ese ida y vuelta, repetido, <strong>es un agente</strong></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      Puede pedir una herramienta que <strong>no existe</strong>. Por eso el nombre se compara siempre contra una lista blanca antes de ejecutar nada. <span style="color:var(--c-text-dim);">Unidad 19, donde está medido.</span>
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. Es la semilla de la unidad 19 y conviene no adelantarla mas de la cuenta: aqui solo se ve UN paso, no el bucle. Lo que si hay que dejar claro es que el modelo no ejecuta — es el malentendido mas comun del tema.
+
+El fallo de herramienta inventada esta MEDIDO en el notebook 28: el agente pidio saludo[bonjour], que no existia en el registro, y solo la lista blanca evito que tumbara el proceso.</aside>
+  </section>
+
+  <section data-transition="fade" id="sl-uso-juzgar">
+    <h2>Juzgar y Comparar</h2>
+    <div class="columns" style="font-size: 0.36em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Eres el evaluador. Compara las dos respuestas al mismo ticket
+y responde SÓLO con JSON:
+
+  {"gana": "A" | "B" | "empate",
+   "motivo": "una frase",
+   "fiel_a_la_politica": {"A": true|false, "B": true|false}}
+
+POLÍTICA: cambio por unidad nueva sólo los primeros 30 días;
+después, reparación en taller autorizado.
+TICKET: licuadora comprada hace 5 meses, huele a quemado.
+
+RESPUESTA A
+Con gusto le enviamos una licuadora nueva hoy mismo.
+
+RESPUESTA B
+Su equipo sigue en garantía. Como pasaron más de 30 días,
+corresponde reparación en taller autorizado.</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><code>{"gana": "B", "motivo": "A ofrece un cambio que la política no permite", "fiel_a_la_politica": {"A": false, "B": true}}</code></span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Por qué se usa tanto:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>Evalúa <strong>a escala</strong> lo que un humano no alcanza a leer</li>
+          <li>Sirve para <strong>comparar dos versiones</strong> de tu prompt</li>
+          <li>Da un criterio explícito, no un “se ve mejor”</li>
+          <li>Es lo que automatiza <strong>RAGAS</strong> en la unidad 16</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      Pero <strong>el juez arrastra los mismos sesgos</strong>: tiende a premiar respuestas largas y las que se parecen a su propio estilo. Hay que calibrarlo contra juicio humano antes de confiar en él — y ese contraste está medido en la unidad 16.
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. Cierra el grupo 2 y es el que mas se usa sin pensarlo: casi todo el mundo termina pidiendole a un LLM que evalue salidas de otro LLM.
+
+El sesgo de longitud no es folclore, esta documentado en la literatura de LLM-as-judge, y en la unidad 16 el curso lo toca al comparar faithfulness y answer_relevancy calculadas a mano contra las de RAGAS: coinciden en el sentido pero no en el valor, porque cada implementacion mide algo ligeramente distinto.</aside>
+  </section>
+<section data-transition="fade">
+    <h2>El Patrón Detrás de Todas</h2>
+    <div class="flow-row" style="justify-content:center; font-size: 0.4em; margin: 0.35em 0;">
+      <div class="flow-node" style="border-color: var(--c-yellow);"><strong>Instrucción</strong><br><span style="color: var(--c-text-dim);">qué hacer</span></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-node" style="border-color: var(--c-blue);"><strong>Entrada</strong><br><span style="color: var(--c-text-dim);">el texto a procesar</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color: var(--c-green);"><strong>Salida</strong><br><span style="color: var(--c-text-dim);">el texto transformado</span></div>
+    </div>
+    <p style="font-size: 0.42em; text-align:center;">
+      Un LLM es, en la práctica, una <strong>función de texto a texto configurable con lenguaje</strong>.
+      Cambias la instrucción y tienes otra función.
+    </p>
+    <div style="font-size: 0.39em; margin-top: 0.35em;">
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● Antes, cada una de estas tareas exigía <strong>entrenar un modelo distinto</strong>,
+        con sus datos etiquetados y su despliegue.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
+        ● Hoy es <strong>el mismo modelo</strong> con doce instrucciones distintas. Eso es lo que
+        cambió de verdad.
+      </div>
+      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
+        ● Y por eso <strong>escribir la instrucción se volvió una habilidad técnica</strong>:
+        es literalmente la programación de esa función.
+      </div>
+    </div>
+    <aside class="notes">Contenido propio. Se retitulo en agosto de 2026 ("de las Cinco" -> "de Todas") para no tener que tocarlo cada vez que se agrega un caso de uso. Este slide es la bisagra hacia el bloque de prompting, que ahora vive mas adelante en la unidad: si la instruccion define la funcion, entonces vale la pena estudiar como escribirla. Conecta tambien con el capstone: muchos problemas que parecen necesitar entrenar un modelo se resuelven con una instruccion bien escrita.</aside>
+  </section>
+
+
+
   <section data-transition="fade">
     <h2>Tokens: la Unidad de Trabajo</h2>
     <p style="font-size: 0.46em;">
@@ -8399,246 +9136,7 @@ for _ in range(max_tokens):
     </aside>
   </section>
 
-  <section data-transition="fade">
-    <h2>Para Qué se Usa un LLM en la Práctica</h2>
-    <div style="text-align:center; margin:0.2em 0;">
-      <svg viewBox="0 0 760 62" style="width:100%; max-width:760px; max-height:64px;" role="img">
-<rect x="12" y="6" width="138" height="30" rx="6" fill="#58C4DD" fill-opacity="0.16" stroke="#58C4DD" stroke-width="1.3"/><text x="81" y="26" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif">resumir</text><rect x="162" y="6" width="138" height="30" rx="6" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.3"/><text x="231" y="26" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif">clasificar</text><rect x="312" y="6" width="138" height="30" rx="6" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.3"/><text x="381" y="26" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif">extraer</text><rect x="462" y="6" width="138" height="30" rx="6" fill="#9A72AC" fill-opacity="0.16" stroke="#9A72AC" stroke-width="1.3"/><text x="531" y="26" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif">reescribir</text><rect x="612" y="6" width="138" height="30" rx="6" fill="#5CD0B3" fill-opacity="0.16" stroke="#5CD0B3" stroke-width="1.3"/><text x="681" y="26" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif">responder</text><text x="380" y="56" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">las cinco son la misma operación: texto entra, texto sale</text>
-      </svg>
-    </div>
-    <p style="font-size: 0.43em;">
-      Casi todo lo que se le pide a un LLM en producción cae en cinco familias.
-      Ninguna requiere entrenar nada: solo <strong>escribir bien la instrucción</strong>.
-    </p>
-    <div class="taxonomy" style="font-size: 0.88em; margin-top: 0.3em;">
-      <div class="branch fragment fade-up" style="border-left-color: var(--c-blue);">
-        <strong style="color: var(--c-blue);">Resumir</strong> — texto largo → texto corto.
-        Actas, tickets, expedientes, artículos.
-      </div>
-      <div class="branch fragment fade-up" style="border-left-color: var(--c-green);">
-        <strong style="color: var(--c-green);">Clasificar</strong> — texto → una etiqueta de un
-        conjunto cerrado. Sentimiento, urgencia, área que debe atender.
-      </div>
-      <div class="branch fragment fade-up" style="border-left-color: var(--c-orange);">
-        <strong style="color: var(--c-orange);">Extraer datos estructurados</strong> — texto libre
-        → JSON. Facturas, correos, formularios escaneados.
-      </div>
-      <div class="branch fragment fade-up" style="border-left-color: var(--c-purple);">
-        <strong style="color: var(--c-purple);">Corregir</strong> — ortografía, gramática, coherencia.
-      </div>
-      <div class="branch fragment fade-up" style="border-left-color: var(--c-pink);">
-        <strong style="color: var(--c-pink);">Cambiar el estilo</strong> — el mismo contenido,
-        otro tono, otro registro, otro idioma.
-      </div>
-    </div>
-    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.35em; color: var(--c-text-dim);">
-      Fíjate en algo: <strong>las cinco son transformaciones de texto en texto</strong>.
-      Ahí está la razón de que un solo modelo las haga todas.
-    </p>
-    <aside class="notes">Contenido propio. Estas cinco familias son las que aparecen una y otra vez en proyectos reales, y las cuatro primeras se resolvian antes con un modelo entrenado a proposito por cada tarea. Buen momento para preguntarle al grupo cual de las cinco necesita su capstone.</aside>
-  </section>
-
-  <section data-transition="fade">
-    <h2>Resumir</h2>
-    <div class="columns" style="font-size: 0.36em;">
-      <div class="col-55">
-        <pre style="margin:0; font-size:0.94em;"><code class="language-text">Resume el siguiente ticket de soporte en
-una sola frase, indicando el problema y
-lo que pide el cliente.
-
-TICKET:
-Buenas tardes, compré una licuadora el
-12 de marzo con el pedido #A-4471 y desde
-la segunda semana hace un ruido muy fuerte
-y huele a quemado. Ya intenté con menos
-carga y sigue igual. Todavía está en
-garantía. Quisiera saber si me la pueden
-cambiar o si tengo que llevarla a algún
-taller.</code></pre>
-      </div>
-      <div class="col-40">
-        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
-          <strong style="color: var(--c-green);">Salida</strong><br>
-          <span style="color: var(--c-text-dim);">Licuadora del pedido #A-4471 con ruido
-          y olor a quemado dentro del período de garantía; el cliente pide cambio o
-          indicación de a dónde llevarla.</span>
-        </div>
-        <p style="margin-top:0.4em;"><strong>Lo que controlas con la instrucción:</strong></p>
-        <ul style="margin:0.15em 0;">
-          <li><strong>Longitud</strong>: "en una frase", "en 3 viñetas", "máximo 50 palabras"</li>
-          <li><strong>Foco</strong>: "resalta solo las fechas y montos"</li>
-          <li><strong>Formato</strong>: prosa, viñetas, tabla</li>
-          <li><strong>Fidelidad</strong>: "no agregues nada que no esté en el texto"</li>
-        </ul>
-      </div>
-    </div>
-    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
-      <strong>El riesgo propio de resumir:</strong> el modelo puede <strong>agregar</strong> cosas
-      que no estaban. Por eso la última instrucción no es opcional en contextos serios.
-    </p>
-    <aside class="notes">Contenido propio. Las salidas de estas cinco diapositivas son EJEMPLOS ilustrativos escritos a mano, no salidas medidas de un modelo — el gpt2 en espanol que usamos en los widgets es demasiado pequeno para seguir instrucciones. Distincion util: resumen extractivo (copia frases del original, mas seguro) vs abstractivo (redacta de nuevo, mas legible y mas riesgoso).</aside>
-  </section>
-
-  <section data-transition="fade">
-    <h2>Clasificar</h2>
-    <div class="columns" style="font-size: 0.36em;">
-      <div class="col-55">
-        <pre style="margin:0; font-size:0.94em;"><code class="language-text">Clasifica el ticket en UNA de estas
-categorías, y responde solo con la
-categoría:
-
-garantia | envio | facturacion | otro
-
-TICKET: {texto del ticket}
-CATEGORÍA:</code></pre>
-        <p style="margin-top:0.4em;">
-          Nota los tres detalles que hacen que esto funcione en producción:
-        </p>
-        <ul style="margin:0.15em 0;">
-          <li><strong>Conjunto cerrado</strong> de etiquetas, escrito explícitamente</li>
-          <li><strong>"responde solo con la categoría"</strong> — si no, redacta un párrafo</li>
-          <li>El prompt <strong>termina</strong> en <code>CATEGORÍA:</code>, así la
-            continuación natural es la etiqueta</li>
-        </ul>
-      </div>
-      <div class="col-40">
-        <div style="padding:0.35em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue);">
-          <strong style="color: var(--c-blue);">Por qué esto funciona</strong><br>
-          <span style="color: var(--c-text-dim);">Un LLM ya <em>es</em> un clasificador sobre el
-          siguiente token. Al terminar el prompt en <code>CATEGORÍA:</code>, la clasificación que
-          hace de forma natural coincide con la que tú quieres.</span>
-        </div>
-        <div class="fragment fade-up" style="margin-top:0.4em; padding:0.35em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
-          <strong>El truco de producción</strong><br>
-          En vez de dejarlo escribir, se mira la <strong>probabilidad de cada etiqueta</strong> y se
-          toma la mayor. Así <strong>nunca</strong> devuelve algo fuera del conjunto…
-          y de paso obtienes una <strong>confianza</strong> con la que decidir si escalas a un humano.
-        </div>
-      </div>
-    </div>
-    <aside class="notes">Contenido propio. El truco de leer las probabilidades de las etiquetas en vez de generar texto es lo que hace un clasificador con LLM fiable, y conecta directo con el slide "La Idea Central: es un Clasificador" de esta misma unidad. En la unidad de LLMs y generacion (RAG_M4) esto reaparece como logit_bias.</aside>
-  </section>
-
-  <section data-transition="fade">
-    <h2>Extraer Datos Estructurados</h2>
-    <div class="columns" style="font-size: 0.35em;">
-      <div class="col-55">
-        <pre style="margin:0; font-size:0.94em;"><code class="language-text">Extrae los datos del correo en JSON con
-EXACTAMENTE este esquema. Si un dato no
-aparece, usa null. No inventes valores.
-
-{"cliente": str, "pedido": str,
- "fecha_compra": "AAAA-MM-DD",
- "monto": number, "en_garantia": bool}
-
-CORREO:
-Buenas, soy Marta Solís. El 12/03/2026
-compré la licuadora del pedido A-4471,
-pagué Q. 899.00 y sigue en garantía.
-
-JSON:</code></pre>
-      </div>
-      <div class="col-40">
-        <pre style="margin:0; font-size:0.94em;"><code class="language-json">{
-  "cliente": "Marta Solís",
-  "pedido": "A-4471",
-  "fecha_compra": "2026-03-12",
-  "monto": 899.0,
-  "en_garantia": true
-}</code></pre>
-        <p style="margin-top:0.4em;">
-          Es probablemente <strong>el caso de uso con mejor retorno</strong>: convierte texto
-          libre en algo que tu base de datos puede consultar.
-        </p>
-        <p class="fragment fade-up" style="margin-top:0.3em; padding:0.3em 0.5em; background: rgba(131,193,103,0.08); border-left: 3px solid var(--c-green);">
-          Fíjate en <strong>"12/03/2026" → "2026-03-12"</strong>: no solo extrae, también
-          <strong>normaliza</strong>. Eso es lo que antes costaba un montón de expresiones regulares.
-        </p>
-      </div>
-    </div>
-    <p class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.25em; text-align:center;">
-      En producción no se confía en que el JSON salga bien: las APIs traen
-      <strong>salida estructurada</strong> (structured outputs / JSON mode) que
-      <strong>garantiza</strong> que la respuesta cumpla el esquema.
-    </p>
-    <aside class="notes">Contenido propio. Las dos instrucciones criticas son "usa null si no aparece" y "no inventes valores": sin ellas el modelo rellena huecos con datos plausibles, que es la alucinacion mas peligrosa aqui porque entra directo a la base de datos. La salida estructurada con esquema (function calling / JSON schema) es lo que se usa hoy en produccion.</aside>
-  </section>
-
-  <section data-transition="fade">
-    <h2>Corregir y Cambiar el Estilo</h2>
-    <div style="text-align:center; margin:0.3em 0;">
-      <svg viewBox="0 0 760 114" style="width:100%; max-width:760px; max-height:116px;" role="img">
-<rect x="20" y="26" width="340" height="58" rx="7" fill="#FF862F" fill-opacity="0.16" stroke="#FF862F" stroke-width="1.4"/><text x="190" y="50" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif" dominant-baseline="middle">«oye mandame el reporte ya»</text><text x="190" y="68" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">lo que escribió alguien</text><rect x="400" y="26" width="340" height="58" rx="7" fill="#83C167" fill-opacity="0.16" stroke="#83C167" stroke-width="1.4"/><text x="570" y="50" text-anchor="middle" fill="#ece6d0" font-size="12.5" font-family="Lora,serif" dominant-baseline="middle">«¿Podrías enviarme el reporte?»</text><text x="570" y="68" text-anchor="middle" fill="#8a86a0" font-size="10.5" font-family="Fira Code,monospace">lo que sale</text><text x="380" y="106" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">el contenido no cambia; cambia el registro. Es transformación, no conocimiento</text>
-      </svg>
-    </div>
-    <div class="columns" style="font-size: 0.36em;">
-      <div class="col">
-        <p style="margin:0.1em 0;"><strong style="color: var(--c-purple);">Corregir</strong></p>
-        <div style="padding:0.3em 0.5em; background: rgba(252,98,85,0.07); border-left: 3px solid var(--c-red); margin-bottom:0.25em;">
-          <span style="color: var(--c-text-dim);">"aser el pedido fue muy dificil, la pagina
-          nunca cargo y ademas nadie contesto el telefono"</span>
-        </div>
-        <div style="padding:0.3em 0.5em; background: rgba(131,193,103,0.07); border-left: 3px solid var(--c-green);">
-          "Hacer el pedido fue muy difícil: la página nunca cargó y además nadie contestó
-          el teléfono."
-        </div>
-        <p style="margin-top:0.3em; color: var(--c-text-dim);">
-          Instrucción típica: <em>"corrige ortografía y puntuación, <strong>sin cambiar
-          el significado ni el tono</strong>"</em>.
-        </p>
-      </div>
-      <div class="col">
-        <p style="margin:0.1em 0;"><strong style="color: var(--c-pink);">Cambiar el estilo</strong></p>
-        <div style="padding:0.3em 0.5em; background: rgba(228,139,176,0.07); border-left: 3px solid var(--c-pink); margin-bottom:0.25em;">
-          <strong>→ formal:</strong> "Estimado cliente: lamentamos los inconvenientes presentados
-          durante su proceso de compra."
-        </div>
-        <div style="padding:0.3em 0.5em; background: rgba(88,196,221,0.07); border-left: 3px solid var(--c-blue); margin-bottom:0.25em;">
-          <strong>→ cercano:</strong> "¡Qué pena que te costara tanto! Ya estamos viendo qué pasó
-          con la página."
-        </div>
-        <div style="padding:0.3em 0.5em; background: rgba(255,134,47,0.07); border-left: 3px solid var(--c-orange);">
-          <strong>→ técnico:</strong> "Se reporta fallo de carga en el frontend de pedidos
-          y falta de respuesta en el canal telefónico."
-        </div>
-      </div>
-    </div>
-    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
-      Las dos son la misma operación con distinta instrucción. Y en las dos hay que decir
-      <strong>qué NO debe cambiar</strong> — si no, el modelo "mejora" cosas que no le pediste.
-    </p>
-    <aside class="notes">Contenido propio. El cambio de estilo es lo que mas se subestima: permite escribir una sola vez el contenido y adaptarlo a cada canal (correo, chat, resumen ejecutivo). Y la advertencia de decir que NO cambiar aplica a las cinco familias.</aside>
-  </section>
-
-  <section data-transition="fade">
-    <h2>El Patrón Detrás de las Cinco</h2>
-    <div class="flow-row" style="justify-content:center; font-size: 0.4em; margin: 0.35em 0;">
-      <div class="flow-node" style="border-color: var(--c-yellow);"><strong>Instrucción</strong><br><span style="color: var(--c-text-dim);">qué hacer</span></div>
-      <div class="flow-arrow">+</div>
-      <div class="flow-node" style="border-color: var(--c-blue);"><strong>Entrada</strong><br><span style="color: var(--c-text-dim);">el texto a procesar</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-node" style="border-color: var(--c-green);"><strong>Salida</strong><br><span style="color: var(--c-text-dim);">el texto transformado</span></div>
-    </div>
-    <p style="font-size: 0.42em; text-align:center;">
-      Un LLM es, en la práctica, una <strong>función de texto a texto configurable con lenguaje</strong>.
-      Cambias la instrucción y tienes otra función.
-    </p>
-    <div style="font-size: 0.39em; margin-top: 0.35em;">
-      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
-        ● Antes, cada una de las cinco tareas exigía <strong>entrenar un modelo distinto</strong>,
-        con sus datos etiquetados y su despliegue.
-      </div>
-      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0;">
-        ● Hoy es <strong>el mismo modelo</strong> con cinco instrucciones distintas. Eso es lo que
-        cambió de verdad.
-      </div>
-      <div class="fragment fade-up" style="text-align:left; margin:0.2em 0; padding: 0.3em 0.5em; background: rgba(255,255,0,0.06); border-left: 3px solid var(--c-yellow);">
-        ● Y por eso <strong>escribir la instrucción se volvió una habilidad técnica</strong>:
-        es literalmente la programación de esa función.
-      </div>
-    </div>
-    <aside class="notes">Contenido propio. Este slide es la bisagra hacia el bloque de prompting: si la instruccion define la funcion, entonces vale la pena estudiar como escribirla. Conecta tambien con el capstone: muchos problemas que parecen necesitar entrenar un modelo se resuelven con una instruccion bien escrita.</aside>
-  </section>
+  
 
   <section data-transition="fade">
     <h2>Zero-shot: Pedirlo sin Ejemplos</h2>
@@ -8651,7 +9149,9 @@ Reseña: El envío llegó tarde pero el
 producto está impecable.
 Sentimiento:</code></pre>
         <p style="margin-top:0.35em;">
-          <strong>Cero ejemplos.</strong> Solo la instrucción y la entrada.
+          Volvemos al patrón del principio de la unidad —<strong>instrucción + entrada</strong>—
+          para mirar ahora la instrucción de cerca. <strong>Cero ejemplos:</strong>
+          sólo la instrucción y la entrada.
           Funciona porque el modelo ya vio millones de textos parecidos al entrenarse.
         </p>
       </div>
@@ -15857,10 +16357,600 @@ def rag_agentico(pregunta, max_intentos=2):
         <span class="resource-tag">arxiv.org/abs/2210.03629</span>
       </a>
     </div>
-    <aside class="notes">Cierre de la unidad y del curso. Otros papers para mencionar: Toolformer (arXiv 2302.04761), Self-RAG (arXiv 2310.11511) y FLARE (arXiv 2305.06983).</aside>
+    <p style="font-size: 0.4em; color: var(--c-text-dim); margin-top: 0.35em;">
+      Todo esto se hizo con un modelo local y sin llaves. El
+      <a onclick="Reveal.slide(20, 0)" style="color: var(--c-blue); cursor: pointer;"><strong>anexo opcional
+      de la unidad 20</strong></a> muestra el mismo bucle con el SDK de Anthropic, MCP y el Agent SDK.
+    </p>
+    <aside class="notes">Cierre de la unidad y del curso. Desde aqui se puede saltar al anexo 20 (opcional, camino comercial) o terminar. Otros papers para mencionar: Toolformer (arXiv 2302.04761), Self-RAG (arXiv 2310.11511) y FLARE (arXiv 2305.06983).</aside>
   </section>
 
 </section>
+
+<!-- ============================================================
+     SECCION 20 — Anexo Opcional: Agentes con Anthropic
+     ============================================================ -->
+<section>
+
+  <section data-transition="fade" id="sl-20-portada">
+    <p style="font-size: 0.5em; color: var(--c-text-dim); letter-spacing: 0.18em; margin-bottom: 0.1em;">ANEXO OPCIONAL</p>
+    <h1 style="font-size: 1.35em;">Agentes con Anthropic</h1>
+    <h3 style="color: var(--c-blue); margin-top: 0.1em;">SDK · MCP · Agent SDK</h3>
+    <p style="font-size: 0.44em; color: var(--c-text-dim); margin-top: 0.7em; max-width: 78%; margin-left:auto; margin-right:auto;">
+      Todo el curso corre con <strong>modelos locales y sin llaves</strong>. Este anexo es el otro
+      camino: el comercial. <strong>Cuesta dinero</strong> y por eso es opcional — pero es el que te
+      vas a encontrar en un trabajo.
+    </p>
+    <aside class="notes">
+      Anexo opcional, se puede saltar entero con una flecha derecha desde la portada de la 19.
+
+      Por que existe: el curso entero esta construido sobre modelos locales para que nadie tenga que
+      pagar. Eso es deliberado y no cambia. Pero el estudiante que salga a trabajar va a encontrarse
+      con el SDK comercial, con MCP en todas partes y con el Agent SDK, y merece saber como se ven.
+
+      IMPORTANTE al darlo: nada de este codigo se ejecuto en el curso, porque necesita una llave de
+      pago. Todo esta verificado contra la documentacion oficial (agosto 2026) pero NO esta medido por
+      nosotros, y eso rompe la regla que seguimos en el resto del deck. Decirlo en voz alta: es la
+      diferencia entre "lo medimos" y "lo leimos en la documentacion".
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-escalera">
+    <h2>Cuatro Alturas, un Mismo Bucle</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.25em;">
+      Lo que cambia de un escalón al siguiente no es lo que hace el agente:
+      es <strong>quién escribe el bucle</strong> y <strong>dónde corre</strong>.
+    </p>
+    <div style="text-align:center; margin:0.2em 0;">
+      <svg viewBox="0 0 760 168" style="width:100%; max-width:760px; max-height:172px;" role="img">
+<rect x="8" y="96" width="172" height="52" rx="8" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD"/><text x="94" y="116" text-anchor="middle" fill="#58C4DD" font-size="12.5" font-family="Fira Code,monospace">Messages API</text><text x="94" y="134" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">tú escribes el bucle</text><rect x="196" y="74" width="172" height="52" rx="8" fill="#83C167" fill-opacity="0.14" stroke="#83C167"/><text x="282" y="94" text-anchor="middle" fill="#83C167" font-size="12.5" font-family="Fira Code,monospace">Tool Runner</text><text x="282" y="112" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">el SDK lo escribe</text><rect x="384" y="52" width="172" height="52" rx="8" fill="#FF862F" fill-opacity="0.14" stroke="#FF862F"/><text x="470" y="72" text-anchor="middle" fill="#FF862F" font-size="12.5" font-family="Fira Code,monospace">Agent SDK</text><text x="470" y="90" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">Claude Code como librería</text><rect x="572" y="30" width="180" height="52" rx="8" fill="#9A72AC" fill-opacity="0.14" stroke="#9A72AC"/><text x="662" y="50" text-anchor="middle" fill="#9A72AC" font-size="12.5" font-family="Fira Code,monospace">Managed Agents</text><text x="662" y="68" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">Anthropic lo corre</text><line x1="8" y1="158" x2="752" y2="158" stroke="#FFFF00" stroke-width="1.6" stroke-dasharray="5 4"/><text x="380" y="20" text-anchor="middle" fill="#8a86a0" font-size="11" font-family="Lora,serif" font-style="italic">más control  ←—————————————————————————→  menos código</text><text x="380" y="152" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif">MCP cruza los cuatro: es de dónde salen las herramientas</text>
+      </svg>
+    </div>
+    <p style="font-size: 0.42em; margin-top: 0.15em;">
+      El bucle es el mismo que escribiste a mano en la unidad 19. Lo que sube en la escalera es
+      <strong>cuánto código ajeno aceptas</strong> a cambio de escribir menos del tuyo.
+    </p>
+    <aside class="notes">
+      La tabla de la documentacion del Agent SDK compara exactamente estas cuatro opciones. La escalera
+      es una lectura propia de esa tabla.
+
+      El punto pedagogico: el estudiante ya escribio el escalon de mas abajo en el notebook 28, con un
+      modelo local. Todo lo demas de este anexo son formas de no escribirlo. Eso es justo el mismo
+      argumento de la unidad 18 con LangChain, y conviene decirlo asi: primero a mano, despues el
+      framework, para que el framework se entienda en vez de creerse.
+
+      MCP va debajo de los cuatro y no dentro de uno: es el protocolo del que salen las herramientas,
+      sin importar quien corra el bucle.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-primera">
+    <h2>La Primera Llamada</h2>
+    <pre style="font-size: 0.38em; max-width: 88%; margin: 0.3em auto;"><code class="language-python">pip install anthropic
+
+import anthropic
+client = anthropic.Anthropic()          # lee ANTHROPIC_API_KEY del entorno
+
+respuesta = client.messages.create(
+    model="claude-sonnet-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Resume esto en una línea: ..."}],
+)
+print(respuesta.content[0].text)</code></pre>
+    <p style="font-size: 0.42em; margin-top: 0.3em;">
+      <code>messages</code> es una <strong>lista que tú mantienes</strong>. La API no recuerda nada
+      entre llamadas: la "conversación" es que le vuelvas a mandar todo.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.2em; padding: 0.35em; background: rgba(255,255,0,0.07);">
+      Es exactamente el <code>historial</code> del notebook 16, con otro nombre. Y es también
+      la razón de que el costo crezca con la conversación: <strong>cada turno reenvía los anteriores</strong>.
+    </p>
+    <aside class="notes">
+      Verificado contra la documentacion oficial de la Messages API (agosto 2026). La llave se lee de
+      la variable de entorno ANTHROPIC_API_KEY: nunca escrita en una celda, igual que en el notebook 16.
+
+      El detalle que sorprende a quien viene de un chat: la API es SIN ESTADO. Todo lo que parece
+      memoria es la lista de mensajes que el cliente reenvia. Enlazar con la diapositiva de memoria
+      conversacional de la unidad 18 y con el costo cuadratico de la conversacion.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-herramienta">
+    <h2>Una Herramienta es un Esquema</h2>
+    <div class="columns" style="align-items: flex-start;">
+      <div class="col-55">
+        <pre style="font-size: 0.335em; margin: 0;"><code class="language-python">tools = [{
+    "name": "get_weather",
+    "description": "Get the current weather "
+                   "for a given location.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "location": {
+                "type": "string",
+                "description": "City and state, "
+                               "e.g. San Francisco, CA"
+            }
+        },
+        "required": ["location"],
+    },
+}]</code></pre>
+      </div>
+      <div class="col-40">
+        <p style="font-size: 0.4em; text-align:left; margin:0.1em 0;">
+          El modelo <strong>no ve tu función</strong>. Ve tres cosas: el nombre, la descripción y el
+          esquema JSON de los argumentos.</p>
+        <p style="font-size: 0.4em; text-align:left; margin:0.35em 0;">
+          Por eso <strong>la descripción es la interfaz</strong>. Una descripción vaga es un bug, no
+          un detalle de estilo.</p>
+        <p style="font-size: 0.4em; text-align:left; margin:0.35em 0;">
+          Es la misma definición de la unidad 19 —<em>una función más una descripción</em>— solo que
+          aquí el formato lo fija la API.</p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; text-align:center; margin-top: 0.25em;">
+      Con <code>strict: true</code> la API <strong>garantiza</strong> que los argumentos cumplan el
+      esquema. Sin él, valida tú.
+    </p>
+    <aside class="notes">
+      Esquema copiado literalmente del ejemplo get_weather de la documentacion de tool use, para que
+      el estudiante lo reconozca cuando lo lea alli.
+
+      El punto que hay que insistir: la descripcion es texto que entra en el prompt y es lo unico que
+      el modelo tiene para decidir. En la unidad 19 el estudiante ya midio que cambiar la descripcion
+      no arreglaba el enrutamiento con un modelo de 1.5B; con un modelo grande si importa mucho.
+
+      strict: true es reciente y resuelve una clase entera de bugs — argumentos que no cumplen el
+      esquema — pero no resuelve el otro: que llame la herramienta equivocada.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-roundtrip">
+    <h2>El Viaje de Ida y Vuelta</h2>
+    <div style="text-align:center; margin:0.25em 0;">
+      <svg viewBox="0 0 760 150" style="width:100%; max-width:760px; max-height:154px;" role="img">
+<rect x="6" y="52" width="120" height="44" rx="7" fill="#ece6d0" fill-opacity="0.07" stroke="#8a86a0"/><text x="66" y="70" text-anchor="middle" fill="#ece6d0" font-size="11.5" font-family="Lora,serif">tu pregunta</text><text x="66" y="86" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Fira Code,monospace">+ tools=[...]</text><line x1="126" y1="74" x2="176" y2="74" stroke="#8a86a0" stroke-width="1.4"/><polygon points="176,74 168,70 168,78" fill="#8a86a0"/><rect x="178" y="46" width="132" height="56" rx="7" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD"/><text x="244" y="64" text-anchor="middle" fill="#58C4DD" font-size="11.5" font-family="Fira Code,monospace">Claude</text><text x="244" y="80" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Fira Code,monospace">stop_reason:</text><text x="244" y="93" text-anchor="middle" fill="#FFFF00" font-size="10.5" font-family="Fira Code,monospace">"tool_use"</text><line x1="310" y1="74" x2="360" y2="74" stroke="#FFFF00" stroke-width="1.4"/><polygon points="360,74 352,70 352,78" fill="#FFFF00"/><text x="335" y="56" text-anchor="middle" fill="#FFFF00" font-size="9.5" font-family="Fira Code,monospace">tool_use</text><rect x="362" y="46" width="132" height="56" rx="7" fill="#83C167" fill-opacity="0.14" stroke="#83C167"/><text x="428" y="68" text-anchor="middle" fill="#83C167" font-size="11.5" font-family="Fira Code,monospace">TU CÓDIGO</text><text x="428" y="86" text-anchor="middle" fill="#ece6d0" font-size="10" font-family="Lora,serif">ejecuta la función</text><path d="M 428 102 L 428 128 L 244 128 L 244 104" fill="none" stroke="#83C167" stroke-width="1.4"/><polygon points="244,104 240,112 248,112" fill="#83C167"/><text x="336" y="142" text-anchor="middle" fill="#83C167" font-size="9.5" font-family="Fira Code,monospace">tool_result</text><rect x="602" y="46" width="152" height="56" rx="7" fill="#ece6d0" fill-opacity="0.07" stroke="#8a86a0"/><text x="678" y="68" text-anchor="middle" fill="#ece6d0" font-size="11.5" font-family="Lora,serif">la respuesta final</text><text x="678" y="86" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Fira Code,monospace">stop_reason: "end_turn"</text><line x1="494" y1="60" x2="598" y2="60" stroke="#8a86a0" stroke-width="1.2" stroke-dasharray="4 3"/><text x="546" y="52" text-anchor="middle" fill="#8a86a0" font-size="9" font-family="Lora,serif">(vuelta 2)</text>
+      </svg>
+    </div>
+    <p style="font-size: 0.43em;">
+      <strong>El modelo nunca ejecuta nada.</strong> Pide, y espera. Quien corre la función —y quien
+      decide si dejarla correr— es tu proceso.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.2em;">
+      🎯 El campo que gobierna todo es <code>stop_reason</code>. Si vale <code>"tool_use"</code>,
+      hay trabajo para ti; si vale <code>"end_turn"</code>, el agente terminó.
+      <strong>Ese if es el bucle entero.</strong>
+    </blockquote>
+    <aside class="notes">
+      Diagrama propio a partir del ejemplo de round trip de la documentacion de tool use.
+
+      Este es EL concepto del anexo y conviene detenerse: mucha gente cree que "el modelo ejecuta
+      herramientas". No. El modelo emite un bloque tool_use, que es texto estructurado, y se detiene.
+      La ejecucion es tuya, el riesgo es tuyo y el permiso es tuyo.
+
+      Es lo mismo que el estudiante vio en la unidad 19 con el regex sobre "Accion: nombre[arg]". La
+      unica diferencia es que aqui el formato lo garantiza la API en vez de un prompt de sistema.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-bucle">
+    <h2>El Bucle Agéntico, en Código</h2>
+    <p style="font-size: 0.4em; margin-bottom: 0.15em;">
+      Las <strong>mismas tres reglas</strong> de la unidad 19, ahora sobre bloques tipados
+      en vez de una expresión regular.
+    </p>
+    <pre style="font-size: 0.315em; max-width: 94%; margin: 0.2em auto;"><code class="language-python">mensajes = [{"role": "user", "content": pregunta}]
+
+for paso in range(MAX_PASOS):                                    # 3) tope de pasos
+    r = client.messages.create(model="claude-sonnet-5", max_tokens=1024,
+                               tools=ESQUEMAS, messages=mensajes)
+    mensajes.append({"role": "assistant", "content": r.content})
+
+    if r.stop_reason != "tool_use":                              # no pidió nada: terminó
+        return next(b.text for b in r.content if b.type == "text")
+
+    resultados = []
+    for b in [b for b in r.content if b.type == "tool_use"]:
+        if b.name not in REGISTRO:                               # 1) lista blanca
+            salida, malo = f"ERROR: '{b.name}' no existe", True
+        else:
+            try:
+                salida, malo = REGISTRO[b.name](**b.input), False
+            except Exception as e:
+                salida, malo = f"ERROR: {e}", True               # 2) el error VUELVE
+        resultados.append({"type": "tool_result", "tool_use_id": b.id,
+                           "content": str(salida), "is_error": malo})
+    mensajes.append({"role": "user", "content": resultados})     # y vuelve arriba</code></pre>
+    <aside class="notes">
+      Codigo propio, escrito siguiendo la documentacion de handle-tool-calls. NO se ejecuto: necesita
+      llave de pago. Es la traduccion directa del agente del notebook 28.
+
+      Proyectarlo AL LADO del de la unidad 19 si se puede: la estructura es identica y los tres
+      comentarios numerados son las tres mismas reglas. Lo que desaparecio es el re.search; lo que
+      aparecio es el bucle interno sobre varios bloques tool_use, porque la API puede pedir varias
+      herramientas en el mismo turno (paralelismo) y el ReAct a mano no.
+
+      is_error=True es la version de la API de la regla 2: el error viaja como resultado de
+      herramienta, no como excepcion, y el modelo lo lee y se corrige.
+
+      El "for paso in range" con return dentro: si se agota el rango, el agente se quedo sin pasos y
+      hay que decidir que hacer. En produccion eso se registra, no se ignora.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-runner">
+    <h2>Lo Mismo, sin Escribir el Bucle</h2>
+    <pre style="font-size: 0.33em; max-width: 90%; margin: 0.2em auto;"><code class="language-python">from anthropic import Anthropic, beta_tool
+
+@beta_tool
+def get_weather(location: str, unit: str = "fahrenheit") -> str:
+    """Get the current weather in a given location.
+
+    Args:
+        location: The city and state, e.g. San Francisco, CA
+        unit: Temperature unit, either 'celsius' or 'fahrenheit'
+    """
+    return json.dumps({"temperature": "20°C", "condition": "Sunny"})
+
+runner = client.beta.messages.tool_runner(
+    model="claude-sonnet-5", max_tokens=1024, tools=[get_weather],
+    messages=[{"role": "user", "content": "¿Qué tiempo hace en París?"}],
+)
+final = runner.until_done()</code></pre>
+    <p style="font-size: 0.4em; margin-top: 0.25em;">
+      El decorador <strong>deriva el esquema JSON</strong> de las anotaciones de tipo y del docstring.
+      Las veinte líneas de la diapositiva anterior se vuelven una.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.15em; padding: 0.35em; background: rgba(252,98,85,0.09);">
+      Lo que pierdes es <strong>el punto donde intervenir</strong>: aprobación humana, bitácora,
+      ejecución condicional. La propia documentación te manda al bucle manual cuando necesitas eso.
+    </p>
+    <aside class="notes">
+      Ejemplo copiado de la documentacion del tool runner (esta en beta). El docstring con la seccion
+      Args no es decorativo: de ahi sale la descripcion de cada parametro en el esquema.
+
+      Este es el mismo trato que se discutio en la unidad 18 con LangChain: menos codigo a cambio de
+      menos visibilidad. Y la respuesta es la misma: usalo cuando el bucle no sea lo interesante del
+      problema; escribelo a mano cuando si lo sea, o cuando tengas que meter una aprobacion humana en
+      medio, que en un sistema real es casi siempre.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-vs">
+    <h2>Qué Cambia Respecto al ReAct a Mano</h2>
+    <table style="font-size: 0.375em; width: 100%; max-width: 830px; margin: 0.25em auto;">
+      <tr><th style="text-align:left;"></th><th>ReAct a mano (unidad 19)</th><th>tool use nativo</th></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">quién detecta la acción</td>
+        <td><code>re.search</code> sobre el texto</td><td><code>stop_reason == "tool_use"</code></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">formato</td>
+        <td>convención de tu prompt</td><td>bloques tipados de la API</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">varias herramientas por turno</td>
+        <td style="color:var(--c-red);">✘</td><td style="color:var(--c-green);">✔ en paralelo</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">herramienta inventada</td>
+        <td>pasa — filtra tú</td><td>menos, pero <strong>filtra igual</strong></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">modelo pequeño</td>
+        <td style="color:var(--c-green);">gana (medido)</td><td style="color:var(--c-red);">pierde (medido)</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">costo</td>
+        <td>tu GPU</td><td>por token — y <code>tools</code> paga aparte</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em;">
+      Ese último renglón no es retórico: solo <strong>activar</strong> herramientas añade unos
+      <strong>286 tokens</strong> de prompt de sistema con Opus 5, más el esquema de cada herramienta,
+      <strong>en cada llamada del bucle</strong>.
+    </p>
+    <aside class="notes">
+      La fila del modelo pequeno es lo medido en el notebook 28 y ya se vio en la unidad 19; el resto
+      sale de la documentacion.
+
+      Los 286 tokens son el dato publicado para Opus 5 con tool_choice auto (406 si se fuerza la
+      llamada). Es un numero de la documentacion, no medido por nosotros — decirlo asi.
+
+      La leccion de costo, que es la que se olvida: un agente de 6 pasos paga el bloque de
+      herramientas SEIS veces, mas toda la conversacion acumulada cada vez. El costo de un agente no
+      es lineal en los pasos, y ese es el argumento real de la ultima diapositiva de la unidad 19
+      ("cuando un agente NO es la respuesta").
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-mcp-mxn">
+    <h2>MCP: de M×N a M+N</h2>
+    <div style="text-align:center; margin:0.25em 0;">
+      <svg viewBox="0 0 760 156" style="width:100%; max-width:760px; max-height:158px;" role="img">
+<text x="176" y="16" text-anchor="middle" fill="#FC6255" font-size="12" font-family="Fira Code,monospace">sin MCP: cada par, una integración</text><circle cx="66" cy="46" r="12" fill="#58C4DD" fill-opacity="0.3" stroke="#58C4DD"/><circle cx="66" cy="86" r="12" fill="#58C4DD" fill-opacity="0.3" stroke="#58C4DD"/><circle cx="66" cy="126" r="12" fill="#58C4DD" fill-opacity="0.3" stroke="#58C4DD"/><circle cx="286" cy="46" r="12" fill="#FF862F" fill-opacity="0.3" stroke="#FF862F"/><circle cx="286" cy="86" r="12" fill="#FF862F" fill-opacity="0.3" stroke="#FF862F"/><circle cx="286" cy="126" r="12" fill="#FF862F" fill-opacity="0.3" stroke="#FF862F"/><g stroke="#FC6255" stroke-width="0.9" stroke-opacity="0.55"><line x1="78" y1="46" x2="274" y2="46"/><line x1="78" y1="46" x2="274" y2="86"/><line x1="78" y1="46" x2="274" y2="126"/><line x1="78" y1="86" x2="274" y2="46"/><line x1="78" y1="86" x2="274" y2="86"/><line x1="78" y1="86" x2="274" y2="126"/><line x1="78" y1="126" x2="274" y2="46"/><line x1="78" y1="126" x2="274" y2="86"/><line x1="78" y1="126" x2="274" y2="126"/></g><text x="176" y="150" text-anchor="middle" fill="#FC6255" font-size="13" font-family="Fira Code,monospace">M × N = 9</text><line x1="380" y1="24" x2="380" y2="140" stroke="#8a86a0" stroke-width="1" stroke-dasharray="4 4"/><text x="584" y="16" text-anchor="middle" fill="#83C167" font-size="12" font-family="Fira Code,monospace">con MCP: cada uno habla el protocolo</text><circle cx="464" cy="46" r="12" fill="#58C4DD" fill-opacity="0.3" stroke="#58C4DD"/><circle cx="464" cy="86" r="12" fill="#58C4DD" fill-opacity="0.3" stroke="#58C4DD"/><circle cx="464" cy="126" r="12" fill="#58C4DD" fill-opacity="0.3" stroke="#58C4DD"/><rect x="546" y="62" width="76" height="48" rx="8" fill="#FFFF00" fill-opacity="0.13" stroke="#FFFF00"/><text x="584" y="84" text-anchor="middle" fill="#FFFF00" font-size="12" font-family="Fira Code,monospace">MCP</text><text x="584" y="99" text-anchor="middle" fill="#8a86a0" font-size="9" font-family="Fira Code,monospace">JSON-RPC 2.0</text><circle cx="706" cy="46" r="12" fill="#FF862F" fill-opacity="0.3" stroke="#FF862F"/><circle cx="706" cy="86" r="12" fill="#FF862F" fill-opacity="0.3" stroke="#FF862F"/><circle cx="706" cy="126" r="12" fill="#FF862F" fill-opacity="0.3" stroke="#FF862F"/><g stroke="#83C167" stroke-width="1.1"><line x1="476" y1="46" x2="546" y2="72"/><line x1="476" y1="86" x2="546" y2="86"/><line x1="476" y1="126" x2="546" y2="100"/><line x1="622" y1="72" x2="694" y2="46"/><line x1="622" y1="86" x2="694" y2="86"/><line x1="622" y1="100" x2="694" y2="126"/></g><text x="584" y="150" text-anchor="middle" fill="#83C167" font-size="13" font-family="Fira Code,monospace">M + N = 6</text>
+      </svg>
+    </div>
+    <p style="font-size: 0.42em;">
+      MCP es un <strong>protocolo abierto</strong>, no un producto de Anthropic: lo publicaron ellos
+      y hoy lo hablan también los clientes de otros proveedores. La documentación oficial lo llama
+      <em>"un puerto USB-C para aplicaciones de IA"</em>.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.15em;">
+      Lo que compras con eso: el servidor que escribes <strong>una vez</strong> sirve a tu agente, a
+      Claude Code, al escritorio y al cliente del vecino.
+    </p>
+    <aside class="notes">
+      La cita del USB-C es literal de modelcontextprotocol.io. El diagrama es propio.
+
+      El numero 9 contra 6 es solo el ejemplo de 3x3; el argumento se ve mejor con numeros grandes:
+      con 10 aplicaciones y 20 servicios son 200 integraciones contra 30.
+
+      Dato para la clase: MCP salio de Anthropic pero es abierto y lo adoptaron OpenAI, Google y
+      Microsoft, y editores como VS Code y Cursor. Por eso esta en el anexo de Anthropic pero NO es
+      exclusivo de Anthropic, y conviene decirlo para que nadie se lleve la idea contraria.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-mcp-prim">
+    <h2>Lo que Expone un Servidor MCP</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.46em; margin-top: 0.2em;">
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color: var(--c-blue);">tools</strong>
+        — funciones que el modelo puede invocar. <em>Las controla el modelo</em>: él decide cuándo.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color: var(--c-green);">resources</strong>
+        — datos que se pueden leer, identificados por URI. <em>Los controla la aplicación</em>:
+        tú decides qué entra en el contexto.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong style="color: var(--c-orange);">prompts</strong>
+        — plantillas reutilizables que publica el servidor. <em>Las elige el usuario</em>.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      Dos transportes: <code>stdio</code> para un servidor local en tu máquina, y
+      <strong>Streamable HTTP</strong> para uno remoto. Debajo, <code>JSON-RPC 2.0</code> en los dos casos.
+    </p>
+    <blockquote class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.2em;">
+      🎯 Quién controla cada primitiva no es trivia: es el <strong>modelo de permisos</strong>.
+      Las herramientas las dispara el modelo — y por eso son las que hay que vigilar.
+    </blockquote>
+    <aside class="notes">
+      Las tres primitivas y el reparto de control (model-controlled / application-controlled /
+      user-controlled) son de la especificacion de MCP.
+
+      El transporte importa en la practica: un servidor stdio corre como subproceso en la maquina del
+      usuario y no se puede conectar desde la API remota; uno HTTP si. Eso condiciona el diseno y es la
+      limitacion de la diapositiva siguiente.
+
+      La ultima frase enlaza con las tres reglas de la unidad 19: la lista blanca sigue siendo tuya
+      aunque las herramientas vengan de un servidor ajeno. Un servidor MCP de terceros es codigo de
+      terceros con acceso a tus datos.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-mcp-api">
+    <h2>Conectar un Servidor MCP</h2>
+    <pre style="font-size: 0.33em; max-width: 90%; margin: 0.2em auto;"><code class="language-python">respuesta = client.beta.messages.create(
+    model="claude-sonnet-5",
+    max_tokens=1000,
+    messages=[{"role": "user", "content": "¿Qué herramientas tienes?"}],
+    mcp_servers=[{
+        "type": "url",
+        "url": "https://example-server.modelcontextprotocol.io/sse",
+        "name": "example-mcp",
+        "authorization_token": "YOUR_TOKEN",
+    }],
+    tools=[{"type": "mcp_toolset", "mcp_server_name": "example-mcp"}],
+    betas=["mcp-client-2025-11-20"],
+)</code></pre>
+    <p style="font-size: 0.4em; margin-top: 0.25em;">
+      Sin escribir un cliente MCP: la API se conecta al servidor por ti. En el <code>mcp_toolset</code>
+      se declara qué herramientas quedan habilitadas — <strong>lista blanca o lista negra</strong>,
+      igual que la regla 1 de la unidad 19, pero declarativa.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.39em; margin-top: 0.15em; padding: 0.35em; background: rgba(252,98,85,0.09);">
+      Tres límites que hay que saber: está en <strong>beta</strong>, solo soporta
+      <strong>tools</strong> (ni resources ni prompts), y el servidor tiene que ser
+      <strong>público por HTTPS</strong> — un servidor local por <code>stdio</code> no se conecta así.
+    </p>
+    <aside class="notes">
+      Codigo de la documentacion del MCP connector, version del beta header mcp-client-2025-11-20 (la
+      anterior, 2025-04-04, esta deprecada y ponia la configuracion de herramientas dentro del servidor).
+
+      El patron de lista blanca se hace con default_config.enabled=false y luego habilitando tool por
+      tool en configs. El de lista negra, al reves. Para un asistente de solo lectura, deshabilitar
+      explicitamente las herramientas destructivas es lo recomendado por la propia documentacion.
+
+      Si hace falta stdio, resources o prompts, el camino es un cliente MCP propio con los helpers de
+      anthropic[mcp], o directamente el Agent SDK, que trae cliente MCP completo.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-agentsdk">
+    <h2>Agent SDK: Claude Code como Librería</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.2em;">
+      Las mismas herramientas, el mismo bucle y la misma gestión de contexto que mueven a Claude Code,
+      pero programables. <strong>Se llamaba <em>Claude Code SDK</em></strong> y se renombró en
+      septiembre de 2025, porque servía para mucho más que código.
+    </p>
+    <div class="columns" style="align-items: flex-start; margin-top: 0.1em;">
+      <div class="col-45">
+        <pre style="font-size: 0.32em; margin: 0;"><code class="language-bash">pip install claude-agent-sdk
+# Python 3.10+
+
+npm install @anthropic-ai/claude-agent-sdk</code></pre>
+      </div>
+      <div class="col-50">
+        <pre style="font-size: 0.32em; margin: 0;"><code class="language-python">import anyio
+from claude_agent_sdk import query
+
+async def main():
+    async for message in query(
+            prompt="What is 2 + 2?"):
+        print(message)
+
+anyio.run(main)</code></pre>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em;">
+      Nota de migración: el paquete viejo era <code>@anthropic-ai/claude-code</code>. Si encuentras un
+      tutorial con ese nombre, está desactualizado — <strong>y en este tema eso pasa cada pocos meses</strong>.
+    </p>
+    <aside class="notes">
+      Verificado contra la documentacion del Agent SDK y el repositorio anthropics/claude-agent-sdk-python
+      (agosto 2026). El paquete de Python trae el binario de Claude Code incluido, asi que no hace falta
+      instalarlo aparte.
+
+      El renombre importa para la clase porque TODO lo que el estudiante encuentre buscando "Claude
+      Code SDK" apunta a la documentacion vieja. Mismo problema que ya se dijo con LangChain en la
+      unidad 18: en este tema la vida util de un tutorial se mide en meses.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-capacidades">
+    <h2>Lo que Trae Puesto</h2>
+    <table style="font-size: 0.365em; width: 100%; max-width: 830px; margin: 0.2em auto;">
+      <tr><th style="text-align:left;">Capacidad</th><th style="text-align:left;">Qué te ahorra</th></tr>
+      <tr><td style="text-align:left;"><strong>Herramientas incluidas</strong></td>
+        <td style="text-align:left;"><code>Read</code>, <code>Write</code>, <code>Edit</code>, <code>Bash</code>, <code>Glob</code>, <code>Grep</code>, <code>WebSearch</code>, <code>WebFetch</code></td></tr>
+      <tr><td style="text-align:left;"><strong>Permisos</strong></td>
+        <td style="text-align:left;"><code>allowed_tools</code>, <code>disallowed_tools</code>, <code>permission_mode</code> — la lista blanca como característica</td></tr>
+      <tr><td style="text-align:left;"><strong>Hooks</strong></td>
+        <td style="text-align:left;">correr código tuyo <em>antes</em> de que una herramienta se ejecute, y bloquearla</td></tr>
+      <tr><td style="text-align:left;"><strong>Subagentes</strong></td>
+        <td style="text-align:left;">delegar una subtarea a un contexto limpio; solo vuelve el resultado</td></tr>
+      <tr><td style="text-align:left;"><strong>Compactación</strong></td>
+        <td style="text-align:left;">resume la historia vieja sola cuando la ventana se llena</td></tr>
+      <tr><td style="text-align:left;"><strong>Sesiones</strong></td>
+        <td style="text-align:left;">retomar o bifurcar una conversación por su <code>session_id</code></td></tr>
+      <tr><td style="text-align:left;"><strong>MCP</strong></td>
+        <td style="text-align:left;">cliente completo: stdio y remoto, no solo <em>tools</em></td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.2em;">
+      Y dos topes que <strong>no son opcionales</strong> en producción:
+      <code>max_turns</code> y <code>max_budget_usd</code>. La regla 3 de la unidad 19, con precio.
+    </p>
+    <aside class="notes">
+      Tabla armada de la documentacion del Agent SDK (paginas overview y agent-loop).
+
+      Los dos topes son el punto que hay que subrayar: un agente sin limite de turnos sobre un prompt
+      abierto ("mejora este codigo") puede correr mucho tiempo y gastar mucho dinero. max_budget_usd
+      cubre tambien lo que gastan los subagentes.
+
+      El modo de permisos por defecto exige aprobacion para lo que no este en allowed_tools;
+      bypassPermissions solo tiene sentido en CI o contenedores aislados, y la documentacion lo dice
+      con todas las letras. Buen momento para conectar con la discusion de seguridad de la unidad 12.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-tool-decorator">
+    <h2>Tus Propias Herramientas</h2>
+    <pre style="font-size: 0.32em; max-width: 94%; margin: 0.2em auto;"><code class="language-python">from claude_agent_sdk import tool, create_sdk_mcp_server, ClaudeAgentOptions, ClaudeSDKClient
+
+@tool("greet", "Greet a user", {"name": str})
+async def greet_user(args):
+    return {"content": [{"type": "text", "text": f"Hello, {args['name']}!"}]}
+
+server = create_sdk_mcp_server(name="my-tools", version="1.0.0", tools=[greet_user])
+
+options = ClaudeAgentOptions(
+    mcp_servers={"tools": server},
+    allowed_tools=["mcp__tools__greet"],     # nombre = mcp__servidor__herramienta
+)
+
+async with ClaudeSDKClient(options=options) as client:
+    await client.query("Greet Alice")
+    async for msg in client.receive_response():
+        print(msg)</code></pre>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.25em; padding: 0.35em; background: rgba(255,255,0,0.07);">
+      Fíjate: tu función <strong>es un servidor MCP</strong>, aunque corra dentro de tu propio proceso.
+      MCP aquí no es "otro programa": es <strong>el vocabulario</strong> con el que se declaran las
+      herramientas.
+    </p>
+    <aside class="notes">
+      Ejemplo del repositorio oficial del SDK de Python. El detalle del nombre —mcp__tools__greet—
+      confunde la primera vez: el prefijo mcp__ y el nombre del servidor forman parte del identificador
+      que va en allowed_tools.
+
+      La idea que vale la pena que se lleven: create_sdk_mcp_server crea un servidor EN PROCESO, sin
+      subproceso ni red. Es el mismo protocolo usado como formato de declaracion. Por eso una
+      herramienta escrita asi se puede mover despues a un servidor MCP de verdad sin reescribirla.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-elegir">
+    <h2>Cuál de los Cuatro</h2>
+    <table style="font-size: 0.375em; width: 100%; max-width: 840px; margin: 0.25em auto;">
+      <tr><th style="text-align:left;">Si lo que quieres es…</th><th style="text-align:left;">Usa</th></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">control total del bucle, o meter una aprobación humana en medio</td>
+        <td style="text-align:left; color:var(--c-blue);"><strong>Messages API</strong> a mano</td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">llamar unas cuantas funciones tuyas sin escribir el bucle</td>
+        <td style="text-align:left; color:var(--c-green);"><strong>Tool Runner</strong></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">un agente que lea, escriba y corra comandos en tu proyecto</td>
+        <td style="text-align:left; color:var(--c-orange);"><strong>Agent SDK</strong></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">tareas largas sin administrar tu propio sandbox ni sesiones</td>
+        <td style="text-align:left; color:var(--c-purple);"><strong>Managed Agents</strong></td></tr>
+      <tr class="fragment fade-up"><td style="text-align:left;">explorar o hacer algo puntual desde la terminal</td>
+        <td style="text-align:left; color:var(--c-text-dim);">el <strong>CLI</strong>, sin escribir código</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.41em; margin-top: 0.3em;">
+      Y para tu capstone, la pregunta anterior a todas: <strong>¿de verdad necesitas un agente?</strong>
+      Si los pasos son siempre los mismos, una cadena fija es más barata, más rápida y se puede probar.
+    </p>
+    <aside class="notes">
+      Las cuatro primeras filas son la tabla de comparacion de la documentacion del Agent SDK, traducida.
+
+      La ultima frase repite a proposito la diapositiva "Cuando un Agente NO es la Respuesta" de la
+      unidad 19. Este anexo muestra herramientas muy comodas y el riesgo pedagogico es que el
+      estudiante quiera meter un agente en el capstone porque es lo mas nuevo que vio. Cerrar
+      recordando el criterio: agente solo si el flujo NO se conoce de antemano.
+    </aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-20-clave">
+    <h2>Conceptos Clave</h2>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.44em;">
+      <div class="step fragment fade-up" style="text-align:left;">El modelo <strong>pide</strong>;
+        tu código <strong>ejecuta</strong>. <code>stop_reason == "tool_use"</code> es todo el bucle.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Las <strong>tres reglas</strong> no
+        cambian con la API: lista blanca, el error vuelve como resultado, tope de pasos.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>MCP</strong> es un protocolo
+        abierto: escribes el servidor una vez y lo usan todos los clientes.</div>
+      <div class="step fragment fade-up" style="text-align:left;">El <strong>Agent SDK</strong> es Claude
+        Code como librería — y el <em>Claude Code SDK</em> de los tutoriales viejos.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Aquí <strong>cada paso cuesta</strong>,
+        y el bloque de herramientas se paga en cada vuelta.</div>
+    </div>
+    <div class="resource-grid" style="max-width: 820px; margin: 0.35em auto 0 auto; font-size: 0.7em;">
+      <a class="resource-card" href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview" target="_blank" rel="noopener">
+        <div class="resource-icon">🔧</div><h4>Tool use</h4>
+        <p>El ciclo <code>tool_use</code> → <code>tool_result</code>, con el ejemplo completo.</p>
+        <span class="resource-tag">platform.claude.com</span></a>
+      <a class="resource-card" href="https://modelcontextprotocol.io" target="_blank" rel="noopener">
+        <div class="resource-icon">🔌</div><h4>MCP</h4>
+        <p>La especificación, los SDKs y cómo escribir un servidor.</p>
+        <span class="resource-tag">modelcontextprotocol.io</span></a>
+      <a class="resource-card" href="https://code.claude.com/docs/en/agent-sdk/overview" target="_blank" rel="noopener">
+        <div class="resource-icon">🤖</div><h4>Agent SDK</h4>
+        <p>Bucle, permisos, hooks, subagentes y sesiones.</p>
+        <span class="resource-tag">code.claude.com</span></a>
+    </div>
+    <aside class="notes">
+      Cierre del anexo. Los tres enlaces se comprobaron en agosto de 2026.
+
+      REPETIR AQUI lo de la portada: este anexo esta verificado contra la documentacion oficial pero NO
+      esta medido por nosotros, a diferencia del resto del deck. No hay notebook porque necesitaria una
+      llave de pago y el curso se compromete a que todo corra gratis en Colab. El estudiante que quiera
+      probarlo tiene los tres enlaces y el codigo de las diapositivas, que es suficiente para empezar.
+
+      Si el proximo trimestre hay presupuesto para llaves, el candidato natural es un notebook 31 que
+      haga el bucle agentico de la diapositiva 5 con dos herramientas, y compare su traza con la del
+      notebook 28 hecha con el modelo local. Ahi si habria medicion propia.
+    </aside>
+  </section>
+
+</section>
+
 
 
 </div>
@@ -15945,6 +17035,7 @@ def rag_agentico(pregunta, max_intentos=2):
 <script src="js/widgets/budget-widget.js"></script>
 <script src="js/widgets/pdfrag-widget.js"></script>
 <script src="js/widgets/attention-cost-widget.js"></script>
+<script src="js/widgets/copiar-prompt.js"></script>
 
 <script>
 Reveal.initialize({
@@ -16337,6 +17428,11 @@ Reveal.on('slidechanged', function(event) {
       widgetsInitialized.attCost = true;
     }
   }
+  // los prompts pegables no llevan bandera: el helper es idempotente por bloque
+  if (typeof initCopiarPrompt === 'function') initCopiarPrompt(slide);
+});
+Reveal.on('ready', function(e) {
+  if (typeof initCopiarPrompt === 'function') initCopiarPrompt(e.currentSlide);
 });
 </script>
 
