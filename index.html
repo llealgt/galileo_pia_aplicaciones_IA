@@ -7378,6 +7378,46 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-caja-negra">
+    <h2>Un LLM es un Procesador de Prompts</h2>
+    <div style="text-align:center; margin:0.25em 0;">
+      <svg viewBox="0 0 760 214" style="width:100%; max-width:760px; max-height:216px;" role="img"><text x="124" y="22" text-anchor="middle" fill="#58C4DD" font-size="12.5" font-family="Fira Code,monospace">PROMPT</text><text x="124" y="36" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">lo que tú escribes · texto</text><rect x="8" y="46" width="232" height="112" rx="8" fill="#58C4DD" fill-opacity="0.12" stroke="#58C4DD" stroke-width="1.4"/><text x="22" y="70" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">Resume esto en una frase:</text><text x="22" y="85" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">«El pedido #A-4471 llegó</text><text x="22" y="100" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">con la caja abierta y</text><text x="22" y="115" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">falta el cable de</text><text x="22" y="130" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">corriente.»</text><line x1="244" y1="102" x2="286" y2="102" stroke="#FFFF00" stroke-width="1.8"/><polygon points="294,102 284,96.5 284,107.5" fill="#FFFF00"/><rect x="298" y="60" width="164" height="84" rx="9" fill="#FFFF00" fill-opacity="0.14" stroke="#FFFF00" stroke-width="1.8"/><text x="380" y="96" text-anchor="middle" fill="#FFFF00" font-size="21" font-family="Lora,serif" font-weight="bold">LLM</text><text x="380" y="118" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">una función de</text><text x="380" y="132" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">texto a texto</text><line x1="466" y1="102" x2="508" y2="102" stroke="#83C167" stroke-width="1.8"/><polygon points="516,102 506,96.5 506,107.5" fill="#83C167"/><text x="636" y="22" text-anchor="middle" fill="#83C167" font-size="12.5" font-family="Fira Code,monospace">RESPUESTA</text><text x="636" y="36" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">lo que devuelve · texto</text><rect x="520" y="46" width="232" height="112" rx="8" fill="#83C167" fill-opacity="0.12" stroke="#83C167" stroke-width="1.4"/><text x="534" y="84" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">El pedido #A-4471 llegó</text><text x="534" y="99" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">abierto y sin el cable</text><text x="534" y="114" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">de corriente.</text><text x="380" y="180" text-anchor="middle" fill="#FC6255" font-size="11" font-family="Fira Code,monospace">no hay nada más en la caja</text><text x="380" y="200" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">ni base de datos, ni internet, ni memoria de la llamada anterior</text></svg>
+    </div>
+    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.42em; margin-top:0.15em;">
+      <div class="step fragment fade-up" style="text-align:left;">Todo lo que le mandas es
+        <strong>una cadena de texto</strong>. Todo lo que devuelve es
+        <strong>otra cadena de texto</strong>. No hay más interfaz.</div>
+      <div class="step fragment fade-up" style="text-align:left;"><strong>No recuerda</strong> la
+        llamada anterior. Lo que parece memoria es que <strong>tú le reenvías</strong> la
+        conversación entera cada vez.</div>
+      <div class="step fragment fade-up" style="text-align:left;">Y lo que parece <em>saber</em>
+        está congelado en sus pesos desde que lo entrenaron.</div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.07);">
+      Todo lo que viene después en el curso —RAG, herramientas, agentes— son formas de
+      <strong>elegir qué texto meter en esa caja</strong>.
+    </p>
+    <aside class="notes">
+      Contenido propio. Es la primera diapositiva de contenido de la unidad a proposito: la vista de
+      CAJA NEGRA va antes de abrir el capo. La que sigue ("Un LLM es un Autocompletado muy
+      Sofisticado") muestra el mecanismo interno; esta muestra la interfaz.
+
+      Las tres vinetas son las tres sorpresas del principiante, y conviene dejarlas caer una por una:
+
+      1. La interfaz es texto y nada mas. No hay "modo resumen" ni "modo traduccion": hay un prompt.
+         Eso es lo que hace que el bloque de casos de uso funcione — trece usos, un solo modelo.
+      2. NO HAY MEMORIA. Es la que mas cuesta. La API es sin estado y la conversacion la mantiene el
+         cliente reenviando la lista de mensajes. De ahi sale, sin trampa, que el costo crezca con la
+         conversacion y que exista la ventana de contexto.
+      3. El conocimiento esta en los pesos y tiene fecha de corte. Esa es, literalmente, la razon de
+         ser de RAG.
+
+      La ultima frase es la percha de todo el curso: RAG elige que texto meter, las herramientas
+      meten el resultado de una funcion, y un agente decide solo que meter en la siguiente vuelta.
+      Vale la pena volver a esta diapositiva al empezar la unidad 13.
+    </aside>
+  </section>
+
   <section data-transition="fade">
     <h2>Un LLM es un Autocompletado muy Sofisticado</h2>
     <div style="text-align:center; margin:0.3em 0;">
