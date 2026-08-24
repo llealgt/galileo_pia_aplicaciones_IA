@@ -7724,7 +7724,7 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-green);">Clasificar</strong> <span style="color: var(--c-text-dim);">— texto → una etiqueta de un conjunto cerrado</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-orange);">Extraer</strong> <span style="color: var(--c-text-dim);">— texto libre → JSON</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-purple);">Corregir y reescribir</strong> <span style="color: var(--c-text-dim);">— mismo contenido, otro registro</span></div>
-        <div style="margin:0.16em 0;"><strong style="color: var(--c-teal);">Responder</strong> <span style="color: var(--c-text-dim);">— pregunta + documento → respuesta</span></div>
+        <div style="margin:0.16em 0;"><strong style="color: var(--c-teal);">Responder</strong> <span style="color: var(--c-text-dim);">— pregunta + corpus → respuesta, con citas o admitiendo que no está</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-pink);">Redactar</strong> <span style="color: var(--c-text-dim);">— puntos clave → texto completo</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-yellow);">Generar código</strong> <span style="color: var(--c-text-dim);">— descripción → función que corre</span></div>
         <div style="margin:0.16em 0;"><strong style="color: var(--c-teal);">Analizar una reunión</strong> <span style="color: var(--c-text-dim);">— transcripción → acta accionable</span></div>
@@ -7964,6 +7964,165 @@ Compré una licuadora hace cinco meses y huele a quemado.
     <aside class="notes">Contenido propio. Esta es la quinta familia que el SVG de la portada ya anunciaba ("responder") y que hasta ahora no tenia diapositiva. La salida es un EJEMPLO escrito a mano, no una medicion — misma regla que las cinco diapositivas originales del bloque. Para la demo en vivo, el boton copia el prompt y la salida real la produce Claude delante de la clase. ES LA DIAPOSITIVA QUE ABRE RAG: si la respuesta tiene que salir de un documento, alguien tiene que elegir QUE documento meter en el prompt — y eso es exactamente el retriever de la unidad 13. Conviene decirlo aqui en voz alta.</aside>
   </section>
 
+  <section data-transition="fade" id="sl-uso-qa-corpus">
+    <h2>Preguntar a un Corpus, no a un Documento</h2>
+    <div class="columns" style="font-size: 0.285em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Responde usando ÚNICAMENTE los extractos de abajo. Indica
+entre corchetes de qué documento sale cada parte. Si algo no
+está en los extractos, dilo.
+
+MANUAL DE ATENCIÓN — extractos
+
+[D1] GARANTÍA. Los electrodomésticos pequeños tienen 12 meses
+de garantía desde la compra. Cubre defectos de fábrica. No
+cubre daños por uso inadecuado ni por caídas.
+
+[D2] CAMBIOS Y REPARACIONES. El cambio por unidad nueva aplica
+sólo los primeros 30 días. Pasado ese plazo, la reparación se
+hace en taller autorizado.
+
+[D3] TALLERES. Guatemala: 5a avenida 12-34, zona 10.
+Quetzaltenango: 4a calle 7-21, zona 3. Lunes a viernes, sin cita.
+
+[D4] ENVÍOS. Dentro del país tardan de 2 a 4 días hábiles.
+Gratis en compras mayores a Q500.
+
+PREGUNTA
+Compré una licuadora hace cinco meses y huele a quemado.
+Vivo en Quetzaltenango. ¿Qué procede y a dónde voy?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);">Sigue en garantía: son 12 meses <strong>[D1]</strong>. Como pasaron más de 30 días, corresponde reparación en taller, no cambio <strong>[D2]</strong>. En Quetzaltenango: 4a calle 7-21, zona 3, de lunes a viernes sin cita <strong>[D3]</strong>.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que hace difícil esta pregunta:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>La respuesta <strong>no está en un extracto</strong>: está repartida en tres</li>
+          <li>Hay que <strong>encadenar</strong>: 5 meses &lt; 12 → sigue en garantía; &gt; 30 días → taller</li>
+          <li>Pedir la <strong>cita</strong> te deja verificarla de un vistazo</li>
+          <li>D4 es ruido: está en el corpus y no sirve aquí</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>El fallo típico:</strong> el modelo se queda con el <strong>primer extracto que suena</strong> y contesta “sí, está en garantía” — cierto y a medias. La pregunta se resuelve sólo si <strong>combina los tres</strong>, y eso es lo que hay que mirar al correrlo en vivo.
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion. EL CORPUS ES EL MISMO EN LAS TRES DIAPOSITIVAS: en clase se pega una vez y despues basta con cambiar la pregunta en el mismo chat, que es ademas como se comporta un RAG de verdad — el corpus se queda, la consulta cambia.
+
+Este es el caso que justifica RAG entero: cuando la respuesta esta repartida, el trabajo no es generar sino ELEGIR QUE METER en el prompt. Aqui le damos los cuatro extractos a mano; en un sistema real los elige el retriever, y si deja fuera D3 la respuesta sale incompleta sin que nadie se entere.
+
+Al correrlo en vivo conviene preguntarle a la clase ANTES que espera, y luego contar cuantos de los tres saltos dio. Con un modelo bueno los da los tres; el fallo interesante es el parcial.
+
+D4 (envios) esta puesto como distractor deliberado. Enlaza con la unidad 15: mas contexto no es mejor contexto.</aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-uso-qa-nosabe">
+    <h2>Cuando la Respuesta No Está</h2>
+    <div class="columns" style="font-size: 0.285em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Responde usando ÚNICAMENTE los extractos de abajo.
+Si la respuesta no está en ellos, contesta exactamente:
+"No está en el manual." No estimes ni supongas.
+
+MANUAL DE ATENCIÓN — extractos
+
+[D1] GARANTÍA. Los electrodomésticos pequeños tienen 12 meses
+de garantía desde la compra. Cubre defectos de fábrica. No
+cubre daños por uso inadecuado ni por caídas.
+
+[D2] CAMBIOS Y REPARACIONES. El cambio por unidad nueva aplica
+sólo los primeros 30 días. Pasado ese plazo, la reparación se
+hace en taller autorizado.
+
+[D3] TALLERES. Guatemala: 5a avenida 12-34, zona 10.
+Quetzaltenango: 4a calle 7-21, zona 3. Lunes a viernes, sin cita.
+
+[D4] ENVÍOS. Dentro del país tardan de 2 a 4 días hábiles.
+Gratis en compras mayores a Q500.
+
+PREGUNTA
+¿Cuánto cuesta la reparación si ya se venció la garantía?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);"><strong style="color:var(--c-green);">No está en el manual.</strong></span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Por qué esta diapositiva importa:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>El corpus habla de garantía, talleres y plazos… <strong>pero no de precios</strong></li>
+          <li>La <strong>salida de escape</strong> es la instrucción más importante del prompt</li>
+          <li>Sin ella el modelo <strong>estima</strong> un precio que suena razonable</li>
+          <li>Y suena razonable <strong>justo porque</strong> el resto del manual es real</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Quítale la segunda línea al prompt y córrelo otra vez.</strong> Ese experimento de diez segundos es la mejor demostración de por qué “no sé” hay que <strong>pedirlo explícitamente</strong>: ningún modelo lo ofrece de suyo.
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion. EL CORPUS ES EL MISMO EN LAS TRES DIAPOSITIVAS: en clase se pega una vez y despues basta con cambiar la pregunta en el mismo chat, que es ademas como se comporta un RAG de verdad — el corpus se queda, la consulta cambia.
+
+ES LA DIAPOSITIVA PARA HACER EL EXPERIMENTO EN VIVO: correr el prompt tal cual (contesta que no esta), borrar la linea de la salida de escape y volver a correrlo. Casi siempre aparece un precio inventado, con formato de precio local y todo.
+
+Conecta con dos cosas ya medidas en el curso: el retriever devuelve k documentos AUNQUE ninguno responda (unidad 10, el caso de la capital de Guatemala), y la fidelidad de la unidad 16 es la metrica que caza exactamente este fallo. Aqui se ve el origen del problema; alli, como se mide.</aside>
+  </section>
+
+
+  <section data-transition="fade" id="sl-uso-qa-cuenta">
+    <h2>Cuando Hay que Sacar la Cuenta</h2>
+    <div class="columns" style="font-size: 0.285em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Responde usando ÚNICAMENTE los extractos de abajo.
+Muestra la operación que hiciste antes de dar el resultado.
+
+MANUAL DE ATENCIÓN — extractos
+
+[D1] GARANTÍA. Los electrodomésticos pequeños tienen 12 meses
+de garantía desde la compra. Cubre defectos de fábrica. No
+cubre daños por uso inadecuado ni por caídas.
+
+[D2] CAMBIOS Y REPARACIONES. El cambio por unidad nueva aplica
+sólo los primeros 30 días. Pasado ese plazo, la reparación se
+hace en taller autorizado.
+
+[D3] TALLERES. Guatemala: 5a avenida 12-34, zona 10.
+Quetzaltenango: 4a calle 7-21, zona 3. Lunes a viernes, sin cita.
+
+[D4] ENVÍOS. Dentro del país tardan de 2 a 4 días hábiles.
+Gratis en compras mayores a Q500.
+
+PREGUNTA
+Voy a comprar una licuadora de Q450 y un sartén de Q120.
+¿Me cobran el envío? ¿En cuánto tiempo llega?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim);">Q450 + Q120 = <strong>Q570</strong>. Como Q570 &gt; Q500, el envío es <strong>gratis</strong> <strong>[D4]</strong>. Llega en 2 a 4 días hábiles <strong>[D4]</strong>.</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Lo que se ve aquí:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>El dato está en el corpus, pero <strong>la respuesta no</strong>: hay que calcularla</li>
+          <li>“Muestra la operación” lo obliga a <strong>escribir la suma</strong> antes del resultado</li>
+          <li>Y así el error, si lo hay, <strong>queda a la vista</strong></li>
+          <li>Es el mismo truco de <em>pedirle que piense antes</em> de la unidad 16</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.3em; padding: 0.28em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Aquí es donde un LLM se resbala</strong>, y ya lo mediste en esta unidad con el 1+1: aritmética sencilla, fallo silencioso. La solución de verdad no es un prompt mejor — es <strong>darle una calculadora</strong>, que es exactamente el caso de uso de herramientas que viene más adelante.
+    </p>
+    <aside class="notes">Contenido propio. La salida es un EJEMPLO escrito a mano, no una medicion. EL CORPUS ES EL MISMO EN LAS TRES DIAPOSITIVAS: en clase se pega una vez y despues basta con cambiar la pregunta en el mismo chat, que es ademas como se comporta un RAG de verdad — el corpus se queda, la consulta cambia.
+
+Los numeros estan elegidos para que la suma quede JUSTO por encima del umbral (570 contra 500): si el modelo se equivoca al sumar, la respuesta cambia de sentido, no solo de cifra. Con 450+120 es dificil que falle; vale la pena repetirlo en vivo con cifras mas feas (Q437.50 + Q68.90) para que se vea el limite.
+
+Cierra el trio de QA y engancha con dos sitios del curso: 'pedirle que piense antes' de la unidad 16, y 'elegir que herramienta invocar' del grupo 2 de este mismo bloque, donde la calculadora es la primera herramienta del ejemplo.</aside>
+  </section>
+
+
   <section data-transition="fade" id="sl-uso-redactar">
     <h2>Redactar desde Puntos Clave</h2>
     <div class="columns" style="font-size: 0.36em;">
@@ -8109,7 +8268,7 @@ TRANSCRIPCIÓN — junta de proyecto, 18 ago 2026
       </svg>
     </div>
     <p style="font-size: 0.43em;">
-      En los ocho casos anteriores la salida la leía una persona. En los cinco que siguen,
+      En los once casos anteriores la salida la leía una persona. En los cinco que siguen,
       la salida <strong>entra a tu programa</strong>: es una etiqueta que elige una rama, un JSON que
       alimenta una consulta, el nombre de una función que se va a ejecutar.
     </p>
