@@ -160,7 +160,7 @@
   <section data-transition="fade">
     <h2>Metodología</h2>
     <div class="columns" style="align-items: center;">
-      <div class="col-60">
+      <div class="col-55">
         <div class="flow-row" style="flex-direction: column; align-items: flex-start; gap: 0.6em;">
           <div class="flow-node fragment fade-up" style="min-width: 100%; text-align:left;"><span class="flow-icon">🎓</span>Clases magistrales</div>
           <div class="flow-node fragment fade-up" style="min-width: 100%; text-align:left;"><span class="flow-icon">💬</span>Discusiones grupales (estudiantes + catedrático)</div>
@@ -586,7 +586,7 @@
       <div class="col-40" style="text-align:center;">
         <img src="img/Clase_01_02_Tools_slide04_img01.png" alt="Jupyter" style="max-width: 220px;" class="fragment fade-up">
       </div>
-      <div class="col-60">
+      <div class="col-55">
         <p class="fragment fade-up" style="font-size: 0.6em;">
           Aplicación web para crear y compartir documentos con código "vivo", visualizaciones y texto.
         </p>
@@ -730,7 +730,7 @@
       <div class="col-40" style="text-align:center;">
         <img src="img/Clase_01_02_Tools_slide18_img01.png" alt="OpenCV" style="max-width: 100%;" class="fragment fade-up">
       </div>
-      <div class="col-60">
+      <div class="col-55">
         <p class="fragment fade-up" style="font-size: 0.58em;">
           Librería de visión por computadora creada por Intel (2000). El estándar de facto para
           procesamiento de imágenes y video en tiempo real.
@@ -787,7 +787,7 @@
           Distancias comunes: euclidiana, coseno, Manhattan, Hamming.
         </p>
       </div>
-      <div class="col-60">
+      <div class="col-55">
         <div class="widget-container">
           <canvas id="vectordb-canvas" width="560" height="360" style="width:100%; max-width:560px; display:block; margin:0 auto;"></canvas>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4em; gap:1em;">
@@ -1472,7 +1472,7 @@ avg / total       0.70     0.60       0.61        5</code></pre>
   <section data-transition="fade">
     <h2>Explora la Curva ROC</h2>
     <div class="columns" style="align-items: center;">
-      <div class="col-60">
+      <div class="col-55">
         <div class="widget-container">
           <canvas id="roc-curve-canvas" width="420" height="320" style="width:100%; max-width:420px; display:block; margin:0 auto;"></canvas>
           <div style="display:flex; justify-content:center; align-items:center; margin-top:0.5em;">
@@ -7380,41 +7380,53 @@ m.features.eval()   # BN NO actualiza sus stats</code></pre>
 
   <section data-transition="fade" id="sl-caja-negra">
     <h2>Un LLM es un Procesador de Prompts</h2>
-    <div style="text-align:center; margin:0.25em 0;">
-      <svg viewBox="0 0 760 214" style="width:100%; max-width:760px; max-height:216px;" role="img"><text x="124" y="22" text-anchor="middle" fill="#58C4DD" font-size="12.5" font-family="Fira Code,monospace">PROMPT</text><text x="124" y="36" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">lo que tú escribes · texto</text><rect x="8" y="46" width="232" height="112" rx="8" fill="#58C4DD" fill-opacity="0.12" stroke="#58C4DD" stroke-width="1.4"/><text x="22" y="70" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">Resume esto en una frase:</text><text x="22" y="85" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">«El pedido #A-4471 llegó</text><text x="22" y="100" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">con la caja abierta y</text><text x="22" y="115" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">falta el cable de</text><text x="22" y="130" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">corriente.»</text><line x1="244" y1="102" x2="286" y2="102" stroke="#FFFF00" stroke-width="1.8"/><polygon points="294,102 284,96.5 284,107.5" fill="#FFFF00"/><rect x="298" y="60" width="164" height="84" rx="9" fill="#FFFF00" fill-opacity="0.14" stroke="#FFFF00" stroke-width="1.8"/><text x="380" y="96" text-anchor="middle" fill="#FFFF00" font-size="21" font-family="Lora,serif" font-weight="bold">LLM</text><text x="380" y="118" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">una función de</text><text x="380" y="132" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">texto a texto</text><line x1="466" y1="102" x2="508" y2="102" stroke="#83C167" stroke-width="1.8"/><polygon points="516,102 506,96.5 506,107.5" fill="#83C167"/><text x="636" y="22" text-anchor="middle" fill="#83C167" font-size="12.5" font-family="Fira Code,monospace">RESPUESTA</text><text x="636" y="36" text-anchor="middle" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">lo que devuelve · texto</text><rect x="520" y="46" width="232" height="112" rx="8" fill="#83C167" fill-opacity="0.12" stroke="#83C167" stroke-width="1.4"/><text x="534" y="84" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">El pedido #A-4471 llegó</text><text x="534" y="99" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">abierto y sin el cable</text><text x="534" y="114" fill="#ece6d0" font-size="10.5" font-family="Fira Code,monospace">de corriente.</text><text x="380" y="180" text-anchor="middle" fill="#FC6255" font-size="11" font-family="Fira Code,monospace">no hay nada más en la caja</text><text x="380" y="200" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Lora,serif" font-style="italic">ni base de datos, ni internet, ni memoria de la llamada anterior</text></svg>
+    <div class="columns" style="align-items: center; margin-top:0.1em;">
+      <div class="col-40" style="text-align:center;">
+        <svg viewBox="0 0 210 392" style="width:100%; max-width:186px; max-height:372px;" role="img"><rect x="72" y="6" width="66" height="66" rx="16" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD" stroke-width="1.8"/><polyline points="90,28 100,38 90,48" fill="none" stroke="#58C4DD" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="104" y1="48" x2="120" y2="48" stroke="#58C4DD" stroke-width="2.6" stroke-linecap="round"/><text x="105" y="92" text-anchor="middle" fill="#ece6d0" font-size="17" font-family="Lora,serif">Prompt</text><text x="105" y="107" text-anchor="middle" fill="#8a86a0" font-size="11.5" font-family="Fira Code,monospace">texto</text><line x1="105" y1="117" x2="105" y2="128" stroke="#ece6d0" stroke-width="2.4" stroke-opacity="0.75"/><polygon points="105,136 98.5,126 111.5,126" fill="#ece6d0" fill-opacity="0.75"/><rect x="72" y="140" width="66" height="66" rx="16" fill="#FFFF00" fill-opacity="0.14" stroke="#FFFF00" stroke-width="1.8"/><line x1="88" y1="158" x2="122" y2="158" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="158" x2="122" y2="173" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="158" x2="122" y2="188" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="173" x2="122" y2="158" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="173" x2="122" y2="173" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="173" x2="122" y2="188" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="188" x2="122" y2="158" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="188" x2="122" y2="173" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><line x1="88" y1="188" x2="122" y2="188" stroke="#FFFF00" stroke-width="1.1" stroke-opacity="0.75"/><circle cx="88" cy="158" r="4.6" fill="#FFFF00"/><circle cx="88" cy="173" r="4.6" fill="#FFFF00"/><circle cx="88" cy="188" r="4.6" fill="#FFFF00"/><circle cx="122" cy="158" r="4.6" fill="#FFFF00"/><circle cx="122" cy="173" r="4.6" fill="#FFFF00"/><circle cx="122" cy="188" r="4.6" fill="#FFFF00"/><text x="105" y="226" text-anchor="middle" fill="#ece6d0" font-size="17" font-family="Lora,serif">LLM</text><text x="105" y="241" text-anchor="middle" fill="#8a86a0" font-size="11.5" font-family="Fira Code,monospace">texto</text><line x1="105" y1="251" x2="105" y2="262" stroke="#ece6d0" stroke-width="2.4" stroke-opacity="0.75"/><polygon points="105,270 98.5,260 111.5,260" fill="#ece6d0" fill-opacity="0.75"/><rect x="72" y="274" width="66" height="66" rx="16" fill="#83C167" fill-opacity="0.14" stroke="#83C167" stroke-width="1.8"/><rect x="84" y="290" width="42" height="29" rx="7" fill="none" stroke="#83C167" stroke-width="2.2"/><polygon points="94,318 104,318 94,328" fill="#83C167"/><circle cx="96" cy="304" r="2.5" fill="#83C167"/><circle cx="105" cy="304" r="2.5" fill="#83C167"/><circle cx="114" cy="304" r="2.5" fill="#83C167"/><path d="M121,313 L122.7,317.3 L127,319 L122.7,320.7 L121,325 L119.3,320.7 L115,319 L119.3,317.3 Z" fill="#83C167"/><text x="105" y="360" text-anchor="middle" fill="#ece6d0" font-size="17" font-family="Lora,serif">Respuesta</text><text x="105" y="375" text-anchor="middle" fill="#8a86a0" font-size="11.5" font-family="Fira Code,monospace">texto</text></svg>
+      </div>
+      <div class="col-55">
+        <p style="font-size: 0.42em; text-align:left; margin:0 0 0.25em 0;">
+          Entra <strong>una cadena de texto</strong>. Sale <strong>otra cadena de texto</strong>.
+          Esa es toda la interfaz — no hay más.
+        </p>
+        <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.39em;">
+          <div class="step fragment fade-up" style="text-align:left;">No hay <strong>“modo resumen”</strong>
+            ni <strong>“modo traducción”</strong>: hay un prompt. Por eso un solo modelo hace
+            todos los usos que vienen enseguida.</div>
+          <div class="step fragment fade-up" style="text-align:left;"><strong>No recuerda</strong> la
+            llamada anterior. Lo que parece memoria es que <strong>tú le reenvías</strong> la
+            conversación entera cada vez.</div>
+          <div class="step fragment fade-up" style="text-align:left;">Y lo que parece <em>saber</em>
+            está congelado en sus pesos desde que lo entrenaron.</div>
+        </div>
+        <p class="fragment fade-up" style="font-size: 0.39em; text-align:left; margin-top: 0.25em; padding: 0.3em 0.45em; background: rgba(255,255,0,0.07);">
+          <strong style="color: var(--c-red);">No hay nada más en la caja</strong>: ni base de datos,
+          ni internet, ni memoria. Todo lo que viene después —RAG, herramientas, agentes— son formas
+          de <strong>elegir qué texto meter en ella</strong>.
+        </p>
+      </div>
     </div>
-    <div class="roadmap" style="flex-direction: column; align-items: stretch; text-align:left; font-size: 0.42em; margin-top:0.15em;">
-      <div class="step fragment fade-up" style="text-align:left;">Todo lo que le mandas es
-        <strong>una cadena de texto</strong>. Todo lo que devuelve es
-        <strong>otra cadena de texto</strong>. No hay más interfaz.</div>
-      <div class="step fragment fade-up" style="text-align:left;"><strong>No recuerda</strong> la
-        llamada anterior. Lo que parece memoria es que <strong>tú le reenvías</strong> la
-        conversación entera cada vez.</div>
-      <div class="step fragment fade-up" style="text-align:left;">Y lo que parece <em>saber</em>
-        está congelado en sus pesos desde que lo entrenaron.</div>
-    </div>
-    <p class="fragment fade-up" style="font-size: 0.41em; text-align:center; margin-top: 0.3em; padding: 0.3em; background: rgba(255,255,0,0.07);">
-      Todo lo que viene después en el curso —RAG, herramientas, agentes— son formas de
-      <strong>elegir qué texto meter en esa caja</strong>.
-    </p>
     <aside class="notes">
-      Contenido propio. Es la primera diapositiva de contenido de la unidad a proposito: la vista de
-      CAJA NEGRA va antes de abrir el capo. La que sigue ("Un LLM es un Autocompletado muy
-      Sofisticado") muestra el mecanismo interno; esta muestra la interfaz.
+      Contenido propio; la composicion vertical con las tres tarjetas de icono sigue una referencia
+      que dio el catedratico. Los iconos estan REDIBUJADOS en SVG con la paleta del tema, no copiados:
+      el original es oscuro sobre blanco y el deck es al reves.
+
+      Primera diapositiva de contenido de la unidad a proposito: la vista de CAJA NEGRA va antes de
+      abrir el capo. La que sigue ("Un LLM es un Autocompletado muy Sofisticado") muestra el mecanismo
+      interno; esta muestra la interfaz.
 
       Las tres vinetas son las tres sorpresas del principiante, y conviene dejarlas caer una por una:
 
-      1. La interfaz es texto y nada mas. No hay "modo resumen" ni "modo traduccion": hay un prompt.
-         Eso es lo que hace que el bloque de casos de uso funcione — trece usos, un solo modelo.
+      1. La interfaz es texto y nada mas. Eso es lo que hace que el bloque de casos de uso funcione:
+         trece usos, un solo modelo, y lo unico que cambia es la instruccion.
       2. NO HAY MEMORIA. Es la que mas cuesta. La API es sin estado y la conversacion la mantiene el
          cliente reenviando la lista de mensajes. De ahi sale, sin trampa, que el costo crezca con la
          conversacion y que exista la ventana de contexto.
       3. El conocimiento esta en los pesos y tiene fecha de corte. Esa es, literalmente, la razon de
          ser de RAG.
 
-      La ultima frase es la percha de todo el curso: RAG elige que texto meter, las herramientas
-      meten el resultado de una funcion, y un agente decide solo que meter en la siguiente vuelta.
-      Vale la pena volver a esta diapositiva al empezar la unidad 13.
+      La ultima frase es la percha de todo el curso, y vale la pena volver a esta diapositiva al
+      empezar la unidad 13.
     </aside>
   </section>
 
