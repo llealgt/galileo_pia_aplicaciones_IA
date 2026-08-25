@@ -8502,6 +8502,78 @@ Buenas, mi pedido #A-4471 huele a quemado. ¿Qué procede?</code></pre>
 
 El fallo de herramienta inventada esta MEDIDO en el notebook 28: el agente pidio saludo[bonjour], que no existia en el registro, y solo la lista blanca evito que tumbara el proceso.</aside>
   </section>
+<section data-transition="fade" id="sl-uso-cerebro">
+    <h2>El Cerebro que Elige la Herramienta</h2>
+    <div class="columns" style="font-size: 0.30em;">
+      <div class="col-55">
+        <pre data-copiable style="margin:0; font-size:0.94em; position:relative;"><code class="language-text">Eres el cerebro de un asistente de soporte. Tienes estas
+herramientas y NINGUNA otra:
+
+  buscar_pedido(numero)       estado y fecha de compra de un pedido
+  consultar_garantia(dias)    qué cubre la garantía a X días
+  crear_orden_taller(pedido)  agenda una reparación
+  buscar_manual(modelo)       devuelve el manual de un modelo
+  tipo_de_cambio(moneda)      convierte a quetzales
+
+Para CADA consulta responde una sola línea con la llamada que
+harías primero, en el formato  herramienta(argumento).
+Si ninguna sirve, responde  ninguna.
+
+CONSULTAS
+1. ¿Dónde viene mi pedido #A-4471?
+2. Compré la licuadora hace 5 meses y huele a quemado.
+   ¿Eso lo cubre la garantía?
+3. ¿Cómo limpio el filtro de la XR-3000?
+4. Muchas gracias, muy amable.
+5. El repuesto cuesta 89 dólares, ¿cuánto es en quetzales?</code></pre>
+      </div>
+      <div class="col-40">
+        <div style="padding:0.4em 0.55em; background: rgba(131,193,103,0.09); border-left: 3px solid var(--c-green);">
+          <strong style="color: var(--c-green);">Salida</strong><br>
+          <span style="color: var(--c-text-dim); font-family:'Fira Code',monospace; font-size:0.95em;">
+          1. buscar_pedido("#A-4471")<br>
+          2. consultar_garantia(150)<br>
+          3. buscar_manual("XR-3000")<br>
+          4. ninguna<br>
+          5. tipo_de_cambio("USD")</span>
+        </div>
+        <p style="margin-top:0.4em;"><strong>Mira las cinco, no la primera:</strong></p>
+        <ul style="margin:0.15em 0;">
+          <li>La <strong>2</strong> exige convertir “5 meses” a <strong>días</strong>: elegir la herramienta incluye <strong>armar el argumento</strong></li>
+          <li>La <strong>4</strong> no necesita ninguna. Sin esa salida, el modelo <strong>inventa una llamada</strong></li>
+          <li>La <strong>3</strong> se parece a la 1 — y el único desempate está en la <strong>descripción</strong></li>
+        </ul>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.4em; margin-top: 0.25em; padding: 0.28em 0.5em; background: rgba(255,255,0,0.07); border-left: 3px solid var(--c-yellow);">
+      Esto es <strong>todo lo que hace un agente</strong> en su primer paso: mirar las herramientas,
+      elegir una y escribir sus argumentos. Lo demás —ejecutar, leer el resultado y volver a
+      decidir— es un bucle alrededor de esta misma decisión.
+      <span style="color: var(--c-text-dim);">Unidad 19.</span>
+    </p>
+    <aside class="notes">
+      Contenido propio. La salida es un EJEMPLO escrito a mano; la de verdad la produce Claude al
+      pegar el prompt, que es la gracia. Las cinco consultas estan elegidas para que cada una rompa
+      algo distinto y conviene correrlas y comentarlas una por una:
+
+      1 · el caso facil, hay una herramienta obvia.
+      2 · la trampa buena: "5 meses" no es un argumento; el modelo tiene que convertirlo a 150 dias.
+          Elegir la herramienta y ARMAR EL ARGUMENTO son dos habilidades distintas y la segunda falla
+          mas.
+      3 · buscar_manual contra buscar_pedido: las dos "buscan algo de un producto". Lo unico que las
+          separa es la descripcion. Si el modelo se equivoca aqui, la leccion no es "el modelo es
+          malo" sino "tu descripcion no distingue".
+      4 · "muchas gracias" no necesita herramienta. Sin la ruta de escape explicita, el modelo llama
+          a algo igual — es el fallo medido en el notebook 28, donde el agente inventaba
+          saludo[bonjour].
+      5 · tipo_de_cambio existe pero es de otro dominio: sirve para ver que el modelo no se limita a
+          las herramientas "del tema".
+
+      Buen ejercicio en vivo: borrar la linea de "si ninguna sirve, responde ninguna" y volver a
+      correr la 4.
+    </aside>
+  </section>
+
 
   <section data-transition="fade" id="sl-uso-juzgar">
     <h2>Juzgar y Comparar</h2>
@@ -8546,6 +8618,53 @@ corresponde reparación en taller autorizado.</code></pre>
 
 El sesgo de longitud no es folclore, esta documentado en la literatura de LLM-as-judge, y en la unidad 16 el curso lo toca al comparar faithfulness y answer_relevancy calculadas a mano contra las de RAGAS: coinciden en el sentido pero no en el valor, porque cada implementacion mide algo ligeramente distinto.</aside>
   </section>
+<section data-transition="fade" id="sl-uso-evaluador">
+    <h2>El LLM como Evaluador de otro LLM</h2>
+    <p style="font-size: 0.42em; margin-bottom: 0.2em;">
+      Lo que acabas de ver tiene nombre —<strong>LLM-as-a-judge</strong>— y es hoy la forma
+      estándar de evaluar texto libre. La razón es simple: <strong>no hay una única respuesta
+      correcta</strong> que comparar con <code>==</code>, y nadie va a leer 500 respuestas a mano.
+    </p>
+    <table style="font-size: 0.35em; width: 100%; max-width: 860px; margin: 0.2em auto;">
+      <tr><th style="text-align:left;">Escalón</th><th style="text-align:left;">Qué es</th>
+          <th style="text-align:left;">Cuándo</th></tr>
+      <tr><td style="text-align:left;"><strong style="color:var(--c-blue);">Un prompt suelto</strong></td>
+        <td style="text-align:left;">el de la diapositiva anterior: tú escribes el criterio</td>
+        <td style="text-align:left;">explorar, comparar dos versiones de tu prompt</td></tr>
+      <tr><td style="text-align:left;"><strong style="color:var(--c-orange);">RAGAS</strong></td>
+        <td style="text-align:left;">trae hechas <em>faithfulness</em> y <em>response relevancy</em>, y las corre sobre un dataset</td>
+        <td style="text-align:left;">un reporte de qué tan bueno es tu RAG hoy</td></tr>
+      <tr><td style="text-align:left;"><strong style="color:var(--c-green);">DeepEval</strong></td>
+        <td style="text-align:left;">las mismas, más <strong>G-Eval</strong> (métrica escrita en prosa) y un <code>threshold</code></td>
+        <td style="text-align:left;">que el CI <strong>falle</strong> si alguien empeora el prompt</td></tr>
+    </table>
+    <p class="fragment fade-up" style="font-size: 0.395em; margin-top: 0.25em; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Y el juez arrastra los mismos defectos que juzga.</strong> Medido en el notebook 31:
+      <code>AnswerRelevancy</code> le dio <strong>1.00 a la respuesta que inventaba</strong> el
+      descuento y 0.67 a la correcta — porque mide si contestas lo que se preguntó, no si es cierto.
+      Un juez se <strong>calibra contra juicio humano</strong> antes de creerle.
+    </p>
+    <p style="font-size: 0.38em; text-align:center; margin-top: 0.2em; color: var(--c-text-dim);">
+      Se ve a fondo en la <strong>unidad 16</strong> · notebook <strong>22</strong> (RAGAS) y
+      <strong>31</strong> (DeepEval)
+    </p>
+    <aside class="notes">
+      Contenido propio. Esta diapositiva le pone nombre a lo que la anterior enseño con un prompt, y
+      abre la escalera hasta las librerias. El nombre en ingles —LLM-as-a-judge— conviene decirlo
+      porque es como lo van a encontrar buscando.
+
+      El numero del recuadro rojo esta MEDIDO (notebook 31, deepeval 4.1.10 con Qwen2.5-1.5B de juez,
+      sin llave): relevancia 1.00 para la respuesta que alucina el descuento y 0.67 para la correcta.
+      No es un fallo de la metrica — mide si contestas lo que se pregunto, no si es cierto. Por eso
+      relevancia y fidelidad se reportan SIEMPRE juntas.
+
+      Lo que hay que dejar claro para el capstone: LLM-as-a-judge no sustituye tener un conjunto de
+      evaluacion con respuestas de referencia. Lo que hace es que ese conjunto se pueda correr en
+      cada cambio sin que nadie lea nada. Y el juez tiene que ser un modelo capaz: en el notebook 31
+      esta medido que con uno de 1.5B los numeros ni siquiera son estables.
+    </aside>
+  </section>
+
 <section data-transition="fade">
     <h2>El Patrón Detrás de Todas</h2>
     <div class="flow-row" style="justify-content:center; font-size: 0.4em; margin: 0.35em 0;">
@@ -14698,7 +14817,7 @@ evaluate(test_cases=[caso], metrics=[
     <h2>La Otra Opción: Fine-Tuning</h2>
     <p style="font-size: 0.42em;">
       Reentrenar el modelo con <strong>tus datos</strong> para cambiar sus parámetros internos.
-      Se hace con <strong>fine-tuning supervisado</strong>: el mismo bucle de siempre.
+      La forma más directa es el <strong>fine-tuning supervisado</strong>: el mismo bucle de siempre. <span style="color: var(--c-text-dim);">(hay otra, y va en la diapositiva siguiente).</span>
     </p>
     <div class="flow-row" style="justify-content:center; font-size: 0.37em; margin: 0.3em 0;">
       <div class="flow-node" style="border-color: var(--c-blue);">Darle ejemplos<br>etiquetados</div>
@@ -14736,6 +14855,56 @@ evaluate(test_cases=[caso], metrics=[
     </p>
     <aside class="notes">Fuente: RAG_M4 ("Understanding Fine-Tuning", "Fine-Tuning Example"). Notar que el cambio es de REGISTRO y de criterio, no de datos nuevos: el modelo ya conocia el lupus, lo que cambio es que ahora responde como un profesional. Enlazar explicitamente con la unidad 11 (Transfer Learning): el estudiante ya implemento este mecanismo en los notebooks 13 y 14, y ahi vio medido que partir de un preentrenado subio de 67% a 95%.</aside>
   </section>
+<section data-transition="fade" id="sl-sft-rl">
+    <h2>Dos Formas de Afinar: SFT y RL</h2>
+    <div style="text-align:center; margin:0.2em 0;">
+      <svg viewBox="0 0 760 172" style="width:100%; max-width:760px; max-height:174px;" role="img"><text x="8" y="15" fill="#58C4DD" font-size="11.5" font-family="Fira Code,monospace">SFT · aprende a IMITAR</text><rect x="8" y="24" width="150" height="34" rx="6" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD" stroke-width="1.2"/><text x="83" y="38" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">pares entrada → salida</text><text x="83" y="50" text-anchor="middle" fill="#8a86a0" font-size="8.5" font-family="Fira Code,monospace">escritos por humanos</text><line x1="158" y1="41" x2="183" y2="41" stroke="#8a86a0" stroke-width="1.4"/><polygon points="190,41 182,36.5 182,45.5" fill="#8a86a0"/><rect x="190" y="24" width="128" height="34" rx="6" fill="#58C4DD" fill-opacity="0.14" stroke="#58C4DD" stroke-width="1.2"/><text x="254" y="38" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">copia la salida</text><text x="254" y="50" text-anchor="middle" fill="#8a86a0" font-size="8.5" font-family="Fira Code,monospace">misma pérdida de siempre</text><line x1="318" y1="41" x2="343" y2="41" stroke="#8a86a0" stroke-width="1.4"/><polygon points="350,41 342,36.5 342,45.5" fill="#8a86a0"/><rect x="350" y="24" width="132" height="34" rx="6" fill="#83C167" fill-opacity="0.14" stroke="#83C167" stroke-width="1.2"/><text x="416" y="43" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">habla como tus ejemplos</text><text x="500" y="38" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">necesitas SABER ESCRIBIR</text><text x="500" y="51" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">la respuesta correcta</text><line x1="8" y1="72" x2="752" y2="72" stroke="#8a86a0" stroke-width="1" stroke-dasharray="4 4"/><text x="8" y="92" fill="#9A72AC" font-size="11.5" font-family="Fira Code,monospace">RL · aprende a MAXIMIZAR una señal</text><rect x="8" y="100" width="150" height="34" rx="6" fill="#9A72AC" fill-opacity="0.14" stroke="#9A72AC" stroke-width="1.2"/><text x="83" y="114" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">el modelo propone varias</text><text x="83" y="126" text-anchor="middle" fill="#8a86a0" font-size="8.5" font-family="Fira Code,monospace">no hay respuesta dada</text><line x1="158" y1="117" x2="183" y2="117" stroke="#8a86a0" stroke-width="1.4"/><polygon points="190,117 182,112.5 182,121.5" fill="#8a86a0"/><rect x="190" y="100" width="128" height="34" rx="6" fill="#FFFF00" fill-opacity="0.14" stroke="#FFFF00" stroke-width="1.2"/><text x="254" y="114" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">algo las ordena</text><text x="254" y="126" text-anchor="middle" fill="#8a86a0" font-size="8.5" font-family="Fira Code,monospace">humano o juez</text><line x1="318" y1="117" x2="343" y2="117" stroke="#8a86a0" stroke-width="1.4"/><polygon points="350,117 342,112.5 342,121.5" fill="#8a86a0"/><rect x="350" y="100" width="132" height="34" rx="6" fill="#83C167" fill-opacity="0.14" stroke="#83C167" stroke-width="1.2"/><text x="416" y="114" text-anchor="middle" fill="#ece6d0" font-size="10.5" font-family="Lora,serif">sube lo preferido</text><text x="416" y="126" text-anchor="middle" fill="#8a86a0" font-size="8.5" font-family="Fira Code,monospace">PPO · DPO</text><path d="M416,134 L416,152 L83,152 L83,136" fill="none" stroke="#FC6255" stroke-width="1.4"/><polygon points="83,130 78,141 88,141" fill="#FC6255"/><text x="250" y="145" text-anchor="middle" fill="#FC6255" font-size="9" font-family="Fira Code,monospace">y otra vuelta</text><text x="500" y="114" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">basta con saber JUZGAR</text><text x="500" y="127" fill="#8a86a0" font-size="10" font-family="Lora,serif" font-style="italic">cuál de dos es mejor</text><text x="376" y="168" text-anchor="middle" fill="#FFFF00" font-size="11" font-family="Lora,serif" font-style="italic">el ChatGPT que conoces es pre-entrenamiento + SFT + RL, en ese orden</text></svg>
+    </div>
+    <div class="columns" style="font-size: 0.36em; margin-top:0.1em;">
+      <div class="col">
+        <p style="margin:0; padding:0.3em 0.5em; background: rgba(88,196,221,0.08); border-left: 3px solid var(--c-blue); text-align:left;">
+          <strong style="color: var(--c-blue);">Supervised fine-tuning (SFT)</strong> — le das pares
+          <em>entrada → respuesta correcta</em> y ajustas los pesos para que la copie. Es el bucle de
+          la unidad 11, con texto en vez de imágenes.
+        </p>
+      </div>
+      <div class="col">
+        <p style="margin:0; padding:0.3em 0.5em; background: rgba(154,114,172,0.08); border-left: 3px solid var(--c-purple); text-align:left;">
+          <strong style="color: var(--c-purple);">Fine-tuning por refuerzo (RLFT)</strong> — no le das
+          la respuesta: le das una <strong>señal de preferencia</strong>. <strong>RLHF</strong> la saca
+          de humanos que ordenan salidas; <strong>DPO</strong> se salta el modelo de recompensa y
+          optimiza directo sobre los pares; <strong>RLAIF</strong> usa otro LLM de juez.
+        </p>
+      </div>
+    </div>
+    <p class="fragment fade-up" style="font-size: 0.405em; margin-top: 0.3em; padding: 0.3em 0.5em; background: rgba(255,255,0,0.07);">
+      🎯 La pregunta que decide cuál usar: <strong>¿sabes escribir la respuesta correcta, o sólo
+      reconocerla?</strong> Si sabes escribirla, SFT. Si sólo sabes decir cuál de dos es mejor —tono,
+      utilidad, seguridad— <strong>esa es exactamente la señal que consume RL</strong>.
+    </p>
+    <aside class="notes">
+      Contenido propio. VERIFICADO antes de escribirla: el deck nombraba el fine-tuning supervisado
+      pero el de refuerzo no aparecia en pantalla en ninguna parte — RLHF solo salia en notas del
+      catedratico de la unidad 12. Este slide cierra ese hueco.
+
+      La distincion que hay que dejar clara, y que resume el recuadro amarillo: SFT necesita que
+      alguien ESCRIBA la respuesta correcta; RL solo necesita que alguien la JUZGUE. Por eso RL es lo
+      que se usa para alinear tono, utilidad y seguridad, donde escribir "la respuesta perfecta" no
+      tiene sentido pero comparar dos si.
+
+      Las tres variantes, para quien pregunte: RLHF (Ouyang et al. 2022) entrena un modelo de
+      recompensa con comparaciones humanas y luego optimiza con PPO; DPO se salta el modelo de
+      recompensa y optimiza directamente sobre los pares preferidos, que es mas barato y mas estable;
+      RLAIF sustituye al humano por otro LLM — y ahi conviene enlazar con el LLM-as-a-judge del bloque
+      de casos de uso, porque es literalmente la misma tecnica usada para entrenar en vez de evaluar.
+      Tambien existe RL con recompensa VERIFICABLE (tests que pasan, resultado correcto), que es lo
+      que mueve a los modelos de razonamiento de la unidad 16.
+
+      Y para el capstone, el orden no cambia: primero prompting, luego RAG, y afinar casi nunca es el
+      primer paso. Este slide explica QUE es, no recomienda hacerlo.
+    </aside>
+  </section>
+
 
   <section data-transition="fade">
     <h2>RAG o Fine-Tuning</h2>
