@@ -1,3 +1,4 @@
+import os
 """Genera 30_tarea_embeddings_busqueda_selfquery.ipynb (y su version resuelta)."""
 import json, io, sys
 
@@ -423,6 +424,12 @@ def buscar_knn(consulta, k=5, subconjunto=None):
     '''Devuelve una lista de (indice, puntaje) con los k más parecidos a la consulta.
 
     subconjunto: si se pasa una lista de índices, busca SOLO entre esos.
+                 Si se pasa una lista VACÍA, devuelve [] (ojo: `if subconjunto:`
+                 también es falso para [], y ahí buscarías en todo el catálogo).
+
+    Devuelve el índice como `int` de Python y el puntaje como `float`, NO como
+    tipos de numpy: `np.argsort` te da `np.int64`, que no es un `int` y rompe
+    la verificación. Castea con int(...) y float(...).
     '''
     # TU CODIGO AQUI
     raise NotImplementedError("Implementa buscar_knn()")
@@ -431,6 +438,12 @@ def buscar_knn(consulta, k=5, subconjunto=None):
     '''Devuelve una lista de (indice, puntaje) con los k más parecidos a la consulta.
 
     subconjunto: si se pasa una lista de índices, busca SOLO entre esos.
+                 Si se pasa una lista VACÍA, devuelve [] (ojo: `if subconjunto:`
+                 también es falso para [], y ahí buscarías en todo el catálogo).
+
+    Devuelve el índice como `int` de Python y el puntaje como `float`, NO como
+    tipos de numpy: `np.argsort` te da `np.int64`, que no es un `int` y rompe
+    la verificación. Castea con int(...) y float(...).
     '''
     vq = codificar([consulta])[0]
     idx = np.arange(len(V)) if subconjunto is None else np.asarray(sorted(subconjunto))
@@ -444,7 +457,9 @@ def buscar_knn(consulta, k=5, subconjunto=None):
 code(r"""
 # ---- verificación ----
 r = buscar_knn("a story about space and astronauts", k=3)
-assert len(r) == 3 and all(isinstance(i, int) for i, _ in r), "devuelve (indice, puntaje)"
+assert len(r) == 3, f"esperaba 3 resultados, obtuve {len(r)}"
+assert all(isinstance(i, int) for i, _ in r), \
+    "los índices deben ser int de Python, no np.int64: castea con int(...)"
 assert r[0][1] >= r[1][1] >= r[2][1], "los resultados deben venir ordenados de mayor a menor"
 assert df.loc[r[0][0], "genero"] == "science fiction", \
     f"el primero debería ser de ciencia ficción, salió «{df.loc[r[0][0], 'genero']}»"
@@ -626,7 +641,7 @@ def prompt_self_query(pregunta):
     '''Construye el prompt que le pide al LLM separar query y filtros.
 
     Tiene que: describir la tarea, incluir ESQUEMA, listar los operadores permitidos
-    ({', '.join(OPERADORES)}), pedir SOLO JSON con las llaves "query" y "filtros",
+    (eq, ne, gt, gte, lt, lte), pedir SOLO JSON con las llaves "query" y "filtros",
     y terminar con la pregunta del usuario.
     '''
     # TU CODIGO AQUI
@@ -637,8 +652,13 @@ def parsear_self_query(salida):
     '''Extrae el JSON de la respuesta del LLM y lo devuelve como dict.
 
     Tiene que ser tolerante: el modelo suele envolver el JSON en ```json ... ```
-    o agregar texto antes y después. Si algo falla, devuelve
+    o agregar texto antes y después. Si el JSON no se puede parsear, devuelve
     {"query": "", "filtros": []} en vez de lanzar excepción.
+
+    Y tiene que VALIDAR: descarta los filtros cuyo "campo" no esté en COLUMNAS
+    o cuyo "op" no esté en OPERADORES. Descarta sólo el filtro inválido, no la
+    respuesta entera — el "query" se conserva. El LLM inventa campos que no
+    existen; comprobarlos es tu trabajo, no el suyo.
     '''
     # TU CODIGO AQUI
     raise NotImplementedError("Implementa parsear_self_query()")
@@ -797,7 +817,11 @@ nb = {"cells": [_fix(c) for c in celdas],
       "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
                    "language_info": {"name": "python", "version": "3.11"}},
       "nbformat": 4, "nbformat_minor": 5}
-nombre = "_resuelto30.ipynb" if RESUELTO else "30_tarea_embeddings_busqueda_selfquery.ipynb"
+# ruta EXPLICITA: si se corre desde scripts/ y se escribe en el cwd, la copia buena
+# de 2025/notebooks/ se queda sin actualizar y nadie se entera.
+DESTINO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "notebooks")
+nombre = ("/tmp/_resuelto30.ipynb" if RESUELTO
+          else os.path.join(DESTINO, "30_tarea_embeddings_busqueda_selfquery.ipynb"))
 io.open(nombre, "w", encoding="utf-8").write(json.dumps(nb, ensure_ascii=False, indent=1))
 print(f"{nombre}: {len(celdas)} celdas "
       f"(md {sum(1 for c in celdas if c['cell_type']=='markdown')}, "

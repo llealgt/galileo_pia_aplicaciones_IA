@@ -9421,6 +9421,14 @@ for _ in range(max_tokens):
 
   <section data-transition="fade">
     <h2>Zero-shot: Pedirlo sin Ejemplos</h2>
+    <p style="font-size: 0.4em; margin: 0 auto 0.3em auto; max-width: 92%; padding: 0.32em 0.55em; background: rgba(255,255,0,0.07); border-left: 3px solid var(--c-yellow); text-align:left;">
+      <strong style="color: var(--c-yellow);">Antes de empezar, qué es esto exactamente.</strong>
+      Un LLM es <strong>estocástico</strong>: la misma pregunta puede darte respuestas distintas
+      —ya lo viste medido en <em>Dos Corridas, Dos Respuestas</em>—. Así que escribir prompts
+      <strong>no garantiza</strong> una salida: <strong>sube la probabilidad</strong> de obtener la
+      que quieres. Por eso un prompt se juzga sobre <strong>varios casos</strong>, no con un ejemplo
+      que salió bien.
+    </p>
     <div class="columns" style="font-size: 0.37em;">
       <div class="col-55">
         <pre style="margin:0; font-size:0.95em;"><code class="language-text">Clasifica el sentimiento de la reseña
@@ -9451,7 +9459,11 @@ Sentimiento:</code></pre>
         </p>
       </div>
     </div>
-    <aside class="notes">Contenido propio. El nombre viene de "zero-shot learning" en vision por computadora: reconocer una clase que nunca se vio en el entrenamiento. Aqui significa simplemente "sin ejemplos en el prompt". Nota importante: zero-shot NO quiere decir sin instrucciones — la instruccion sigue siendo esencial.</aside>
+    <aside class="notes">Contenido propio. EL RECUADRO DE ARRIBA ES EL ENCUADRE DE TODO EL BLOQUE y conviene leerlo en voz alta: prompt engineering no es una lista de trucos que garantizan una salida, es mover una distribucion. El deck ya lo dejo medido dos veces antes de llegar aqui —"Dos Corridas, Dos Respuestas" con la misma pregunta dando resultados distintos, y los parametros de muestreo—, asi que aqui solo hay que nombrarlo.
+
+      De ahi sale la consecuencia practica que mas cuesta aceptar: un prompt NO se valida con un ejemplo que salio bien. Se corre sobre un conjunto de casos y se mira cuantos acierta, que es exactamente lo que hace la tarea 12 con la bitacora, y lo que automatizan RAGAS y DeepEval en la unidad 16.
+
+      El nombre viene de "zero-shot learning" en vision por computadora: reconocer una clase que nunca se vio en el entrenamiento. Aqui significa simplemente "sin ejemplos en el prompt". Nota importante: zero-shot NO quiere decir sin instrucciones — la instruccion sigue siendo esencial.</aside>
   </section>
 
   <section data-transition="fade">
