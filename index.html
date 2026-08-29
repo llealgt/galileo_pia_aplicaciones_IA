@@ -5952,6 +5952,48 @@ with torch.no_grad():
     </aside>
   </section>
 
+  <section data-transition="fade" id="sl-multimodal-espacio">
+    <h2>Un Solo Espacio para Texto e Imagen</h2>
+    <div style="text-align:center; margin:0.15em 0;">
+      <svg viewBox="0 0 760 258" style="width:100%; max-width:760px; max-height:262px;" role="img"><rect x="6" y="16" width="196" height="78" rx="9" fill="#58C4DD" fill-opacity="0.05" stroke="#8a86a0" stroke-width="0.9" stroke-dasharray="4 3"/><rect x="16" y="26" width="176" height="30" rx="6" fill="#E48BB0" fill-opacity="0.10" stroke="#E48BB0" stroke-width="1.1"/><rect x="25" y="31.5" width="15" height="19" rx="2.5" fill="none" stroke="#E48BB0" stroke-width="1.3"/><line x1="28.5" y1="36.5" x2="36.5" y2="36.5" stroke="#E48BB0" stroke-width="1.1"/><line x1="28.5" y1="41.0" x2="36.5" y2="41.0" stroke="#E48BB0" stroke-width="1.1"/><line x1="28.5" y1="45.5" x2="36.5" y2="45.5" stroke="#E48BB0" stroke-width="1.1"/><text x="52" y="40" fill="#E48BB0" font-size="10" font-family="Fira Code,monospace">texto</text><text x="52" y="51" fill="#ece6d0" font-size="9.5" font-family="Lora,serif">«un cachorro»</text><rect x="16" y="60" width="176" height="30" rx="6" fill="#58C4DD" fill-opacity="0.10" stroke="#58C4DD" stroke-width="1.1"/><rect x="25" y="65.5" width="15" height="19" rx="2.5" fill="none" stroke="#58C4DD" stroke-width="1.3"/><line x1="28.5" y1="70.5" x2="36.5" y2="70.5" stroke="#58C4DD" stroke-width="1.1"/><line x1="28.5" y1="75.0" x2="36.5" y2="75.0" stroke="#58C4DD" stroke-width="1.1"/><line x1="28.5" y1="79.5" x2="36.5" y2="79.5" stroke="#58C4DD" stroke-width="1.1"/><text x="52" y="74" fill="#58C4DD" font-size="10" font-family="Fira Code,monospace">texto</text><text x="52" y="85" fill="#ece6d0" font-size="9.5" font-family="Lora,serif">«un perro»</text><rect x="6" y="104" width="196" height="114" rx="9" fill="#5CD0B3" fill-opacity="0.05" stroke="#8a86a0" stroke-width="0.9" stroke-dasharray="4 3"/><rect x="16" y="114" width="176" height="30" rx="6" fill="#FFFF00" fill-opacity="0.10" stroke="#FFFF00" stroke-width="1.1"/><rect x="25" y="119.5" width="19" height="19" rx="2.5" fill="none" stroke="#FFFF00" stroke-width="1.3"/><circle cx="30.5" cy="125.5" r="2" fill="#FFFF00"/><path d="M27.5,135.5 L32.5,129.0 L36,133.0 L38.5,130.5 L41.5,135.5 Z" fill="#FFFF00"/><text x="52" y="128" fill="#FFFF00" font-size="10" font-family="Fira Code,monospace">imagen</text><text x="52" y="139" fill="#ece6d0" font-size="9.5" font-family="Lora,serif">foto de un perro</text><rect x="16" y="148" width="176" height="30" rx="6" fill="#9A72AC" fill-opacity="0.10" stroke="#9A72AC" stroke-width="1.1"/><rect x="25" y="153.5" width="15" height="19" rx="2.5" fill="none" stroke="#9A72AC" stroke-width="1.3"/><line x1="28.5" y1="158.5" x2="36.5" y2="158.5" stroke="#9A72AC" stroke-width="1.1"/><line x1="28.5" y1="163.0" x2="36.5" y2="163.0" stroke="#9A72AC" stroke-width="1.1"/><line x1="28.5" y1="167.5" x2="36.5" y2="167.5" stroke="#9A72AC" stroke-width="1.1"/><text x="52" y="162" fill="#9A72AC" font-size="10" font-family="Fira Code,monospace">texto</text><text x="52" y="173" fill="#ece6d0" font-size="9.5" font-family="Lora,serif">«un árbol»</text><rect x="16" y="182" width="176" height="30" rx="6" fill="#5CD0B3" fill-opacity="0.10" stroke="#5CD0B3" stroke-width="1.1"/><rect x="25" y="187.5" width="19" height="19" rx="2.5" fill="none" stroke="#5CD0B3" stroke-width="1.3"/><circle cx="30.5" cy="193.5" r="2" fill="#5CD0B3"/><path d="M27.5,203.5 L32.5,197.0 L36,201.0 L38.5,198.5 L41.5,203.5 Z" fill="#5CD0B3"/><text x="52" y="196" fill="#5CD0B3" font-size="10" font-family="Fira Code,monospace">imagen</text><text x="52" y="207" fill="#ece6d0" font-size="9.5" font-family="Lora,serif">foto de un árbol</text><rect x="216" y="96" width="120" height="56" rx="9" fill="#FFFF00" fill-opacity="0.13" stroke="#FFFF00" stroke-width="1.6"/><text x="276" y="118" text-anchor="middle" fill="#FFFF00" font-size="11.5" font-family="Fira Code,monospace">modelo</text><text x="276" y="134" text-anchor="middle" fill="#ece6d0" font-size="11" font-family="Lora,serif">multimodal</text><line x1="202" y1="124" x2="212" y2="124" stroke="#8a86a0" stroke-width="1.4"/><line x1="336" y1="124" x2="370" y2="124" stroke="#ece6d0" stroke-width="2"/><polygon points="379,124 367,117.5 367,130.5" fill="#ece6d0"/><line x1="520" y1="196" x2="520" y2="46" stroke="#ece6d0" stroke-width="1.6" stroke-opacity="0.65"/><polygon points="520,40 515.5,52 524.5,52" fill="#ece6d0" fill-opacity="0.65"/><line x1="520" y1="196" x2="746" y2="228" stroke="#ece6d0" stroke-width="1.6" stroke-opacity="0.65"/><polygon points="752,231 740,222 738,232" fill="#ece6d0" fill-opacity="0.65"/><line x1="520" y1="196" x2="400" y2="240" stroke="#ece6d0" stroke-width="1.6" stroke-opacity="0.65"/><polygon points="394,243 406,234 408,244" fill="#ece6d0" fill-opacity="0.65"/><path d="M520,196 L746,228 L640,250 L400,240 Z" fill="none" stroke="#8a86a0" stroke-width="0.8" stroke-dasharray="3 4" stroke-opacity="0.5"/><ellipse cx="452" cy="96" rx="52" ry="40" fill="none" stroke="#8a86a0" stroke-width="1.2" stroke-dasharray="5 4"/><text x="452" y="46" text-anchor="middle" fill="#ece6d0" font-size="12" font-family="Lora,serif">Árboles</text><circle cx="438" cy="88" r="5" fill="#5CD0B3"/><circle cx="462" cy="106" r="5" fill="#9A72AC"/><ellipse cx="646" cy="106" rx="58" ry="44" fill="none" stroke="#8a86a0" stroke-width="1.2" stroke-dasharray="5 4"/><text x="646" y="52" text-anchor="middle" fill="#ece6d0" font-size="12" font-family="Lora,serif">Perros</text><circle cx="628" cy="92" r="5" fill="#E48BB0"/><circle cx="660" cy="100" r="5" fill="#58C4DD"/><circle cx="642" cy="122" r="5" fill="#FFFF00"/><text x="674" y="92" text-anchor="middle" fill="#8a86a0" font-size="9.5" font-family="Lora,serif">perro</text><text x="624" y="82" text-anchor="middle" fill="#8a86a0" font-size="9.5" font-family="Lora,serif">cachorro</text><circle cx="556" cy="60" r="4" fill="#8a86a0" fill-opacity="0.35"/><circle cx="520" cy="128" r="4" fill="#8a86a0" fill-opacity="0.35"/><circle cx="582" cy="168" r="4" fill="#8a86a0" fill-opacity="0.35"/><circle cx="694" cy="168" r="4" fill="#8a86a0" fill-opacity="0.35"/><circle cx="474" cy="158" r="4" fill="#8a86a0" fill-opacity="0.35"/><circle cx="612" cy="62" r="4" fill="#8a86a0" fill-opacity="0.35"/><circle cx="720" cy="130" r="4" fill="#8a86a0" fill-opacity="0.35"/><text x="560" y="248" text-anchor="middle" fill="#FFFF00" font-size="11" font-family="Lora,serif" font-style="italic">la foto del perro cae con los TEXTOS sobre perros, no con la otra foto</text></svg>
+    </div>
+    <p style="font-size: 0.4em; margin-top: 0.1em;">
+      Un modelo multimodal codifica <strong>texto e imágenes con el mismo espacio de salida</strong>.
+      Por eso puedes buscar fotos escribiendo, o agrupar por concepto sin importar de qué modalidad
+      venga cada cosa.
+    </p>
+    <p class="fragment fade-up" style="font-size: 0.385em; margin-top: 0.2em; padding: 0.3em 0.5em; background: rgba(252,98,85,0.08); border-left: 3px solid var(--c-red);">
+      <strong>Y esa figura es el objetivo, no exactamente el resultado.</strong> Lo mediste en el
+      notebook 29: una imagen se parece más a <strong>otra imagen (+0.46)</strong> que a
+      <strong>su propia descripción (+0.32)</strong>, y los centros de las dos nubes están a
+      <strong>0.88</strong>. Se llama <strong>brecha de modalidad</strong> — sirve para
+      <em>ordenar dentro de una fila</em>, no como distancia absoluta.
+    </p>
+    <aside class="notes">
+      Diagrama propio, redibujado en SVG a partir de una figura de referencia que dio el catedratico.
+      Se redibuja y no se pega la imagen porque el original es oscuro sobre blanco y el deck es al
+      reves — misma regla que con la figura de tamanos de modelos y con las tarjetas del anexo de
+      Anthropic.
+
+      COMO LEERLO EN CLASE: los colores atan cada entrada con su punto. Lo que hay que hacer notar es
+      el punto AMARILLO, que es una FOTO de un perro y cae junto a los dos TEXTOS sobre perros, no
+      junto a la otra foto. Ese es todo el mensaje del diagrama: el espacio se organiza por
+      concepto, no por modalidad.
+
+      Y ENSEGUIDA EL MATIZ, que es lo que separa este curso de la figura de marketing: eso es el
+      OBJETIVO del entrenamiento contrastivo, no lo que sale exactamente. En el notebook 29 esta
+      medido que el vecino mas cercano de cada punto es de su propia modalidad en los 16 casos, que
+      imagen-imagen da +0.46 contra +0.32 de imagen con su propia descripcion, y que los centros de
+      las dos nubes estan a 0.88 sobre vectores unitarios. Es la brecha de modalidad (Liang et al.
+      2022): las dos modalidades viven en conos separados del mismo espacio.
+
+      Consecuencia practica que hay que decir en voz alta: si mezclas imagenes y textos en el mismo
+      indice vectorial y buscas por cercania cruda, te salen casi solo resultados de la modalidad de
+      la consulta. Lo que funciona es comparar DENTRO de una fila — de estas ocho imagenes, cual va
+      con este texto —, y ahi la diagonal acerto 8 de 8.
+    </aside>
+  </section>
+
   <section data-transition="fade" id="sl-clip">
     <h2>Multimodales: CLIP</h2>
     <p style="font-size: 0.46em;">
